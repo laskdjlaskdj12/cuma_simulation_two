@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QVector>
 #include <QTime>
+#include <QTimer>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -46,6 +47,7 @@ signals:
      * 2. 다른 유닛이 자기 시그널을 emit하는것을 in으로함
      * */
 
+    //send_ping_message_si_out
     void send_ping_message_si_out();
     void recv_ping_message_si_in();
 
@@ -89,7 +91,7 @@ private:
     QTime clock;
 
     //타임아웃 타이머
-    QTime timeout_timer;
+    QTimer timeout_timer;
 
     //타임아웃 시간
     uint32_t timeout_time;
