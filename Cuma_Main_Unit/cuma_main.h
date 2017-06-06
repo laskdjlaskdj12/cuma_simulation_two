@@ -75,6 +75,10 @@ public slots:
 private:
     
 private:
+
+    //유닛의 pid
+    ulong unit_pid;
+
     QList<QByteArray> file_frag;
     
     //Cuma_Main의 타겟설정
