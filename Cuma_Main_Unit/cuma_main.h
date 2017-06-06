@@ -63,7 +63,6 @@ signals:
  
     //내부에서 메세지 프로시저
 public slots:
-
     void send_ping_message_sl_out();
     void recv_ping_message_sl_in();
 
@@ -79,7 +78,7 @@ private:
     QList<QByteArray> file_frag;
     
     //Cuma_Main의 타겟설정
-    QSharedPointer<Cuma_Main> target;
+    QSharedPointer<Cuma_Main> target_unit;
 
     //리턴타임의 핑타임의 행렬을 구성함
     QVector<QVector<uint32_t> > time_array;
