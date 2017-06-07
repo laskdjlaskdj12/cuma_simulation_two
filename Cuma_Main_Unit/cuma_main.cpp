@@ -32,16 +32,44 @@ void Cuma_Main::start_event_loop()
         measure_ping_unit_time[(*(*iter))->get_unit_pid()] = unit_ping_return_time;
 
         //해당 유닛에게 ping 메세지를 전송
-        emit (*(*iter))->recv_message_si( cuma_protocol::ping_protocol(unit_pid));
+        emit (*(*iter))->recv_message_si( cuma_protocol::ping_protocol(unit_pid, true));
     }
+
+
 }
 
 int Cuma_Main::unit_event_loop(QJsonObject obj)
 {
-    //connect는 unit_event_loop에서 타겟 라이브러리에 connect함
-
     //만약 핑요청 프로토콜일경우
-    // 해당 유닛id를 찾아서 핑타임의 sleep을 하고 전송
+    if(obj["request"].toString() == "PIng"){
+
+        //만약 핑요청한 프로토콜이 되돌아 올경우
+        if(obj["responce"].toBool() == true){
+
+            //핑을 요청한 프로토콜의 pid를 토대로 maping되어있는 QTime을 찾음
+            uint32_t req_pid = get_pid_from_json(obj);
+
+            //해당 타임을 elapsed()를 통해서 리턴된 milisec를 받음
+            int time =  measure_ping_unit_time[req_pid].elapsed();
+
+            //
+        }
+        // 해당 유닛id를 찾아서 핑타임의 sleep을 하고 전송
+
+        //자신의 pid를 중심으로 구성된 유닛들 타임 딜레이리스트 를 찾음
+        QVector<uint32_t> mypid_vector = time_array[unit_pid];
+
+        //유닛들의 타임 딜레이 리스트 중 수신된 유닛의 pid의 타임 딜레이를 찾음;
+        uint32_t time_delay = mypid_vector[static_cast<unsigned int>(obj["pid"].toInt())];
+
+        //해당 타임 딜레이 만큼 sleep함
+        QThread::msleep(time_delay);
+
+        //해당 유닛을 타겟으로 하여 전송함
+
+
+
+    }
     // 자신의 send_signal이 유닛에게 connect를 하고 전송
 
     //만약 파일 확인 프로토콜 일경우
@@ -51,5 +79,10 @@ int Cuma_Main::unit_event_loop(QJsonObject obj)
     //만약 팡리 읽기 프로토콜 일경우
 
 
+}
+
+uint32_t Cuma_Main::get_pid_from_json(QJsonObject obj)
+{
+    return static_cast<uint32_t>(obj["pid"].toInt());
 }
 

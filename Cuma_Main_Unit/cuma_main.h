@@ -75,6 +75,9 @@ private:
     //내부 이벤트 루프문
     int unit_event_loop(QJsonObject);
 
+    //Jsonobject문에 있는 pid를 추출함
+    uint32_t get_pid_from_json(QJsonObject obj);
+
 private:
 
     //유닛의 pid
@@ -111,7 +114,7 @@ private:
 #endif // CUMA_MAIN_H
 
 class cuma_protocol{
-    static QJsonObject ping_protocol(uint32_t unit_id);
+    static QJsonObject ping_protocol(uint32_t unit_id, bool is_return);
     static QJsonObject is_file_exsist_protocol(uint32_t file_frag_index, uint32_t unit_id);
     static QJsonObject file_binary_save_protocol(QJsonObject file_binary, uint32_t unit_id);
     static QJsonObject file_binary_read_protocol(uint32_t file_frag_index, uint32_t );
