@@ -5,6 +5,7 @@
 #include <QVector>
 #include <QTime>
 #include <QTimer>
+#include <QThread>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -32,6 +33,9 @@ public:
     //전송된 유닛들의 시간들의 리포트를 json으로 리턴함
     QJsonObject get_result_json();
 
+    //유닛 타이밍
+    uint32_t get_unit_timer();
+
     //핑 메세지
 signals:
 
@@ -49,7 +53,7 @@ signals:
 
     //send_ping_message_si_out
     void send_ping_message_si_out();
-    void recv_ping_message_si_in();
+    void recv_ping_message_si_in(QSharedPointer<Cuma_Main>);
 
     //파일 메세지
     void send_file_message_si_out(QByteArray);
@@ -64,7 +68,7 @@ signals:
     //내부에서 메세지 프로시저
 public slots:
     void send_ping_message_sl_out();
-    void recv_ping_message_sl_in();
+    void recv_ping_message_sl_in(QSharedPointer<Cuma_Main>);
 
     void send_file_message_sl_out(QByteArray binary);
     void recv_file_message_sl_in(QByteArray binary);
@@ -73,11 +77,13 @@ public slots:
     void stop_simulation_sl();
 
 private:
-    
+    //내부 이벤트 루프문
+    int unit_event_loop();
+
 private:
 
     //유닛의 pid
-    ulong unit_pid;
+    uint32_t  unit_pid;
 
     QList<QByteArray> file_frag;
     
@@ -91,13 +97,16 @@ private:
     QVector<QSharedPointer<Cuma_Main>> target_array_list;
 
     //핑타임 재는 타이머
-    QTime clock;
+    QTime p_time;
 
     //타임아웃 타이머
     QTimer timeout_timer;
 
     //타임아웃 시간
     uint32_t timeout_time;
+
+    //핑 메세지가 전송되었는지 확인
+    bool is_ping_message;
 
 };
 
