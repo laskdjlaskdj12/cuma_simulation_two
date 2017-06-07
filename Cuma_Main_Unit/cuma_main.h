@@ -51,9 +51,8 @@ signals:
      * 2. 다른 유닛이 자기 시그널을 emit하는것을 in으로함
      * */
 
-
     //메세지 프로시저
-    void send_message_si (uint32_t unit_id, QJsonObject obj);
+    void recv_message_si (QJsonObject obj);
 
     //attach된 쓰레드에 끝났다는것을 리턴함
     void quit_si_int_out();
@@ -62,9 +61,10 @@ signals:
     void stop_si_in();
  
     //내부에서 메세지 프로시저
-public slots:
-    void recv_message_sl (uint32_t unit_id, QJsonObject obj);
+private slots:
+    void recv_message_sl (QJsonObject obj);
 
+public slots:
     //메인에서 stop시그널이 왔을경우
     void stop_simulation_sl();
 
@@ -73,7 +73,7 @@ public slots:
 
 private:
     //내부 이벤트 루프문
-    int unit_event_loop();
+    int unit_event_loop(QJsonObject);
 
 private:
 
@@ -114,6 +114,6 @@ class cuma_protocol{
     static QJsonObject ping_protocol(uint32_t unit_id);
     static QJsonObject is_file_exsist_protocol(uint32_t file_frag_index, uint32_t unit_id);
     static QJsonObject file_binary_save_protocol(QJsonObject file_binary, uint32_t unit_id);
-    static QJsonObject file_binary_read_protocol(uint32_t file_frag_index );
+    static QJsonObject file_binary_read_protocol(uint32_t file_frag_index, uint32_t );
 
 };
