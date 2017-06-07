@@ -51,13 +51,9 @@ signals:
      * 2. 다른 유닛이 자기 시그널을 emit하는것을 in으로함
      * */
 
-    //send_ping_message_si_out
-    void send_ping_message_si_out();
-    void recv_ping_message_si_in(QSharedPointer<Cuma_Main>);
 
-    //파일 메세지
-    void send_file_message_si_out(QByteArray);
-    void recv_file_message_si_in(QByteArray);
+    //메세지 프로시저
+    void send_message_si (uint32_t unit_id, QJsonObject obj);
 
     //attach된 쓰레드에 끝났다는것을 리턴함
     void quit_si_int_out();
@@ -67,14 +63,13 @@ signals:
  
     //내부에서 메세지 프로시저
 public slots:
-    void send_ping_message_sl_out();
-    void recv_ping_message_sl_in(QSharedPointer<Cuma_Main>);
-
-    void send_file_message_sl_out(QByteArray binary);
-    void recv_file_message_sl_in(QByteArray binary);
+    void recv_message_sl (uint32_t unit_id, QJsonObject obj);
 
     //메인에서 stop시그널이 왔을경우
     void stop_simulation_sl();
+
+    //시뮬레이션을 시작함
+    void start_event_loop();
 
 private:
     //내부 이벤트 루프문
@@ -108,6 +103,17 @@ private:
     //핑 메세지가 전송되었는지 확인
     bool is_ping_message;
 
+    QMap<uint32_t, QTime> measure_ping_unit_time;
+
+
 };
 
 #endif // CUMA_MAIN_H
+
+class cuma_protocol{
+    static QJsonObject ping_protocol(uint32_t unit_id);
+    static QJsonObject is_file_exsist_protocol(uint32_t file_frag_index, uint32_t unit_id);
+    static QJsonObject file_binary_save_protocol(QJsonObject file_binary, uint32_t unit_id);
+    static QJsonObject file_binary_read_protocol(uint32_t file_frag_index );
+
+};
