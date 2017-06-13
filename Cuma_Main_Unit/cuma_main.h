@@ -61,7 +61,7 @@ signals:
     void stop_si_in();
  
     //내부에서 메세지 프로시저
-private slots:
+protected slots:
     void recv_message_sl (QJsonObject obj);
 
 public slots:
@@ -71,7 +71,7 @@ public slots:
     //시뮬레이션을 시작함
     void start_event_loop();
 
-private:
+protected:
     //내부 이벤트 루프문
     int unit_event_loop(QJsonObject);
 
