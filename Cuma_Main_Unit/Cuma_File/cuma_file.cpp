@@ -84,3 +84,8 @@ QByteArray Cuma_File::get_fragment_slite(uint32_t index)
 {
 
 }
+
+QString Cuma_File::mf_get_file_error_string()
+{
+    return _Read_File->errorString();
+}

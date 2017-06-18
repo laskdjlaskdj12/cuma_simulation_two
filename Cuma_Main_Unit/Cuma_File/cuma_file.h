@@ -31,6 +31,8 @@ public:
 
     QByteArray get_fragment_slite(uint32_t index);
 
+    QString mf_get_file_error_string();
+
 private:
 
     QSharedPointer<QFile> _Read_File;

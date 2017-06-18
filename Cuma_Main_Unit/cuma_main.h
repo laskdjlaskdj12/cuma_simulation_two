@@ -55,11 +55,15 @@ public:
     void mf_set_ping_limit_time(uint32_t time);
     uint32_t mf_get_ping_limit_time();
 
-    void set_pid(uint32_t pid);
-    uint32_t get_pid();
+    void mf_set_pid(uint32_t pid);
+    uint32_t mf_get_pid();
 
     //json 리포트 받기
     QJsonObject mf_get_report_json();
+
+    //active되었는지 확인
+    bool mf_is_active();
+    void mf_set_active(bool);
 
 signals:
 
@@ -99,7 +103,7 @@ protected slots:
 protected:
 
     //recv의 실행 프로세스
-    virtual void f_recv_process(QJsonObject o);
+    virtual void f_recv_process(const QJsonObject& o);
 
     //로그 리포트 json 입력 프로세스
     virtual void f_write_report_json(QJsonObject o);
@@ -114,7 +118,7 @@ protected:
     virtual int f_f_read_file(const QString file_name);
 
     //파일을 분해하는 프로세스
-    virtual int f_fragment_file(const QString file_name);
+    virtual int f_fragment_file(const uint32_t count);
 
 protected:
     //전송할 유닛 리스트들을 push하는 프로세스
@@ -131,10 +135,10 @@ private:
     QVector<QVector<uint32_t>> m_Unit_delay_time_array;
 
     //모든 유닛들의 행렬
-    QVector<QSharedPointer<Cuma_Unit>> m_Cuma_unit_list;
+    QVector<QSharedPointer<Cuma_Main>> m_Cuma_unit_list;
 
     //전송할 유닛들 리스트 (유닛당 전송이 완료가 되면 자동으로 pop함)
-    QVector<QSharedPointer<Cuma_Unit>> m_Send_Unit_list;
+    QVector<QSharedPointer<Cuma_Main>> m_Send_Unit_list;
 
     //현재 유닛 pid
     uint32_t m_Pid;
@@ -146,14 +150,17 @@ private:
     QJsonObject m_report_json;
 
     //유닛리스트를 push할때 뮤텍스 locker
-    QMutexLocker locker;
+    QMutexLocker m_locker;
+
+    //이 유닛이 active했는지 확인함
+    bool m_active;
 
 };
 
 #endif // CUMA_MAIN_H
 
 class cuma_protocol{
-    static QJsonObject ping_protocol(uint32_t unit_id, bool is_return);
+    static QJsonObject ping_protocol(uint32_t unit_id, bool is_return = false);
     static QJsonObject is_file_exsist_protocol(uint32_t file_frag_index, uint32_t unit_id);
     static QJsonObject file_binary_save_protocol(QJsonObject file_binary, uint32_t unit_id);
     static QJsonObject file_binary_read_protocol(uint32_t file_frag_index, uint32_t );
