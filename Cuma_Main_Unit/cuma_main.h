@@ -13,6 +13,29 @@
 #include <QSharedPointer>
 #include "Cuma_File/cuma_file.h"
 
+class Cuma_Unit :public QObject
+{
+    Q_OBJECT
+public:
+    explicit Cuma_Unit(QObject* obj = nullptr);
+
+    //인터페이스 영역
+    virtual void set_unit_array(QVector<Cuma_Unit> unit_array) = 0;
+    virtual QVector<Cuma_Unit> get_unit_array() = 0;
+    virtual void set_unit_id(uint32_t) = 0;
+    virtual uint32_t get_unit_id() = 0;
+
+    virtual uint32_t start_spread(QString file_name) = 0;
+
+signals:
+    void recv_Unit(QByteArray array);
+
+protected:
+
+private:
+    //디폴트 대입생성자 는 엄격하게 금함
+    void operator = (Cuma_Unit& u) = 0;
+};
 
 class Cuma_Main : public QObject
 {
@@ -59,7 +82,7 @@ signals:
 
     //메인에서 stop시그널이 왔을경우
     void stop_si_in();
- 
+
     //내부에서 메세지 프로시저
 protected slots:
     void recv_message_sl (QJsonObject obj);
