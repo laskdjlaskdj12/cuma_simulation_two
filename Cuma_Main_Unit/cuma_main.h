@@ -12,6 +12,7 @@
 #include <QJsonDocument>
 #include <QSharedPointer>
 #include "Cuma_File/cuma_file.h"
+#include "../Cuma_Debug/cuma_debug.h"
 
 class Cuma_Unit :public QObject
 {
@@ -33,7 +34,7 @@ signals:
 protected:
 
 private:
-    //디폴트 대입생성자 는 엄격하게 금함
+    //디폴트 대입생성자 는 금함
     void operator = (Cuma_Unit& u) = 0;
 };
 
@@ -83,9 +84,6 @@ signals:
     //메인에서 stop시그널이 왔을경우
     void stop_si_in();
 
-    //내부에서 메세지 프로시저
-protected slots:
-    void recv_message_sl (QJsonObject obj);
 
 public slots:
     //메인에서 stop시그널이 왔을경우
@@ -93,6 +91,12 @@ public slots:
 
     //시뮬레이션을 시작함
     void start_event_loop();
+
+
+protected slots:
+
+    //내부에서 메세지 프로시저
+    void recv_message_sl (QJsonObject obj);
 
 protected:
     //내부 이벤트 루프문
@@ -106,6 +110,7 @@ private:
     //유닛의 pid
     uint32_t  unit_pid;
 
+    //파일 파편화 리스트
     QList<QByteArray> file_frag;
     
     //Cuma_Main의 타겟설정

@@ -41,18 +41,41 @@ void Cuma_Main::start_event_loop()
 int Cuma_Main::unit_event_loop(QJsonObject obj)
 {
     //만약 핑요청 프로토콜일경우
-    if(obj["request"].toString() == "PIng"){
-
+    if(obj["request"].toString() == "PIng")
+    {
         //만약 핑요청한 프로토콜이 되돌아 올경우
-        if(obj["responce"].toBool() == true){
-
+        if(obj["responce"].toBool() == true)
+        {
             //핑을 요청한 프로토콜의 pid를 토대로 maping되어있는 QTime을 찾음
             uint32_t req_pid = get_pid_from_json(obj);
 
             //해당 타임을 elapsed()를 통해서 리턴된 milisec를 받음
             int time =  measure_ping_unit_time[req_pid].elapsed();
 
-            //
+            //해당 유닛의 타임이 이미 target_array_list에 존재하는지 확인
+            bool is_exsist = false;
+
+            foreach (QSharedPointer<Cuma_Unit> it_unit, target_array_list)
+            {
+
+                if (it_unit->get_unit_id() == obj["unit_id"].toInt())
+                {
+                    is_exsist = true;
+                }
+            }
+
+            //만약 해당 유닛이 이미 리스트에 존재했을시 디버그 메세지를 출력함
+            if (is_exsist == true)
+            {
+                //디버그 메세지를 출력함
+                Cuma_Debug("Unit is alread exsist unit_id : " << obj["unit_id"].toInt());
+            }
+            else
+            {
+                //해당 유닛을 array에 push함
+                target_array_list.push_back();
+            }
+
         }
         // 해당 유닛id를 찾아서 핑타임의 sleep을 하고 전송
 

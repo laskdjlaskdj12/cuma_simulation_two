@@ -13,7 +13,8 @@ SOURCES += main.cpp \
     Cuma_Main_Unit/cuma_main.cpp \
     Cuma_Main_Unit/Cuma_File/cuma_file.cpp \
     Cuma_Unit_Base/cuma_unit_base.cpp \
-    Test/cuma_main_unit_test.cpp
+    Test/cuma_main_unit_test.cpp \
+    Cuma_Debug/cuma_debug.cpp
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked deprecated (the exact warnings
@@ -30,4 +31,5 @@ HEADERS += \
     Cuma_Main_Unit/cuma_main.h \
     Cuma_Main_Unit/Cuma_File/cuma_file.h \
     Cuma_Unit_Base/cuma_unit_base.h \
-    Test/cuma_main_unit_test.h
+    Test/cuma_main_unit_test.h \
+    Cuma_Debug/cuma_debug.h
