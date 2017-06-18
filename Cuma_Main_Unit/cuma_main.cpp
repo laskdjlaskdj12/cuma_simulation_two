@@ -116,10 +116,12 @@ void Cuma_Main::sl_start_spread_signal(QString filename)
             emit unit->s_recv(cuma_protocol::ping_protocol(m_Pid));
         }
 
-
         //while문으로 유닛리스트들에 유닛들이 있는지 검사해서 있으면 검사하고 전송함
-
         while()
+        {
+            //자기 자신 인덱스를 제외한 모든 유닛들의 인덱스를 확인함
+
+        }
         //파일의 바이너리를
         if (f_f_read_file(file_name) < 0)
         {
