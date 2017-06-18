@@ -11,6 +11,7 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QSharedPointer>
+#include <QMutexLocker>
 #include "Cuma_File/cuma_file.h"
 #include "../Cuma_Debug/cuma_debug.h"
 
@@ -42,25 +43,24 @@ class Cuma_Main : public QObject
 {
     Q_OBJECT
 public:
-    explicit Cuma_Main(QObject *parent = nullptr);
+
+    explicit Cuma_Main(QObject* parent = null);
     ~Cuma_Main();
-    
-    //파일을 전송할 파일 이름
-    void read_file_name(QString f);
-    
-    //타임아웃을 세팅함
-    void set_timeout(uint32_t timeout);
 
-    //유닛 리스트들을 복사함
-    void copy_unit_list(QList<QSharedPointer<Cuma_Main>> list);
+    //unit 리스트 프로퍼티
+    void mf_set_unit_list(QVector<Cuma_Main> list);
+    QVector<Cuma_Main> mf_get_unit_list();
 
-    //전송된 유닛들의 시간들의 리포트를 json으로 리턴함
-    QJsonObject get_result_json();
+    //ping 리스트 리미트 프로퍼티
+    void mf_set_ping_limit_time(uint32_t time);
+    uint32_t mf_get_ping_limit_time();
 
-    //유닛 타이밍
-    uint32_t get_unit_timer();
+    void set_pid(uint32_t pid);
+    uint32_t get_pid();
 
-    //핑 메세지
+    //json 리포트 받기
+    QJsonObject mf_get_report_json();
+
 signals:
 
     /*
@@ -74,68 +74,79 @@ signals:
      * 1. 자기를 기준으로 다른 유닛에게 전송하는것을 out으로 함
      * 2. 다른 유닛이 자기 시그널을 emit하는것을 in으로함
      * */
-
-    //메세지 프로시저
-    void recv_message_si (QJsonObject obj);
-
-    //attach된 쓰레드에 끝났다는것을 리턴함
-    void quit_si_int_out();
-
-    //메인에서 stop시그널이 왔을경우
-    void stop_si_in();
-
-
+    
+    //쓰레드가 attach가 된 상태에서 컨트롤 서버에서 본 유닛에게 stop 요청 시그널
+    void s_stop_unit();
+    
+    //다른 유닛에서 recv 요청 시그널
+    void s_recv(QJsonObject o);
+    
+    //메인 컨트롤에서 파일을 읽고 다른유닛에게 전파 명령 시그널
+    void s_start_spread(QString file_name);
+    
 public slots:
-    //메인에서 stop시그널이 왔을경우
-    void stop_simulation_sl();
-
-    //시뮬레이션을 시작함
-    void start_event_loop();
-
-
+    
 protected slots:
+    //s_stop_unit()의 slot
+    void sl_stop_unit();
 
-    //내부에서 메세지 프로시저
-    void recv_message_sl (QJsonObject obj);
+    //s_recv()의 slot
+    void sl_recv_signal(QJsonObject o);
+
+    //s_start_spread()의 slot
+    void sl_start_spread_signal(QString filename);
+    
+protected:
+
+    //recv의 실행 프로세스
+    virtual void f_recv_process(QJsonObject o);
+
+    //로그 리포트 json 입력 프로세스
+    virtual void f_write_report_json(QJsonObject o);
+
+    //현재 시간을 알려주는 프로세스
+    virtual QTime f_tell_time();
+
+    //외부에서 s_start_spread 요청이 접수됬을시 유닛들 목록을 스크리밍해서 파일을 읽고 전송함
+    virtual int f_start_spread(const QString file_name);
+
+    //파일을 읽는 프로세스
+    virtual int f_f_read_file(const QString file_name);
+
+    //파일을 분해하는 프로세스
+    virtual int f_fragment_file(const QString file_name);
 
 protected:
-    //내부 이벤트 루프문
-    int unit_event_loop(QJsonObject);
+    //전송할 유닛 리스트들을 push하는 프로세스
+    virtual void f_push_unit(QSharedPointer<Cuma_Main> unit);
 
-    //Jsonobject문에 있는 pid를 추출함
-    uint32_t get_pid_from_json(QJsonObject obj);
+    //전송을 시작할 유닛 리스트들을 pop하는 프로세스
+    virtual QSharedPointer<Cuma_Main> f_pop_unit();
 
 private:
+    //Cuma_File 애트리뷰트
+    QSharedPointer<Cuma_File> m_File;
 
-    //유닛의 pid
-    uint32_t  unit_pid;
+    //모든유닛들의 delay_time 행렬
+    QVector<QVector<uint32_t>> m_Unit_delay_time_array;
 
-    //파일 파편화 리스트
-    QList<QByteArray> file_frag;
-    
-    //Cuma_Main의 타겟설정
-    QSharedPointer<Cuma_Main> target_unit;
+    //모든 유닛들의 행렬
+    QVector<QSharedPointer<Cuma_Unit>> m_Cuma_unit_list;
 
-    //리턴타임의 핑타임의 행렬을 구성함
-    QVector<QVector<uint32_t> > time_array;
-    
-    //핑이 타임아웃내에 있는 어레이 리스트
-    QVector<QSharedPointer<Cuma_Main>> target_array_list;
+    //전송할 유닛들 리스트 (유닛당 전송이 완료가 되면 자동으로 pop함)
+    QVector<QSharedPointer<Cuma_Unit>> m_Send_Unit_list;
 
-    //핑타임 재는 타이머
-    QTime p_time;
+    //현재 유닛 pid
+    uint32_t m_Pid;
 
-    //타임아웃 타이머
-    QTimer timeout_timer;
+    //현재 유닛의 리미트 ping 타임
+    uint32_t m_ping_limit;
 
-    //타임아웃 시간
-    uint32_t timeout_time;
+    //유닛의 리포트 json
+    QJsonObject m_report_json;
 
-    //핑 메세지가 전송되었는지 확인
-    bool is_ping_message;
-
-    QMap<uint32_t, QTime> measure_ping_unit_time;
-
+    //유닛리스트를 push할때 뮤텍스 locker
+    QMutexLocker locker;
 
 };
 
