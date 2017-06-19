@@ -116,13 +116,10 @@ void Cuma_Main::sl_start_spread_signal(QString filename)
             emit unit->s_recv(cuma_protocol::ping_protocol(m_Pid));
         }
 
-        //while문으로 유닛리스트들에 유닛들이 있는지 검사해서 있으면 검사하고 전송함
-        while()
-        {
-            //자기 자신 인덱스를 제외한 모든 유닛들의 인덱스를 확인함
+        //저장되어있는 유닛리스트의 delay time을 체크함
+        f_send_ping_to_unit(m_ping_limit);
 
-        }
-        //파일의 바이너리를
+        //파일의 바이너리를 읽음
         if (f_f_read_file(file_name) < 0)
         {
             //파일바이너리 읽기가 실패할 경우 파일 에러 메세지를 읽어서 throw함
@@ -177,5 +174,65 @@ void Cuma_Main::f_push_unit(QSharedPointer<Cuma_Main> unit)
 
 QSharedPointer<Cuma_Main> Cuma_Main::f_pop_unit()
 {
+
+}
+
+int Cuma_Main::f_send_ping_to_unit(uint32_t limit_time)
+{
+    //디버그 메세지
+    Cuma_Debug("Send Ping protocol to unit to unit PID: " +  m_Pid);
+
+    //모든유닛에게 핑 프로토콜을 전송함
+    for(QVector<QSharedPointer<Cuma_Main>>::iterator it = m_Cuma_unit_list.begin(); it != m_Cuma_unit_list.end(); it++)
+    {
+        //emit으로 유닛들에게 시그널을 전송함
+        emit (*it)->s_recv(cuma_protocol::ping_protocol(m_Pid));
+    }
+
+    Cuma_Debug("Wait for recv ping from Unit: PID:" +  m_Pid);
+    //자기자신을 제외한 전송할 유닛리스트가 모두 모일때까지 while문으로 sleep()
+    while(m_Send_Unit_list != (m_Cuma_unit_list.count() - 1))
+    {
+        QThread::msleep(1000);
+    }
+
+    Cuma_Debug("Scriming ping_unit: PID:" +  m_Pid);
+
+    //전송할 유닛들 리스트 캐시
+    QVector<QSharedPointer<Cuma_Main>> m_Send_Unit_list_cache;
+
+    //리턴된 유닛들의 딜레이 핑타임 for문으로 체크해서 허용된 딜레이 핑만 스크리밍함
+    for(QVector<QSharedPointer<Cuma_Main>>::iterator it = m_Send_Unit_list.begin(); it != m_Send_Unit_list.end(); it++)
+    {
+        //유닛들을 pop해서 해당 유닛의 핑을 체크함
+        QSharedPointer<Cuma_Main> temp_unit;
+
+        //유닛들을 먼저 pop함
+        temp_unit = (*it)->f_pop_unit();
+
+        //만약 유닛 리스트에 유닛들이 없을 경우 break으로 탈출
+        if( temp_unit == nullptr)
+        {
+            break;
+        }
+
+        //유닛들의 딜레이 타임을 체크함
+        QVector<uint32_t> get_unit_delay_array = m_Unit_delay_time_array[m_pid];
+
+        uint32_t delay_time = get_unit_delay_array[temp_unit->mf_get_pid()];
+
+        //딜레이 타임이 허용되는 기준에 초과되는지 체크함
+        if(delay_time > limit_time)
+        {
+            //만약 초과된다면 m_Cuma_unit_list에 넣지 않음
+            continue;
+        }
+
+        //전송할 유닛들 캐시 리스트에 넣음
+        m_Send_Unit_list_cache.append(temp_unit);
+    }
+
+    //캐시 리스트들을 모든 유닛들의 행렬에 넣음
+    m_Cuma_unit_list = m_Send_Unit_list_cache;
 
 }

@@ -127,6 +127,9 @@ protected:
     //전송을 시작할 유닛 리스트들을 pop하는 프로세스
     virtual QSharedPointer<Cuma_Main> f_pop_unit();
 
+    //유닛들의 핑을 전송해서 리턴된 핑의 딜레이 타임 재는 프로세스
+    virtual int f_send_ping_to_unit(uint32_t limit_time);
+
 private:
     //Cuma_File 애트리뷰트
     QSharedPointer<Cuma_File> m_File;
