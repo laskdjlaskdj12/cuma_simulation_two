@@ -27,6 +27,8 @@ public:
 
     int read_and_fragment();
 
+    void read_file_frag(QByteArray array, uint32_t index);
+
     QVector<QByteArray> get_all_fragment_file();
 
     QByteArray get_fragment_slite(uint32_t index);

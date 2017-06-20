@@ -108,8 +108,8 @@ protected:
     //로그 리포트 json 입력 프로세스
     virtual void f_write_report_json(QJsonObject o);
 
-    //현재 시간을 알려주는 프로세스
-    virtual QTime f_tell_time();
+    //현재 타이머의 milisec를 알려주는 프로세스
+    virtual int f_tell_time();
 
     //외부에서 s_start_spread 요청이 접수됬을시 유닛들 목록을 스크리밍해서 파일을 읽고 전송함
     virtual int f_start_spread(const QString file_name);
@@ -159,13 +159,29 @@ private:
     bool m_active;
 
 };
+class unit_Timer{
+public:
 
-#endif // CUMA_MAIN_H
+    //타이머 본체
+    static QTime time;
+
+    //타이머가 시작됬는지
+    static bool is_start;
+};
 
 class cuma_protocol{
-    static QJsonObject ping_protocol(uint32_t unit_id, bool is_return = false);
-    static QJsonObject is_file_exsist_protocol(uint32_t file_frag_index, uint32_t unit_id);
-    static QJsonObject file_binary_save_protocol(QJsonObject file_binary, uint32_t unit_id);
-    static QJsonObject file_binary_read_protocol(uint32_t file_frag_index, uint32_t );
+public:
+    static QJsonObject req_ping_protocol(uint32_t unit_id, bool is_return = false);
+    static QJsonObject req_is_file_exsist_protocol(uint32_t file_frag_index, uint32_t unit_id);
+    static QJsonObject req_file_binary_save_protocol(QJsonObject file_binary, uint32_t unit_id);
+    static QJsonObject file_binary_read_protocol(uint32_t file_frag_index, uint32_t unit_id );
+
+public:
+    static QJsonObject reply_ping_protocol(uint32_t unit_id, bool is_return = false);
+    static QJsonObject reply_is_file_exsist_protocol(uint32_t file_frag_index, uint32_t unit_id);
+    static QJsonObject reply_file_binary_save_protocol(QJsonObject file_binary, uint32_t unit_id);
+    static QJsonObject reply_file_binary_read_protocol(uint32_t file_frag_index, uint32_t unit_id );
 
 };
+
+#endif // CUMA_MAIN_H
