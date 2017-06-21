@@ -1,6 +1,6 @@
 #include "cuma_file.h"
 
-Cuma_File::Cuma_File(QObject *parent) : QObject(parent),
+/*Cuma_File::Cuma_File(QObject *parent) : QObject(parent),
     F_name(nullptr),
     frag_count(0)
 {
@@ -40,7 +40,7 @@ int Cuma_File::read_and_fragment()
      * 2. 파일을 읽어서 인덱스당 fragment의 크기를 만듬
      * */
 
-    try
+    /*try
     {
         //오픈할 파일 이름을 읽음
         _Read_File->setFileName(F_name);
@@ -75,11 +75,6 @@ int Cuma_File::read_and_fragment()
     }
 }
 
-QVector<QByteArray> Cuma_File::get_all_fragment_file()
-{
-
-}
-
 QByteArray Cuma_File::get_fragment_slite(uint32_t index)
 {
 
@@ -88,4 +83,79 @@ QByteArray Cuma_File::get_fragment_slite(uint32_t index)
 QString Cuma_File::mf_get_file_error_string()
 {
     return _Read_File->errorString();
+}
+
+QSharedPointer<Cuma_File> Cuma_File_ReFectoring::get_Cuma_File_Object()
+{
+
+}*/
+
+Cuma_File::Cuma_File(QObject *parent)
+{
+
+}
+
+Cuma_File::~Cuma_File()
+{
+
+}
+
+void Cuma_File::set_File_Frag_Count(uint32_t c)
+{
+
+}
+
+void Cuma_File::set_File_Name(QString n)
+{
+
+}
+
+void Cuma_File::save_File_Frag(QVector<QByteArray> frag, QString name)
+{
+
+}
+
+void Cuma_File::save_File_Frag(QVector<QByteArray> frag, QString name, uint32_t index)
+{
+
+}
+
+uint32_t Cuma_File::get_File_Index()
+{
+
+}
+
+QString Cuma_File::get_File_Name()
+{
+
+}
+
+QVector<QByteArray> Cuma_File::get_File_Frag()
+{
+
+}
+
+QByteArray Cuma_File::get_File_Frag_By_Index(uint32_t index)
+{
+
+}
+
+QSharedPointer<Cuma_File> Cuma_File::get_Cuma_File_Object()
+{
+
+}
+
+int Cuma_File::read_file()
+{
+
+}
+
+int Cuma_File::make_frag()
+{
+
+}
+
+int Cuma_File::save_Frag(QVector<QByteArray> frag, QString name, uint32_t index)
+{
+
 }

@@ -125,9 +125,6 @@ protected:
     //현재 타이머의 milisec를 알려주는 프로세스
     virtual int f_tell_time();
 
-    //외부에서 s_start_spread 요청이 접수됬을시 유닛들 목록을 스크리밍해서 파일을 읽고 전송함
-    virtual int f_start_spread(const QString file_name);
-
 protected:
     //전송할 유닛 리스트들을 push하는 프로세스
     virtual void f_push_unit(QSharedPointer<Cuma_Main> unit);

@@ -75,6 +75,36 @@ void Cuma_Main::mf_set_active(bool b)
     m_active = b;
 }
 
+int Cuma_Main::set_file_name(QString f_name)
+{
+
+}
+
+int Cuma_Main::mf_command_ping_test()
+{
+
+}
+
+int Cuma_Main::mf_command_spread_test()
+{
+
+}
+
+int Cuma_Main::mf_command_req_file_test()
+{
+
+}
+
+int Cuma_Main::mf_command_trace_pass_test()
+{
+
+}
+
+void Cuma_Main::mf_command_set_unit_bypass_count(uint32_t count)
+{
+
+}
+
 void Cuma_Main::sl_stop_unit()
 {
     //디버그 메세지
@@ -491,6 +521,16 @@ int Cuma_Main::f_check_file_frag_to_unit(QJsonObject &o)
 }
 
 int Cuma_Main::f_reply_check_file_frag_to_unit(QJsonObject &o)
+{
+
+}
+
+int Cuma_Main::f_over_bypass(QJsonObject &o)
+{
+
+}
+
+int Cuma_Main::f_reply_over_bypass_limit(QJsonObject &o)
 {
 
 }
