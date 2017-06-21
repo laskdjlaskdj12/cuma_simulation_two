@@ -36,7 +36,7 @@ private:
     QVector<QByteArray> File_Frag;
 };
 
-class Cuma_File_ReFectoring: public QObject
+/*class Cuma_File_ReFectoring: public QObject
 {
     Q_OBJECT
 public:
@@ -63,6 +63,6 @@ private:
     QString File_name;
     uint32_t File_frag;
     QVector<QByteArray> File_Frag;
-};
+};*/
 
 #endif // CUMA_FILE_H

@@ -40,7 +40,7 @@ int Cuma_File::read_and_fragment()
      * 2. 파일을 읽어서 인덱스당 fragment의 크기를 만듬
      * */
 
-    /*try
+/*try
     {
         //오픈할 파일 이름을 읽음
         _Read_File->setFileName(F_name);
@@ -90,7 +90,7 @@ QSharedPointer<Cuma_File> Cuma_File_ReFectoring::get_Cuma_File_Object()
 
 }*/
 
-Cuma_File::Cuma_File(QObject *parent)
+Cuma_File::Cuma_File(QObject *parent = 0)
 {
 
 }
@@ -152,7 +152,39 @@ int Cuma_File::read_file()
 
 int Cuma_File::make_frag()
 {
+    try
+    {
+        //오픈할 파일 이름을 읽음
+        _Read_File->setFileName(F_name);
 
+        //파일을 READ_ONLY로 오픈함
+        if (_Read_File->open(QIODevice::ReadOnly) == false){ throw _Read_File->error();}
+
+        //파일을 읽음
+        QByteArray _File_Binary_ = _Read_File->readAll();
+
+        //파일 바이너리를 원하는 count를기준으로 나눔
+        _file_frag_size =  static_cast<unsigned long>(_File_Binary_.size() / _frag_count);
+
+        //만약 나머지가 나오면 +1를 함
+        if(_File_Binary_.size() % _frag_count != 0){ _frag_count += 1;}
+
+        //파일 를 바이너리 count로 분해함
+        for(uint32_t i = 0; i < _frag_count ; i++)
+        {
+            //파일 프래그먼트를 읽음
+            QByteArray temp_fragment;
+            temp_fragment((i * _file_frag_size), ((i+1) * _file_frag_size) - 1);
+
+            //읽은 파일 프래그먼트를 push_back함
+            _File_Frag_Array.push_back(temp_fragment);
+        }
+    }
+    catch (QFile::FileError& error)
+    {
+        qDebug()<<"[Error] : File_read_and frag has been error : "<<_Read_File->errorString() <<" Line : "<<__LINE__;
+        return error;
+    }
 }
 
 int Cuma_File::save_Frag(QVector<QByteArray> frag, QString name, uint32_t index)
