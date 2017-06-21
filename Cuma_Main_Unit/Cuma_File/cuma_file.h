@@ -35,12 +35,32 @@ public:
 
     QString mf_get_file_error_string();
 
+protected:
+
+    //파일을 읽어오기
+    virtual int read_file(QString f_name);
+
+    //파일을 쓰기
+    virtual int write_file(QByteArray arr);
+
+    //파일 파편화
+    virtual int frag_file();
+
+    //파일 파편화 저장
+    virtual int save_file_frag();
+
+    //파일 파편화 읽어오기
+    virtual QByteArray read_file_frag(uint32_t index);
+
 private:
 
     QSharedPointer<QFile> _Read_File;
+
     QVector<QByteArray> _File_Frag_Array;
 
     QString _F_name;
+
+    QString _F_Path;
 
     uint32_t _frag_count;
 

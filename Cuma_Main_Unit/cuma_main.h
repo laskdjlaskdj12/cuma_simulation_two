@@ -65,6 +65,25 @@ public:
     bool mf_is_active();
     void mf_set_active(bool);
 
+    //유닛을 제어하는 노드에서 커맨드 함수
+protected:
+    virtual int set_file_name(QString f_name);
+
+    //이 유닛이 ping을 메인 유닛
+    virtual int mf_command_ping_test();
+
+    //이 유닛이 spread의 메인 유닛
+    virtual int mf_command_spread_test();
+
+    //이 유닛이 파일 요청의 메인 유닛
+    virtual int mf_command_req_file_test();
+
+    //이 유닛이 파일 track의 메인유
+    virtual int mf_command_trace_pass_test();
+
+    //유닛의 바이패스 횟수를 카운트
+    virtual void mf_command_set_unit_bypass_count(uint32_t count);
+
 signals:
 
     /*
@@ -86,10 +105,8 @@ signals:
     void s_recv(QJsonObject o);
     
     //메인 컨트롤에서 파일을 읽고 다른유닛에게 전파 명령 시그널
-    void s_start_spread(QString file_name);
-    
-public slots:
-    
+    void s_start_command(const QJsonObject command);
+
 protected slots:
     //s_stop_unit()의 slot
     void sl_stop_unit();
@@ -98,27 +115,18 @@ protected slots:
     void sl_recv_signal(QJsonObject o);
 
     //s_start_spread()의 slot
-    void sl_start_spread_signal(QString filename);
+    void sl_start_command_signal(const QJsonObject command);
     
 protected:
 
-    //recv의 실행 프로세스
+    //recv의 수신 프로세스
     virtual void f_recv_process(const QJsonObject& o);
-
-    //로그 리포트 json 입력 프로세스
-    virtual void f_write_report_json(QJsonObject o);
 
     //현재 타이머의 milisec를 알려주는 프로세스
     virtual int f_tell_time();
 
     //외부에서 s_start_spread 요청이 접수됬을시 유닛들 목록을 스크리밍해서 파일을 읽고 전송함
     virtual int f_start_spread(const QString file_name);
-
-    //파일을 읽는 프로세스
-    virtual int f_f_read_file(const QString file_name);
-
-    //파일을 분해하는 프로세스
-    virtual int f_fragment_file(const uint32_t count);
 
 protected:
     //전송할 유닛 리스트들을 push하는 프로세스
@@ -127,21 +135,50 @@ protected:
     //전송을 시작할 유닛 리스트들을 pop하는 프로세스
     virtual QSharedPointer<Cuma_Main> f_pop_unit();
 
-    //유닛들의 핑을 전송해서 리턴된 핑의 딜레이 타임 재는 프로세스
+    //모든 유닛들의 핑을 전송해서 리턴된 핑의 딜레이 탐색 프로세스
     virtual int f_send_ping_to_unit(uint32_t limit_time);
 
-private:
-    //Cuma_File 애트리뷰트
-    QSharedPointer<Cuma_File> m_File;
+    //수신 json로그 저장 프로세스
+    virtual void f_save_recv_json_report(QJsonValue protocol);
 
+    //송신 json로그 저장 프로세스
+    virtual void f_save_send_json_report(QJsonValue protocol);
+
+
+    //서버 Area
+protected:
+    // 파일 업로드 프로세스
+    virtual int f_upload_file_frag_to_unit(QJsonObject& o);
+    virtual int f_reply_upload_file_frag_to_unit(QJsonObject& o);
+
+    // 파일 다운로드 프로세스
+    virtual int f_download_file_frag_to_unit(QJsonObject& o);
+    virtual int f_reply_download_file_frag_to_unit(QJsonObject& o);
+
+    // 파일 체크 프로세스
+    virtual int f_check_file_frag_to_unit(QJsonObject& o);
+    virtual int f_reply_check_file_frag_to_unit(QJsonObject& o);
+
+    //바이패스 프로세스
+    virtual int f_over_bypass(QJsonObject& o);
+    //바이패스  초과 프로세스
+    virtual int f_reply_over_bypass_limit(QJsonObject& o);
+
+private:
     //모든유닛들의 delay_time 행렬
     QVector<QVector<uint32_t>> m_Unit_delay_time_array;
 
     //모든 유닛들의 행렬
     QVector<QSharedPointer<Cuma_Main>> m_Cuma_unit_list;
 
+    //핑 타임아웃내의 유닛들의 행렬
+    QVector<QSharedPointer<Cuma_Main>> m_Cuma_unit_inside_timeout_unit_list;
+
     //전송할 유닛들 리스트 (유닛당 전송이 완료가 되면 자동으로 pop함)
     QVector<QSharedPointer<Cuma_Main>> m_Send_Unit_list;
+
+    //Cuma_File 애트리뷰트
+    QSharedPointer<Cuma_File> m_File;
 
     //현재 유닛 pid
     uint32_t m_Pid;
@@ -153,10 +190,13 @@ private:
     QJsonObject m_report_json;
 
     //유닛리스트를 push할때 뮤텍스 locker
-    QMutexLocker m_locker;
+    QMutex m_locker;
 
     //이 유닛이 active했는지 확인함
     bool m_active;
+
+    //유닛의 바이패스 리미트 카운트를 잼
+    static uint32_t m_limit_bypass_count;
 
 };
 class unit_Timer{
@@ -170,17 +210,23 @@ public:
 };
 
 class cuma_protocol{
+
+public:
+    static QJsonObject req_unit_command_protocol(QString command);
+    static QJsonObject req_unit_command_protocol(QString command, uint32_t count);
+    static QJsonObject req_unit_command_protocol(QString command, QString name);
+
 public:
     static QJsonObject req_ping_protocol(uint32_t unit_id, bool is_return = false);
     static QJsonObject req_is_file_exsist_protocol(uint32_t file_frag_index, uint32_t unit_id);
     static QJsonObject req_file_binary_save_protocol(QJsonObject file_binary, uint32_t unit_id);
-    static QJsonObject file_binary_read_protocol(uint32_t file_frag_index, uint32_t unit_id );
+    static QJsonObject req_file_binary_read_protocol(QString binary_name, uint32_t file_frag_index, uint32_t unit_id );
 
 public:
     static QJsonObject reply_ping_protocol(uint32_t unit_id, bool is_return = false);
     static QJsonObject reply_is_file_exsist_protocol(uint32_t file_frag_index, uint32_t unit_id);
-    static QJsonObject reply_file_binary_save_protocol(QJsonObject file_binary, uint32_t unit_id);
-    static QJsonObject reply_file_binary_read_protocol(uint32_t file_frag_index, uint32_t unit_id );
+    static QJsonObject reply_file_binary_save_protocol(QString file_frag_name, uint32_t unit_id);
+    static QJsonObject reply_file_binary_read_protocol(QString file_frag_name, uint32_t file_frag_index, uint32_t unit_id, QByteArray binary );
 
 };
 

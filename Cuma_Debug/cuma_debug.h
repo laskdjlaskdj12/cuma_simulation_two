@@ -8,12 +8,20 @@ class Cuma_Debug
 public:
     Cuma_Debug(QString Debug);
     Cuma_Debug(QString Debug, uint line);
-
     static void show_debug(bool b);
+
+protected:
+    static bool is_show_debug();
 
 private:
     static bool m_show_debug;
 
+};
+
+class Cuma_Debug_protocol: public Cuma_Debug
+{
+public:
+    Cuma_Debug(QJsonObject o, uint32_t pid);
 };
 
 class Cuma_Error
