@@ -486,6 +486,10 @@ int Cuma_Main::f_reply_upload_file_frag_to_unit(QJsonObject &o)
 {
     try
     {
+        //
+        //어디유닛에서 전송을 했는지 적음
+        uint32_t    unit_from = dynamic_cast<uint32_t>(o["From"].toInt());
+        //파일이름을 표시함
         QString     file_name = o["file_name"].toString();
         uint32_t    file_index = (uint32_t)o["file_index"].toInt();
         uint32_t    file_size = (uint32_t)o["file_byte"].toInt();
@@ -503,7 +507,7 @@ int Cuma_Main::f_reply_upload_file_frag_to_unit(QJsonObject &o)
             throw Cuma_Error("f_reply_upload_file_frag_to_unit error frag_index != file_frag.count() : recv frag_index and file_frag_count is not match", __LINE__, m_Pid);
         }
 
-        //리턴된 파일의 바이너리를 읽음
+        //리턴된 파일의 바이너리를 읽고 저장함
         int ret_type = m_File->save_File_Frag(file_frag, file_name, file_index);
 
         //만약 파일이 이미 존재할경우 continue함
@@ -511,6 +515,9 @@ int Cuma_Main::f_reply_upload_file_frag_to_unit(QJsonObject &o)
         {
             continue;
         }
+
+        //리턴함
+        return;
     }
     catch(Cuma_Error& e)
     {
