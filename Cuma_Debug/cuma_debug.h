@@ -27,7 +27,7 @@ public:
 class Cuma_Error
 {
 public:
-    Cuma_Error(QString Error, uint line, uint32_t pid);
+    Cuma_Error(QString Error, uint line, uint32_t pid = 0);
 
     void show_error_string();
 

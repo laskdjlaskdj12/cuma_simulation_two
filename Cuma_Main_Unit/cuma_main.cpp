@@ -3,6 +3,8 @@
 Cuma_Main::Cuma_Main(QObject *parent) : QObject(parent), redirect(0)
 {
 
+    m_File = new Cuma_File;
+
     //stop 시그널을 바인딩함
     connect(this, SIGNAL(s_stop_unit()), this, SLOT(sl_stop_unit()));
 
@@ -75,9 +77,9 @@ void Cuma_Main::mf_set_active(bool b)
     m_active = b;
 }
 
-int Cuma_Main::set_file_name(QString f_name)
+int Cuma_Main::mf_command_set_file_name(QString f_name)
 {
-
+    m_File->set_File_Name(f_name);
 }
 
 int Cuma_Main::mf_command_ping_test()
@@ -138,57 +140,71 @@ void Cuma_Main::sl_start_command_signal(const QJsonObject command)
 
     try
     {
-        /*//유닛에게 핑을 전송하여 해당 유닛들이 반응을 하는지 체크함
-        foreach (QSharedPointer<Cuma_Main> unit, m_Cuma_unit_list) {
-
-            //모든 유닛들에게 ping 프로토콜을 전송함
-            emit unit->s_recv(cuma_protocol::req_ping_protocol(m_Pid));
-        }
-
-        Cuma_Debug("check unit_list delay_time");
-        //저장되어있는 유닛리스트의 delay time을 체크함
-        f_send_ping_to_unit(m_ping_limit);
-
-        Cuma_Debug("read file_binary");
-        //파일의 바이너리를 읽음
-
-        //파일바이너리 읽기가 실패할 경우 파일 에러 메세지를 읽어서 throw함
-        m_File->set_read_file_name(file_name);
-        m_File->read_and_fragment();
-
-        if (m_File->read_and_fragment() < 0){ throw Cuma_Error("Error of file_binary_read :" + m_File->mf_get_file_error_string(), __LINE__, m_Pid);}
-
-        Cuma_Debug("frag the file");
-        //파일 바이너리를 파편화 시킴
-        if(f_fragment_file(file_) < 0){ throw Cuma_Error("Error of file_binary_fragment :" + m_File->mf_get_file_error_string(), __LINE__, m_Pid);}
-
-        //바이너리 파편화를 가지고 옴
-        QVector<QByteArray> t_file_frag_binary = m_File->get_all_fragment_file();
-
-        Cuma_Debug("check valid file_frag");
-        //file이 valid 한지 확인
-        if(t_file_frag_binary.count() == 0){ throw Cuma_Error("File_frag_binary has no frag");}
-
-        //파편화를 모든 유닛들에게 전송함
-        for(uint32_t i = 0; i < m_Cuma_unit_inside_timeout_unit_list.count(); i++)
+        //커맨드에 있는 파라미터를 나열하기
+        if(command["command_set_file_name"].isNull() == false)
         {
+            //읽을 파일이름이 세팅이 되어있으면 현재 유닛의 읽을 파일 이름을 세팅
+            QString f_name = command ["command_set_file_name"].toString();
 
-            QJsonObject obj;
-            obj["file_binary"] = t_file_frag_binary[i];
-            obj["file_frag_index"] = (i % m_File->get_frag_count());
-            obj["file_name"] = filename;
-
-            //디버그 출력
-            Cuma_Debug(QJsonDocument(obj).toJson().toStdString());
-
-            //obj을 유닛에게 전송함
-            m_Cuma_unit_inside_timeout_unit_list[i]->s_recv(cuma_protocol::req_file_binary_save_protocol(obj, m_Pid));
+            //커맨드를 실행함 만약 리턴값이 -1일경우 Cuma_Error를 Emit함
+            if( mf_command_set_file_name(f_name) < 0)
+            {
+                throw Cuma_Error("mf_command_set_file_name is error", __LINE__, m_Pid);
+            }
         }
 
-        //전송 완료 디버그 메세지 출력
-        Cuma_Debug("spread signal compolete");
+        //바이패스 카운트를 세팅함
+        if(command["command_set_unit_bypass_count"].isNull() == false)
+        {
+            m_limit_bypass_count = command["command_set_unit_bypass_count"].toInt();
 
-        return 0;*/
+            if (mf_command_set_unit_bypass_count(m_limit_bypass_count) < 0)
+            {
+                throw Cuma_Error("mf_command_set_unit_bypass_count is error", __LINE__, m_Pid);
+            }
+        }
+
+        //커맨드가 있는지 확인함
+
+        //모든 유닛의 ping을 스크리밍 하는 테스트
+        if(command["command_ping_test"].isNull() == false)
+        {
+            //ping 커맨드를 실행함
+            if(mf_command_ping_test() < 0)
+            {
+                throw Cuma_Error("mf_command_ping_test is error", __LINE__, m_Pid);
+            }
+        }
+
+        //이 유닛에게 파일을 spread 하는 테스트
+        if(command["command_spread_test"].isNull() == false)
+        {
+            //ping 커맨드를 실행함
+            if(mf_command_spread_test() < 0)
+            {
+                throw Cuma_Error("mf_command_spread_test is error", __LINE__, m_Pid);
+            }
+        }
+
+        //이유닛에게 파일을 요청하는 메인 유닛
+        if(command["command_rq_file"].isNull() == false)
+        {
+            //ping 커맨드를 실행함
+            if(mf_command_req_file_test() < 0)
+            {
+                throw Cuma_Error("mf_command_spread_test is error", __LINE__, m_Pid);
+            }
+        }
+
+        //이 유닛이 파일 track 의 메인 유닛
+        if(command["command_trace_pass"].isNull() == false)
+        {
+            //ping 커맨드를 실행함
+            if(mf_command_trace_pass_test() < 0)
+            {
+                throw Cuma_Error("mf_command_spread_test is error", __LINE__, m_Pid);
+            }
+        }
     }
     catch(Cuma_Error& e)
     {
@@ -262,7 +278,7 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
                 if( rcv_unit_id != m_Pid)
                 {
 
-                   //프로토콜에 명시된 다음 바이패스로 전달함
+                    //프로토콜에 명시된 다음 바이패스로 전달함
                     f_over_bypass(o);
                 }
 
@@ -307,7 +323,7 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
             else
             {
                 //핑을 전송한 유닛의 shared_Pointer를 찾음
-               QSharedPointer<Cuma_Main> temp_main =  m_Cuma_unit_list[o["pid"].toInt();]
+                QSharedPointer<Cuma_Main> temp_main =  m_Cuma_unit_list[o["pid"].toInt();]
 
                 //m_Cuma_unit_list에 추가함
                 m_Cuma_unit_inside_timeout_unit_list.append(temp_main);
@@ -468,8 +484,39 @@ int Cuma_Main::f_upload_file_frag_to_unit(QJsonObject &o)
 
 int Cuma_Main::f_reply_upload_file_frag_to_unit(QJsonObject &o)
 {
-    //리턴된 파일의 바이너리를 읽음
-    m_File->read_file_frag(o["file_binary"].toString(), dynamic_cast<uint32_t>(o["file_index"].toInt()) );
+    try
+    {
+        QString     file_name = o["file_name"].toString();
+        uint32_t    file_index = (uint32_t)o["file_index"].toInt();
+        uint32_t    file_size = (uint32_t)o["file_byte"].toInt();
+        QString     frag_string = o["file_frag"].toString();
+        QByteArray  file_frag(frag_string.constData(), frag_index);
+
+        //디버그 표시
+        Cuma_Debug("f_reply_upload_file_frag_to_unit", __LINE__);
+        Cuma_Debug("File_Frag_size : " + QString::number(file_size), __LINE__);
+        Cuma_Debug("File_Frag_info : ", + "size : " + QString::number(file_frag.count()), __LINE__);
+
+        //만약 frag인덱스와 file_frag의 사이즈가 안맞을 경우 예외 처리 보냄
+        if(frag_index != file_frag.count())
+        {
+            throw Cuma_Error("f_reply_upload_file_frag_to_unit error frag_index != file_frag.count() : recv frag_index and file_frag_count is not match", __LINE__, m_Pid);
+        }
+
+        //리턴된 파일의 바이너리를 읽음
+        int ret_type = m_File->save_File_Frag(file_frag, file_name, file_index);
+
+        //만약 파일이 이미 존재할경우 continue함
+        if( ret_type == Cuma_File::Cuma_File_Status::C_F_Exsist)
+        {
+            continue;
+        }
+    }
+    catch(Cuma_Error& e)
+    {
+        e.show_error_string();
+        return -1;
+    }
 }
 
 int Cuma_Main::f_download_file_frag_to_unit(QJsonObject &o)
@@ -509,20 +556,12 @@ int Cuma_Main::f_reply_download_file_frag_to_unit(QJsonObject &o)
 
 int Cuma_Main::f_check_file_frag_to_unit(QJsonObject &o)
 {
-    /*//만약 파일이 없다면 연결된 다른 유닛들에게 요청된 파일을 읽을 명령을 전송함
-    if(frag_binary == nullptr)
-    {
-        //저장된 유닛 리스트들 중 현재 자기가 가지고 있는 다른 유닛에게 파일을 요청하고 리턴함
-        emit req_unit->s_recv(cuma_protocol::reply_file_binary_read_protocol ( o["file_name"].toString(), o["file_index"].toInt(), m_Pid, false, nullptr ) );
-    }
 
-    //만약 파일 바이너리가 있을경우 파일 바이너리의 이름, index, QByteArray를 전송함
-    emit req_unit->s_recv(cuma_protocol::reply_file_binary_read_protocol ( o["file_name"].toString(), o["file_index"].toInt(), m_Pid, true, frag_binary ) );*/
 }
 
 int Cuma_Main::f_reply_check_file_frag_to_unit(QJsonObject &o)
 {
-
+    o[""]
 }
 
 int Cuma_Main::f_over_bypass(QJsonObject &o)

@@ -15,7 +15,7 @@ void Cuma_Debug::show_debug(bool b)
 
 }
 
-Cuma_Error::Cuma_Error(QString Error, uint line, uint32_t pid)
+Cuma_Error::Cuma_Error(QString Error, uint line, uint32_t pid = 0)
 {
 
 }
