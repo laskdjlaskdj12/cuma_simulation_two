@@ -66,6 +66,7 @@ public:
     void mf_set_active(bool);
 
     //유닛을 제어하는 노드에서 커맨드 함수
+    //Client 영역
 protected:
     //유닛이 읽을 파일 이름
     virtual int mf_command_set_file_name(QString f_name);
@@ -82,7 +83,7 @@ protected:
     //이 유닛이 파일 요청의 메인 유닛
     virtual int mf_command_req_file_test();
 
-    //이 유닛이 파일 track의 메인 유닛
+    //이 유닛이 파일 track의 메인 유닛 (반드시 자기자신이 bypass_limit_count이고 프로토콜 전송하기전에 -1를 할것)
     virtual int mf_command_trace_pass_test();
 
 
@@ -148,25 +149,25 @@ protected:
 protected:
     // 파일 업로드 프로세스
     // (유닛으로부터 파일 frag 업로드 명령이 왔을시)
-    virtual int f_upload_file_frag_to_unit(QJsonObject& o);
-    virtual int f_reply_upload_file_frag_to_unit(QJsonObject& o);
+    virtual int f_upload_file_frag_to_unit(QJsonObject o);
+    virtual int f_reply_upload_file_frag_to_unit(QJsonObject o);
 
     // 파일 다운로드 프로세스
     // (유닛으로부터 파일 frag 를 저장 하라는 명령이 왔을시)
-    virtual int f_download_file_frag_to_unit(QJsonObject& o);
-    virtual int f_reply_download_file_frag_to_unit(QJsonObject& o);
+    virtual int f_download_file_frag_to_unit(QJsonObject o);
+    virtual int f_reply_download_file_frag_to_unit(QJsonObject o);
 
     // 파일 체크 프로세스
     // (바이패스를 같이 포함함)
-    virtual int f_check_file_frag_to_unit(QJsonObject& o);
-    virtual int f_reply_check_file_frag_to_unit(const QJsonObject& o);
+    virtual int f_check_file_frag_to_unit(QJsonObject o);
+    virtual int f_reply_check_file_frag_to_unit(const QJsonObject o);
 
     //바이패스 프로세스
     // (모든 유닛에게 받은 QJsonObject를 전송하는 역활)
-    virtual int f_over_bypass(QJsonObject& o);
+    virtual int f_over_bypass(QJsonObject o);
     //바이패스  초과 프로세스
     // (유닛에게 리플라이가 오는 역활을 함)
-    virtual int f_reply_over_bypass_limit(QJsonObject& o);
+    virtual int f_reply_over_bypass_limit(QJsonObject o);
 
 private:
     //모든유닛들의 delay_time 행렬
@@ -201,6 +202,10 @@ private:
 
     //유닛의 바이패스 리미트 카운트를 잼
     static uint32_t m_limit_bypass_count;
+
+    //유닛의 바이패스 주소 저장
+    //QMap<QString, QList<uint32_t, QVector<uint32_t>>> file_frag_bypass_address;
+
 
 };
 class unit_Timer{
