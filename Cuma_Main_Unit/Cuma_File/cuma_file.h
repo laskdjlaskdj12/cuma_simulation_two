@@ -38,6 +38,8 @@ public:
     virtual QByteArray get_File_Frag_By_Index(uint32_t index);
     virtual QSharedPointer<Cuma_File> get_Cuma_File_Object();
 
+    virtual bool find_file_frag(QString file_name, uint32_t index);
+
 protected:
     virtual int mf_Read_File();
     virtual int mf_Make_Frag();

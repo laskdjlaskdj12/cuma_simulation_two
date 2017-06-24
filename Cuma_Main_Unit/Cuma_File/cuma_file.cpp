@@ -201,6 +201,11 @@ QSharedPointer<Cuma_File> Cuma_File::get_Cuma_File_Object()
     return this;
 }
 
+bool Cuma_File::find_file_frag(QString file_name, uint32_t index)
+{
+
+}
+
 int Cuma_File::mf_Read_File()
 {
     try
