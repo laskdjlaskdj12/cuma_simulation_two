@@ -204,7 +204,7 @@ private:
     static uint32_t m_limit_bypass_count;
 
     //유닛의 바이패스 주소 저장
-    //QMap<QString, QList<uint32_t, QVector<uint32_t>>> file_frag_bypass_address;
+    QMap<QString, QList<uint32_t, QVector<uint32_t>>> m_file_frag_address;
 
 
 };
