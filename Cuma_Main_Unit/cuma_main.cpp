@@ -140,7 +140,7 @@ int Cuma_Main::mf_command_spread_test()
         m_file_info_block[m_File->get_File_Name()] = file_info_block;
 
         //파일 유닛들의 send info 저장함
-         QMap<uint32_t, QVector<uint32_t>> file_save_unit;
+        QMap<uint32_t, QVector<uint32_t>> file_save_unit;
 
         //파일 파편화를 모든 유닛들에게 전송함
         foreach(QSharedPointer<Cuma_Main>& p, m_Cuma_unit_unit_list)
@@ -178,73 +178,106 @@ int Cuma_Main::mf_command_spread_test()
 int Cuma_Main::mf_command_req_file_test()
 {
 
-    //읽을 바이패스 파일의 블록을 저장할 리스트
-    QVector<uint32_t> prepare_read_frag_index;
+    try{
 
-    QJsonObject read_list = m_file_info_block[m_File->get_File_Name()];
+        //file_frag_address의 블록이 이미 있을때 해당 유닛에게 블록을 읽는 커맨드
+        //반드시 파일별 m_file_frag_address가 미리 있어야함
 
-    uint32_t read_list_count = dynamic_cast<uint32_t> (read_list["file_index"].toInt());
+        //읽을 바이패스 파일의 블록을 저장할 리스트
+        QVector<uint32_t> req_file_frag_index;
 
-    //해당 파일 블록이 있는지 체크함
-     QMap<uint32_t, QVector<uint32_t>>& file_block_list = m_file_frag_address[m_File->get_File_Name()];
+        QJsonObject read_list = m_file_info_block[m_File->get_File_Name()];
 
-    for(uint32_t i = 0; i < read_list_count ; i++)
-    {
-       QVector<uint32_t> unit_list = file_block_list[i];
-       if ( unit_list.isEmpty() == true)
-       {
-           //읽을 파일블록 인덱스를 read_list에 넣음
-           prepare_read_frag_index.append(i);
-       }
+        uint32_t read_list_count = dynamic_cast<uint32_t> (read_list["file_index"].toInt());
+
+        //해당 파일 블록이 있는지 체크함
+        QMap<uint32_t, QVector<uint32_t>>& file_block_list = m_file_frag_address[m_File->get_File_Name()];
+
+        //frag_index별로 유닛 벡터에 유닛들이 있는지 확인함
+        for(uint32_t i = 0; i < read_list_count ; i++)
+        {
+            QVector<uint32_t> unit_list = file_block_list[i];
+
+            if ( unit_list.isEmpty() == true)
+            {
+                //읽을 파일블록 인덱스를 read_list에 넣음
+                req_file_frag_index.append(i);
+            }
+        }
+
+        //만약 읽을 파일 address가 없을경우 Cuma_Error를 리턴함
+        if(req_file_frag_index.isEmpty() == false)
+        {
+            throw Cuma_Error("mf_command_req_file_test : Need to read All File_Block", __LINE__, m_Pid);
+        }
+
+        //파일 address에 적혀있는 유닛들에게 전송함
+        for(uint32_t i = 0; i < read_list_count ; i++)
+        {
+            QVector<uint32_t>& unit_list = file_block_list[i];
+
+            QSharedPointer<Cuma_Main>& ready_send_unit = f_find_unit_from_inside_timeout_unit(unit_list);
+
+            //요청 프로토콜을 unit에게 전송함
+            emit ready_send_unit->s_recv(cuma_protocol::req_file_binary_read_protocol(m_File->get_File_Name(),
+                                                                                      req_file_frag_index[i],
+                                                                                      m_Pid));
+        }
+
+        uint32_t timeout_t = 0;
+        do
+        {
+            //타임아웃이 될때까지 wait
+            QThread::wait(1000);
+            timeout_t ++;
+
+        }while(timeout_t < 10);
+
+        //만약 모든 frag_index의 리스트들이 돌아오지 않았을 경우 Cuma_Error를 리턴함
+        if(file_block_list.count() != read_list_count)
+        {
+            Cuma_Error("all frag_index_list is not complete", __LINE__, m_Pid);
+
+        }
+
+        return 0;
     }
 
-    //만약 파일 블록이 없으면 파일에 대한 인덱스 정보를 불러옴
-
-    uint32_t frag_index = 0;
-
-    //유닛들에게 파일이 있는지 체크 프로세스를 실행함
-    foreach(QSharedPointer<Cuma_Main>& p, m_Cuma_unit_inside_timeout_unit_list)
+    catch(Cuma_Error& e)
     {
-        //유닛들에게 파일업로드 프로토콜을 전송함
-        emit p->s_recv(cuma_protocol::req_file_binary_read_protocol(m_File->get_File_Name(),
-                                                                    prepare_read_frag_index[frag_index],
-                                                                    m_Pid));
-
-        //해당 인덱스를 pop함
-        prepare_read_frag_index.remove(frag_index);
-
-        //인덱스를 ++함
-        frag_index++;
-    }
-
-    //유닛들의 frag_address을 체크함
-    for(uint32_t i = 0; i < read_list_count ; i++)
-    {
-        //해당 frag인덱스들이 비어있는지 체크함
-       QVector<uint32_t> unit_list = file_block_list[i];
-       if ( unit_list.isEmpty() == true)
-       {
-           //읽을 파일블록 인덱스를 read_list에 넣음
-           prepare_read_frag_index.append(i);
-       }
-    }
-
-    //만약 frag_address의 인덱스들이 모이지 않았다면 -1를 리턴함
-    if(frag_index != 0)
-    {
+        e.show_error_string();
         return -1;
     }
-
-    return 0;
 }
 
 int Cuma_Main::mf_command_trace_pass_test()
 {
-    //frag_addres에 있는 유닛들에게 바이패스 리퀘스트 하는 테스트
-    m_file_frag_address[m_File->get_File_Name()]
-    //다른 유닛에게 파일을 읽히고 자신의 유닛에게 해당 유닛까지 도달하는데 가장 적은 시간을 가지는 테스트
+    //모든 유닛들에게 파일이 있는지 체크를 하는 실험
 
+    //frag_address을 전부 flush함
+    m_file_frag_address[m_File->get_File_Name()].clear();
 
+    //모든 유닛에게 파일 메타데이터 인덱스를 요청함
+    foreach(QSharedPointer<Cuma_Main>& p, m_Cuma_unit_inside_timeout_unit_list)
+    {
+       emit p->s_recv(cuma_protocol::req_is_file_exsist_protocol(m_File->get_File_Name(), m_Pid));
+    }
+
+    //파일 메타데이터 인덱스가 도착했는지 체크함
+    if(m_file_info_block[m_File->get_File_Name()].isEmpty())
+    {
+        throw Cuma_Error("Can't find any File_index");
+    }
+
+    //인덱스가 도착했으면 인덱스를 읽어서 is_file_frag_exsist 프로토콜로 파일frag를 체크함
+
+    for(uint32_t frag_index = 0;
+        frag_index < m_file_info_block[m_File->get_File_Name()]["file_frag_count"].toInt();
+        frag_index++)
+    {
+        //is_file_exsist_protocol을 모든 유닛에게 전송
+            emit p->s_recv(cuma_protocol::req_is_file_exsist_protocol(frag_index, m_Pid));
+    }
 }
 
 void Cuma_Main::mf_command_set_unit_bypass_count(uint32_t count)
@@ -859,7 +892,7 @@ int Cuma_Main::f_reply_check_file_frag_to_unit(QJsonObject o)
                     }
 
                     //path_unit_block을 frag_address 저장함
-                     QMap<uint32_t, QVector<uint32_t>> frag_index_address;
+                    QMap<uint32_t, QVector<uint32_t>> frag_index_address;
                     frag_index_address[dynamic_cast<uint32_t>(o["file_index"].toInt())] = path_unit_block;
 
                     //m_file_frag_address 저장함
@@ -870,7 +903,7 @@ int Cuma_Main::f_reply_check_file_frag_to_unit(QJsonObject o)
                 else
                 {
                     //못찾은 경우로 해당 frag_index에 0을 저장함
-                     QMap<uint32_t, QVector<uint32_t>> frag_index_address;
+                    QMap<uint32_t, QVector<uint32_t>> frag_index_address;
                     frag_index_address[dynamic_cast<uint32_t>(o["file_index"].toInt())] = 0;
 
                     //m_file_frag_address 저장함
@@ -894,7 +927,7 @@ int Cuma_Main::f_reply_check_file_frag_to_unit(QJsonObject o)
             //만약 파일이 있으면 해당파일을 m_file_frag_address에 저장함
             if (o["exsist"].toBool() == true)
             {
-                 QMap<uint32_t, QVector<uint32_t>> frag_index_address;
+                QMap<uint32_t, QVector<uint32_t>> frag_index_address;
 
                 frag_index_address[dynamic_cast<uint32_t>(o["file_index"].toInt())] = dynamic_cast<uint32_t>(o["From"].toInt());
 
@@ -906,7 +939,7 @@ int Cuma_Main::f_reply_check_file_frag_to_unit(QJsonObject o)
             else
             {
                 //못찾은 경우로 해당 frag_index에 0을 저장함
-                 QMap<uint32_t, QVector<uint32_t>> frag_index_address;
+                QMap<uint32_t, QVector<uint32_t>> frag_index_address;
                 frag_index_address[dynamic_cast<uint32_t>(o["file_index"].toInt())] = 0;
 
                 //m_file_frag_address 저장함
@@ -1054,6 +1087,11 @@ QJsonObject cuma_protocol::req_ping_protocol(uint32_t unit_id, bool is_return)
 }
 
 QJsonObject cuma_protocol::req_is_file_exsist_protocol(uint32_t file_frag_index, uint32_t unit_id)
+{
+
+}
+
+QJsonObject cuma_protocol::req_is_file_exsist_protocol(QString f_name, uint32_t unit_id, bool req_file_index)
 {
 
 }

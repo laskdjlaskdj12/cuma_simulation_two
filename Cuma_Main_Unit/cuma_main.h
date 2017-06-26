@@ -3,6 +3,8 @@
 
 #include <QObject>
 #include <QVector>
+#include <QMap>
+#include <QList>
 #include <QTime>
 #include <QTimer>
 #include <QThread>
@@ -174,6 +176,13 @@ protected:
     // (유닛에게 리플라이가 오는 역활을 함)
     virtual int f_reply_over_bypass_limit(QJsonObject o);
 
+
+    //유닛들에게 적용되는 툴
+protected:
+    virtual QSharedPointer<Cuma_Main> f_find_unit_from_inside_timeout_unit(uint32_t unit_id);
+
+    virtual QSharedPointer<Cuma_Main> f_find_unit_from_Cuma_unit_list(uint32_t unit_id);
+
 private:
     //모든유닛들의 delay_time 행렬
     QVector<QVector<uint32_t>> m_Unit_delay_time_array;
@@ -239,6 +248,7 @@ public:
 public:
     static QJsonObject req_ping_protocol(uint32_t unit_id, bool is_return = false);
     static QJsonObject req_is_file_exsist_protocol(uint32_t file_frag_index, uint32_t unit_id);
+    static QJsonObject req_is_file_exsist_protocol(QString f_name, uint32_t unit_id, bool req_file_index = true);
     static QJsonObject req_file_binary_save_protocol(QJsonObject file_binary, uint32_t unit_id);
     static QJsonObject req_file_binary_read_protocol(QString binary_name, uint32_t file_frag_index, uint32_t unit_id );
 
