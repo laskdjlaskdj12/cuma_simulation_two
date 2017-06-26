@@ -1,4 +1,4 @@
-QT += core network sql
+QT += core network sql testlib
 QT -= gui
 
 CONFIG += c++11
@@ -14,7 +14,11 @@ SOURCES += main.cpp \
     Cuma_Main_Unit/Cuma_File/cuma_file.cpp \
     Cuma_Unit_Base/cuma_unit_base.cpp \
     Test/cuma_main_unit_test.cpp \
-    Cuma_Debug/cuma_debug.cpp
+    Cuma_Debug/cuma_debug.cpp \
+    Cuma_Main_Unit/Cuma_Peer_Server/cuma_peer_server.cpp \
+    Cuma_Main_Unit/Cuma_Peer_Client/cuma_peer_client.cpp \
+    Cuma_Main_Unit/Cuma_Peer_Protocol/cuma_peer_protocol.cpp \
+    Test/cuma_file_test.cpp
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked deprecated (the exact warnings
@@ -32,4 +36,8 @@ HEADERS += \
     Cuma_Main_Unit/Cuma_File/cuma_file.h \
     Cuma_Unit_Base/cuma_unit_base.h \
     Test/cuma_main_unit_test.h \
-    Cuma_Debug/cuma_debug.h
+    Cuma_Debug/cuma_debug.h \
+    Cuma_Main_Unit/Cuma_Peer_Server/cuma_peer_server.h \
+    Cuma_Main_Unit/Cuma_Peer_Client/cuma_peer_client.h \
+    Cuma_Main_Unit/Cuma_Peer_Protocol/cuma_peer_protocol.h \
+    Test/cuma_file_test.h

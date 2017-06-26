@@ -15,6 +15,11 @@
 #include "Cuma_File/cuma_file.h"
 #include "../Cuma_Debug/cuma_debug.h"
 
+//소스를 분활하기 위한 프랜드
+#include "Cuma_Peer_Protocol/cuma_peer_protocol.h"
+#include "Cuma_Peer_Client/cuma_peer_client.h"
+#include "Cuma_Peer_Server/cuma_peer_server.h"
+
 class Cuma_Unit :public QObject
 {
     Q_OBJECT
@@ -149,12 +154,12 @@ protected:
 protected:
     // 파일 업로드 프로세스
     // (유닛으로부터 파일 frag 업로드 명령이 왔을시)
-    virtual int f_upload_file_frag_to_unit(QJsonObject o);
+    virtual int f_upload_file_frag_from_unit(QJsonObject o);
     virtual int f_reply_upload_file_frag_to_unit(QJsonObject o);
 
     // 파일 다운로드 프로세스
     // (유닛으로부터 파일 frag 를 저장 하라는 명령이 왔을시)
-    virtual int f_download_file_frag_to_unit(QJsonObject o);
+    virtual int f_download_file_frag_from_unit(QJsonObject o);
     virtual int f_reply_download_file_frag_to_unit(QJsonObject o);
 
     // 파일 체크 프로세스
@@ -203,9 +208,15 @@ private:
     //유닛의 바이패스 리미트 카운트를 잼
     static uint32_t m_limit_bypass_count;
 
-    //유닛의 바이패스 주소 저장
-    QMap<QString, QList<uint32_t, QVector<uint32_t>>> m_file_frag_address;
+    //유닛의 file의 메타데이터 인덱스를 저장함
+    QMap<QString, QJsonObject> m_file_info_block;
 
+    //유닛의 frag_address를 저장함
+    QMap<QString, QMap<uint32_t, QVector<uint32_t>>> m_file_frag_address;
+
+    //클라이언트와 서버를 peer로 하는 프로토콜을 만듬
+    friend class Cuma_Peer_Client;
+    friend class Cuma_Peer_Server;
 
 };
 class unit_Timer{

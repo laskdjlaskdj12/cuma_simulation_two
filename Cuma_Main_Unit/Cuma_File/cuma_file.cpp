@@ -201,9 +201,17 @@ QSharedPointer<Cuma_File> Cuma_File::get_Cuma_File_Object()
     return this;
 }
 
-bool Cuma_File::find_file_frag(QString file_name, uint32_t index)
+QByteArray Cuma_File::get_File_binary()
 {
+    return m_File_Binary;
+}
 
+int Cuma_File::read_file_frag(QString file_name, uint32_t index)
+{
+    m_File_Name = file_name;
+    m_File_Frag_Index = index;
+
+    return read_file_frag(file_name, index);
 }
 
 int Cuma_File::mf_Read_File()
@@ -236,6 +244,45 @@ int Cuma_File::mf_Read_File()
     {
         e.show_error_string();
         return Cuma_File_Status::C_F_error;
+    }
+}
+
+int Cuma_File::mf_Read_File_Frag()
+{
+    try{
+
+        if (m_Dir.cd("Cuma_Frag_dir") == false)
+        {
+            throw Cuma_File_Status::C_F_Dir_Not_Open;
+        }
+
+        m_File.setFileName(m_File_Name + QString::number(m_File_Frag_Index));
+
+        if(m_File.open(QFile::ReadOnly) < 0)
+        {
+            throw m_File.error();
+        }
+
+        m_File_Binary =  m_File.readAll();
+
+        if(m_File_Binary.isEmpty())
+        {
+            throw m_File.error();
+        }
+
+        return 0;
+    }
+    catch(QFile::FileError& e)
+    {
+        qDebug()<<e.errorString();
+
+        if(e == QFile::FileError::NotOpen){ return Cuma_File_Status::C_F_not_open;}
+        else if(e == QFile::FileError::OpenError){ return Cuma_File_Status::C_F_Dir_Not_Open;}
+        else { return -1;}
+    }
+    catch(Cuma_File::Cuma_File_Status& e)
+    {
+        return e;
     }
 }
 
@@ -321,7 +368,8 @@ int Cuma_File::mf_Save_by_Frag(QVector<QByteArray> f_frag, QString f_name, uint3
 
         if(frag_dir.cd("Cuma_Frag_dir") == false)
         {
-            throw Cuma_Error("Can't open Cuma_Frag_Dir", __LINE__);
+            //Cuma_Frag_dir를 만듬
+            if (frag_dir.mkdir("Cuma_Frag_dir") < 0){   throw Cuma_Error("Can't open Cuma_Frag_Dir", __LINE__);}
         }
 
         for(int i = 0; i < f_frag.count(); i++)
@@ -373,8 +421,8 @@ int Cuma_File::mf_Save_by_File(QString file_name)
         //Cuma_Frag_dir로 디렉토리를 변경
         if(frag_dir.cd("Cuma_Frag_dir") == false)
         {
-            //만약 없으면 Exception을 리턴
-            throw Cuma_Error("Can't open Cuma_Frag_Dir", __LINE__);
+            //Cuma_Frag_dir를 만듬
+            if (frag_dir.mkdir("Cuma_Frag_dir") < 0){   throw Cuma_Error("Can't open Cuma_Frag_Dir", __LINE__);}
         }
 
         //Cuma_Frag_dir의 디렉토리에 파일이름을 생성 f_name + 인덱스 이터레이션

@@ -9,6 +9,7 @@
 #include <QJsonDocument>
 #include <QByteArray>
 #include <QSharedPointer>
+#include <QMutex>
 #include "../../Cuma_Debug/cuma_debug.h"
 
 class Cuma_File : public QObject
@@ -20,6 +21,7 @@ public:
         C_F_error = -1,
         C_F_not_open = -2,
         C_F_Exsist = -3,
+        C_F_Dir_Not_Open = -4,
         C_F_no_err = 0
     };
 
@@ -37,11 +39,13 @@ public:
     virtual QVector<QByteArray> get_File_Frag();
     virtual QByteArray get_File_Frag_By_Index(uint32_t index);
     virtual QSharedPointer<Cuma_File> get_Cuma_File_Object();
+    virtual QByteArray get_File_binary();
 
-    virtual bool find_file_frag(QString file_name, uint32_t index);
+    virtual int read_file_frag(QString file_name, uint32_t index);
 
 protected:
     virtual int mf_Read_File();
+    virtual int mf_Read_File_Frag();
     virtual int mf_Make_Frag();
     virtual int mf_Save_by_Frag();
     virtual int mf_Save_by_Frag(QVector<QByteArray> frag, QString name, uint32_t index = NULL);
@@ -57,6 +61,10 @@ private:
     QByteArray m_File_Binary;
     QFile m_File;
     QDir m_Dir;
+
+private:
+    static QMutex m_Mutex;
+
 
 };
 
