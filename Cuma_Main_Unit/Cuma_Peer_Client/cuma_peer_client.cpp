@@ -113,7 +113,7 @@ int Cuma_Main::mf_command_req_file_test()
 
         QJsonObject read_list = m_file_info_block[m_File->get_File_Name()];
 
-        uint32_t read_list_count = dynamic_cast<uint32_t> (read_list["file_index"].toInt());
+        uint32_t read_list_count = static_cast<uint32_t> (read_list["file_index"].toInt());
 
         //해당 파일 블록이 있는지 체크함
         QMap<uint32_t, QVector<uint32_t>>& file_block_list = m_file_frag_address[m_File->get_File_Name()];

@@ -196,7 +196,7 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
         f_save_recv_json_report(o);
 
         //pid로 유닛객체를 받음
-        QSharedPointer<Cuma_Main> send_unit = m_Cuma_unit_list[dynamic_cast<uint32_t>(o["pid"].toInt())];
+        QSharedPointer<Cuma_Main> send_unit = m_Cuma_unit_list[static_cast<uint32_t>(o["pid"].toInt())];
 
         //파일 frag 저장일경우
         if (o["proecess"].toString() == "save")
@@ -238,7 +238,7 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
             //만약 응답 요청일 경우
             else
             {
-                uint32_t rcv_unit_id = dynamic_cast<uint32_t>(o["pid"].toInt());
+                uint32_t rcv_unit_id = static_cast<uint32_t>(o["pid"].toInt());
 
                 //받으려는 유닛이 자기가 아닐경우
                 if ( rcv_unit_id != m_Pid)
@@ -280,7 +280,7 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
             if (o["reply"].toBool() == false)
             {
                 //해당 유닛와의 연결된 시간을 array에서 찾음
-                uint32_t u_delay_time = m_Unit_delay_time_array[m_Pid][dynamic_cast<uint32_t>(o["From"].toInt())];
+                uint32_t u_delay_time = m_Unit_delay_time_array[m_Pid][static_cast<uint32_t>(o["From"].toInt())];
 
                 //ping의 리미트 time대로 sleep을 함
                 QThread::sleep(u_delay_time);
@@ -292,9 +292,9 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
             else
             {
                 //핑을 전송한 유닛의 shared_Pointer를 찾음
-                QSharedPointer<Cuma_Main> temp_main =  m_Cuma_unit_list[dynamic_cast<uint32_t>(o["From"].toInt())];
+                QSharedPointer<Cuma_Main> temp_main =  m_Cuma_unit_list[static_cast<uint32_t>(o["From"].toInt())];
 
-                uint32_t u_ping_time = m_Unit_delay_time_array[m_Pid][dynamic_cast<uint32_t>(o["From"].toInt())];
+                uint32_t u_ping_time = m_Unit_delay_time_array[m_Pid][static_cast<uint32_t>(o["From"].toInt())];
                 //만약 ping이 해당 시간 내에 들어왔다면 추가함
                 if(m_ping_limit < u_ping_time )
                 {

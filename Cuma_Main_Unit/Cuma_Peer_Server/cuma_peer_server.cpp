@@ -5,7 +5,7 @@ int Cuma_Main::f_upload_file_frag_from_unit(QJsonObject o)
     try
     {
         //해당 파일을 요청한 uid의 유닛 포인터를 반환함
-        QSharedPointer<Cuma_Main> req_unit = m_Cuma_unit_inside_timeout_unit_list[dynamic_cast<uint32_t>(o["pid"].toInt())];
+        QSharedPointer<Cuma_Main> req_unit = m_Cuma_unit_inside_timeout_unit_list[static_cast<uint32_t>(o["pid"].toInt())];
 
         //만약 파일을 요청한 uid의 유닛포인터가 m_Cuma_unit_list의 검색에 없을경우 예외처리
         if (req_unit == nullptr)
@@ -32,7 +32,7 @@ int Cuma_Main::f_reply_upload_file_frag_to_unit(const QJsonObject o)
     try
     {
         //유닛의 목적지가 어디인지
-        uint32_t unit_to  =  dynamic_cast<uint32_t>(o["To"].toInt());
+        uint32_t unit_to  =  static_cast<uint32_t>(o["To"].toInt());
 
         uint32_t next_unit_pid = nullptr;
 
@@ -48,7 +48,7 @@ int Cuma_Main::f_reply_upload_file_frag_to_unit(const QJsonObject o)
                 //만약 해당 array가 자기 pid랑 일치할경우 next_unit_pid에 값을 할당함
                 if (bypass_array.at(i).toInt() == m_Pid)
                 {
-                    next_unit_pid = dynamic_cast<uint32_t>(bypass_array[i+1].toInt());
+                    next_unit_pid = static_cast<uint32_t>(bypass_array[i+1].toInt());
                 }
             }
 
@@ -79,7 +79,7 @@ int Cuma_Main::f_reply_upload_file_frag_to_unit(const QJsonObject o)
         else
         {
             //어디유닛에서 전송을 했는지 적음
-            uint32_t    unit_from = dynamic_cast<uint32_t>(o["From"].toInt());
+            uint32_t    unit_from = static_cast<uint32_t>(o["From"].toInt());
 
             //파일이름을 표시함
             QString     file_name = o["file_name"].toString();
@@ -125,7 +125,7 @@ int Cuma_Main::f_download_file_frag_from_unit(QJsonObject o)
     try
     {
         //가지고 온 파일을 저장함
-        if (m_File->save_File_Frag(o["file_frag"].toString().toUtf8(), o["file_name"].toString(), dynamic_cast<uint32_t>(o["file_index"].toInt())) < 0)
+        if (m_File->save_File_Frag(o["file_frag"].toString().toUtf8(), o["file_name"].toString(), static_cast<uint32_t>(o["file_index"].toInt())) < 0)
         {
             Cuma_Debug("Can't open file", __LINE__);
             return 0;
@@ -167,7 +167,7 @@ int Cuma_Main::f_reply_download_file_frag_to_unit(QJsonObject o)
     //reply된 download_frag_file를 체크하고 파일이 저장을 한 유닛의 pid를 File_Frag의 메타데이터에 저장함
     if ( !o["reply"].isNull() && o["reply"].toBool() == true)
     {
-        Cuma_Debug("Unit : " + dynamic_cast<uint32_t>(o["From"].toInt()) + "save file_frag  " + o["file_name"].toString() + ": " + o["file_index"].toInt());
+        Cuma_Debug("Unit : " + static_cast<uint32_t>(o["From"].toInt()) + "save file_frag  " + o["file_name"].toString() + ": " + o["file_index"].toInt());
     }
 
     //만약 아닐경우 error를 출력함(이건 reply중요도가 떨어지기때문에 굳이 exception을 던지지 않음)
@@ -183,7 +183,7 @@ int Cuma_Main::f_check_file_frag_to_unit(QJsonObject o)
     //만약 파일이 없을경우 다른 유닛들에게 파일을 전송하고 reply로 파일이 없고 현재 bypass count대로 탐색중이라는것을 알림
 
     QString req_frag_name = o["file_name"].toString();
-    uint32_t req_frag_index = dynamic_cast<uint32_t>(o["file_index"].toInt());
+    uint32_t req_frag_index = static_cast<uint32_t>(o["file_index"].toInt());
 
     int32_t f_flag = m_File->read_file_frag(req_frag_name, req_frag_index);
 
@@ -254,12 +254,12 @@ int Cuma_Main::f_reply_check_file_frag_to_unit(const QJsonObject o)
                     //bypass_unit_array를 path_unit_block으로 넣음
                     foreach(QJsonValue& e, bypass_unit_array)
                     {
-                        path_unit_block.append(dynamic_cast<uint32_t>(e.toInt()));
+                        path_unit_block.append(static_cast<uint32_t>(e.toInt()));
                     }
 
                     //path_unit_block을 frag_address 저장함
                     QMap<uint32_t, QVector<uint32_t>> frag_index_address;
-                    frag_index_address[dynamic_cast<uint32_t>(o["file_index"].toInt())] = path_unit_block;
+                    frag_index_address[static_cast<uint32_t>(o["file_index"].toInt())] = path_unit_block;
 
                     //m_file_frag_address 저장함
                     m_file_frag_address[o["file_name"].toString()] = frag_index_address;
@@ -270,7 +270,7 @@ int Cuma_Main::f_reply_check_file_frag_to_unit(const QJsonObject o)
                 {
                     //못찾은 경우로 해당 frag_index에 nullptr을 저장함
                     QMap<uint32_t, QVector<uint32_t>> frag_index_address;
-                    frag_index_address[dynamic_cast<uint32_t>(o["file_index"].toInt())] = nullptr;
+                    frag_index_address[static_cast<uint32_t>(o["file_index"].toInt())] = nullptr;
 
                     //m_file_frag_address 저장함
                     m_file_frag_address[o["file_name"].toString()] = frag_index_address;
@@ -295,7 +295,7 @@ int Cuma_Main::f_reply_check_file_frag_to_unit(const QJsonObject o)
             {
                 QMap<uint32_t, QVector<uint32_t>> frag_index_address;
 
-                frag_index_address[dynamic_cast<uint32_t>(o["file_index"].toInt())] = dynamic_cast<uint32_t>(o["From"].toInt());
+                frag_index_address[static_cast<uint32_t>(o["file_index"].toInt())] = static_cast<uint32_t>(o["From"].toInt());
 
                 //m_file_frag_address 저장함
                 m_file_frag_address[o["file_name"].toString()] = frag_index_address;
@@ -306,7 +306,7 @@ int Cuma_Main::f_reply_check_file_frag_to_unit(const QJsonObject o)
             {
                 //못찾은 경우로 해당 frag_index에 0을 저장함
                 QMap<uint32_t, QVector<uint32_t>> frag_index_address;
-                frag_index_address[dynamic_cast<uint32_t>(o["file_index"].toInt())] = 0;
+                frag_index_address[static_cast<uint32_t>(o["file_index"].toInt())] = 0;
 
                 //m_file_frag_address 저장함
                 m_file_frag_address[o["file_name"].toString()] = frag_index_address;
