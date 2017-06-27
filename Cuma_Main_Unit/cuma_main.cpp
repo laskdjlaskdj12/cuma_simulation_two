@@ -441,7 +441,7 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
             if (o["reply"].isNull() == true)
             {
                 //유닛에게 파일 바이너리를 전송함
-                if (f_upload_file_frag_to_unit(o) < 0)
+                if (f_upload_file_frag_from_unit(o) < 0)
                 {
                     throw Cuma_Error("f_reply_check_frag_to_unit_Error", __LINE__, m_Pid);
                 }
@@ -1195,7 +1195,7 @@ QJsonObject cuma_protocol::req_is_file_exsist_protocol(uint32_t file_frag_index,
     return recv_obj;
 }
 
-QJsonObject cuma_protocol::req_is_file_exsist_protocol(QString f_name, uint32_t unit_id, bool req_file_index)
+QJsonObject cuma_protocol::req_is_file_exsist_protocol(QString f_name, uint32_t unit_id, bool req_file_index = true)
 {
 
     QJsonObject recv_obj = basic_protocol(unit_id);
@@ -1203,6 +1203,9 @@ QJsonObject cuma_protocol::req_is_file_exsist_protocol(QString f_name, uint32_t 
     recv_obj["process"] = "check_file";
     recv_obj["index"] = file_frag_index;
     recv_obj["reply"] = req_file_index;
+    recv_obj["file_name"] = f_name;
+    recv_obj["file_index"] = unit_id;
+    recv_obj["file_req"] = req_file_index;
     return recv_obj;
 }
 
