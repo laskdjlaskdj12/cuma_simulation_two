@@ -241,12 +241,15 @@ public:
 class cuma_protocol{
 
 public:
+    static QJsonObject basic_command_protocol(uint32_t From_Pid);
+
+public:
     static QJsonObject req_unit_command_protocol(QString command);
     static QJsonObject req_unit_command_protocol(QString command, uint32_t count);
     static QJsonObject req_unit_command_protocol(QString command, QString name);
 
 public:
-    static QJsonObject req_ping_protocol(uint32_t unit_id, bool is_return = false);
+    static QJsonObject req_ping_protocol(uint32_t unit_id, bool reply = false);
     static QJsonObject req_is_file_exsist_protocol(uint32_t file_frag_index, uint32_t unit_id);
     static QJsonObject req_is_file_exsist_protocol(QString f_name, uint32_t unit_id, bool req_file_index = true);
     static QJsonObject req_file_binary_save_protocol(QJsonObject file_binary, uint32_t unit_id);

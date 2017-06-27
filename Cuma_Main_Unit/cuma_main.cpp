@@ -111,6 +111,7 @@ int Cuma_Main::mf_command_ping_test()
 int Cuma_Main::mf_command_spread_test()
 {
     try{
+
         //ping limit 내의 유닛들이 있는지
         if( ! (m_Cuma_unit_inside_timeout_unit_list.count() > 0))
         {
@@ -225,6 +226,7 @@ int Cuma_Main::mf_command_req_file_test()
         }
 
         uint32_t timeout_t = 0;
+
         do
         {
             //타임아웃이 될때까지 wait
@@ -260,7 +262,7 @@ int Cuma_Main::mf_command_trace_pass_test()
     //모든 유닛에게 파일 메타데이터 인덱스를 요청함
     foreach(QSharedPointer<Cuma_Main>& p, m_Cuma_unit_inside_timeout_unit_list)
     {
-       emit p->s_recv(cuma_protocol::req_is_file_exsist_protocol(m_File->get_File_Name(), m_Pid));
+        emit p->s_recv(cuma_protocol::req_is_file_exsist_protocol(m_File->get_File_Name(), m_Pid));
     }
 
     //파일 메타데이터 인덱스가 도착했는지 체크함
@@ -276,7 +278,7 @@ int Cuma_Main::mf_command_trace_pass_test()
         frag_index++)
     {
         //is_file_exsist_protocol을 모든 유닛에게 전송
-            emit p->s_recv(cuma_protocol::req_is_file_exsist_protocol(frag_index, m_Pid));
+        emit p->s_recv(cuma_protocol::req_is_file_exsist_protocol(frag_index, m_Pid));
     }
 }
 
@@ -416,13 +418,10 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
             if (o["reply"].isNull() == true)
             {
                 //파일 다운로드 프로세스
-                if (f_download_file_frag_to_unit(o) < 0)
+                if (f_download_file_frag_from_unit(o) < 0)
                 {
                     throw Cuma_Error("f_download_file_frag_to_unit is fail", __LINE__, m_Pid);
                 }
-
-                //파일 저장 reply를 전송함
-                emit send_unit->s_recv(cuma_protocol::reply_file_binary_save_protocol(o["file_name"].toString(), m_Pid));
             }
 
             //만약 save의 reply로그가 true일경우 로그에 저장
@@ -456,7 +455,6 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
                 //받으려는 유닛이 자기가 아닐경우
                 if ( rcv_unit_id != m_Pid)
                 {
-
                     //프로토콜에 명시된 다음 바이패스로 전달함
                     f_over_bypass(o);
                 }
@@ -473,7 +471,6 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
         //파일 체크일경우
         else if (o["process"].toString() == "check_file")
         {
-
             //만약 응답 요청이 자기가 아닐경우 파일을 체크해서 리턴함
             if (o["reply"].isNull() == true)
             {
@@ -489,23 +486,37 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
         }
 
         //ping 리턴 메세지일 경우
-        else if (o["process"].toString() == "ping" && o["reply"].isNull() != true)
+        else if (o["process"].toString() == "ping" && o["reply"].isNull() == false)
         {
             //응답 요청일경우 시간에 텀을 두고 reply를 함
-            if (o["reply"].isNull() == true)
+            if (o["reply"].toBool() == false)
             {
+                //해당 유닛와의 연결된 시간을 array에서 찾음
+                uint32_t u_delay_time = m_Unit_delay_time_array[m_Pid][dynamic_cast<uint32_t>(o["From"].toInt())];
 
-                QTimer timer;
-                timer.start();
+                //ping의 리미트 time대로 sleep을 함
+                QThread::sleep(u_delay_time);
+
+                //응답 프로토콜을 건냄
+                emit m_Cuma_unit_list[u_delay_time]->s_recv(cuma_protocol::reply_ping_protocol(m_Pid, true));
             }
             //응답 reply일 경우 전송할 유닛들 리스트에 넣음
             else
             {
                 //핑을 전송한 유닛의 shared_Pointer를 찾음
-                QSharedPointer<Cuma_Main> temp_main =  m_Cuma_unit_list[o["pid"].toInt();]
+                QSharedPointer<Cuma_Main> temp_main =  m_Cuma_unit_list[dynamic_cast<uint32_t>(o["From"].toInt())];
 
-                //m_Cuma_unit_list에 추가함
-                m_Cuma_unit_inside_timeout_unit_list.append(temp_main);
+                uint32_t u_ping_time = m_Unit_delay_time_array[m_Pid][dynamic_cast<uint32_t>(o["From"].toInt())];
+                //만약 ping이 해당 시간 내에 들어왔다면 추가함
+                if(m_ping_limit < u_ping_time )
+                {
+                    continue;
+                }
+                else
+                {
+                    //m_Cuma_unit_list에 추가함
+                    m_Cuma_unit_inside_timeout_unit_list.append(temp_main);
+                }
             }
         }
 
@@ -626,12 +637,22 @@ int Cuma_Main::f_send_ping_to_unit(uint32_t limit_time)
 
 void Cuma_Main::f_save_recv_json_report(QJsonValue e)
 {
+    //타임을 적어서 넣음
+    e["Time"] = unit_Timer::time.elapsed();
 
+    //프로토콜을 recv_arr에 넣음
+    QJsonArray& recv_arr = m_report_json["recv"].toArray();
+    recv_arr.append(e);
 }
 
 void Cuma_Main::f_save_send_json_report(QJsonValue e)
 {
+    //타임을 적어서 넣음
+    e["Time"] = unit_Timer::time.elapsed();
 
+    //프로토콜을 recv_arr에 넣음
+    QJsonArray& send_arr = m_report_json["send"].toArray();
+    send_arr.append(e);
 }
 
 int Cuma_Main::f_upload_file_frag_from_unit(QJsonObject o)
@@ -1068,22 +1089,79 @@ int Cuma_Main::f_reply_over_bypass_limit(QJsonObject o)
 
 QJsonObject cuma_protocol::req_unit_command_protocol(QString command)
 {
+    QJsonObject command_protocol;
+    //만약 커맨드가 set_file_name일때
+    if(command == "set_file_name" || command == "set_bypass_count")
+    {
+        Cuma_Debug("this command is not used in this command");
+        Cuma_Debug("try to use cuma_protocol::req_unit_command_protocol(QString command, uint32_t count)");
+        return nullptr;
+    }
 
+    if(command == "ping")
+    {
+        command_protocol["command_ping_test"] = true;
+    }
+
+    if(command == "spread")
+    {
+        command_protocol["command_spread_test"] = true;
+    }
+
+    if(command == "request")
+    {
+        command_protocol["command_rq_file"] = true;
+    }
+
+    if(command == "track")
+    {
+        command_protocol["command_trace_pass"] = true;
+    }
+
+    else
+    {
+        command_protocol = nullptr;
+    }
+
+    return command_protocol;
 }
 
 QJsonObject cuma_protocol::req_unit_command_protocol(QString command, uint32_t count)
 {
+    QJsonObject command_protocol;
 
+    if(command == "set_file_name")
+    {
+        command_protocol["command_set_unit_bypass_count"] = count;
+    }
+    else
+    {
+        command_protocol = nullptr;
+    }
+    return command_protocol;
 }
 
 QJsonObject cuma_protocol::req_unit_command_protocol(QString command, QString name)
 {
+    QJsonObject command_protocol;
 
+    if(command == "set_file_name")
+    {
+        command_protocol["command_set_file_name"] = name;
+    }
+    else
+    {
+        command_protocol = nullptr;
+    }
+    return command_protocol;
 }
 
-QJsonObject cuma_protocol::req_ping_protocol(uint32_t unit_id, bool is_return)
+QJsonObject cuma_protocol::req_ping_protocol(uint32_t unit_id, bool reply)
 {
+    QJsonObject recv_obj = basic_command_protocol(unit_id);
 
+    recv_obj["process"] = "ping";
+    recv_obj["reply"] = is_return;
 }
 
 QJsonObject cuma_protocol::req_is_file_exsist_protocol(uint32_t file_frag_index, uint32_t unit_id)
