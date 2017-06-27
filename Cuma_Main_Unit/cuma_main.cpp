@@ -148,7 +148,7 @@ int Cuma_Main::mf_command_spread_test()
         {
             //파편화에 대한 json을 만듬
             QJsonObject send_frag_binary;
-            send_frag_binary["file_binary"] = m_File->get_File_Frag_By_Index(i);
+            send_frag_binary["file_frag"] = m_File->get_File_Frag_By_Index(i);
             send_frag_binary["file_name"] = m_File->get_File_Name();
             send_frag_binary["file_index"] = i;
             send_frag_binary["file_info_block"] = file_info_block;
@@ -486,7 +486,7 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
         }
 
         //ping 리턴 메세지일 경우
-        else if (o["process"].toString() == "ping" && o["reply"].isNull() == false)
+        else if (o["process"].toString() == "ping")
         {
             //응답 요청일경우 시간에 텀을 두고 reply를 함
             if (o["reply"].toBool() == false)
@@ -780,7 +780,7 @@ int Cuma_Main::f_download_file_frag_from_unit(QJsonObject o)
     try
     {
         //가지고 온 파일을 저장함
-        if (m_File->save_File_Frag(o["file_binary"].toString(), o["file_name"].toString(), dynamic_cast<uint32_t>(o["file_index"].toInt())) < 0)
+        if (m_File->save_File_Frag(o["file_frag"].toString().toUtf8(), o["file_name"].toString(), dynamic_cast<uint32_t>(o["file_index"].toInt())) < 0)
         {
             Cuma_Debug("Can't open file", __LINE__);
             return 0;
@@ -833,7 +833,7 @@ int Cuma_Main::f_reply_download_file_frag_to_unit(QJsonObject o)
     return 0;
 }
 
-int Cuma_Main::f_check_file_frag_to_unit(QJsonObject &o)
+int Cuma_Main::f_check_file_frag_to_unit(QJsonObject o)
 {
     //만약 파일이 없을경우 다른 유닛들에게 파일을 전송하고 reply로 파일이 없고 현재 bypass count대로 탐색중이라는것을 알림
 
@@ -885,7 +885,7 @@ int Cuma_Main::f_check_file_frag_to_unit(QJsonObject &o)
     return 0;
 }
 
-int Cuma_Main::f_reply_check_file_frag_to_unit(QJsonObject o)
+int Cuma_Main::f_reply_check_file_frag_to_unit(const QJsonObject o)
 {
     try{
         //bypass의 프로토콜은 bypass_count 끝날때까지 리턴값을 못받는것으로 산정함
@@ -923,9 +923,9 @@ int Cuma_Main::f_reply_check_file_frag_to_unit(QJsonObject o)
                 //만약 파일이 못찾을 경우 frag_address 저장
                 else
                 {
-                    //못찾은 경우로 해당 frag_index에 0을 저장함
+                    //못찾은 경우로 해당 frag_index에 nullptr을 저장함
                     QMap<uint32_t, QVector<uint32_t>> frag_index_address;
-                    frag_index_address[dynamic_cast<uint32_t>(o["file_index"].toInt())] = 0;
+                    frag_index_address[dynamic_cast<uint32_t>(o["file_index"].toInt())] = nullptr;
 
                     //m_file_frag_address 저장함
                     m_file_frag_address[o["file_name"].toString()] = frag_index_address;
@@ -1087,6 +1087,24 @@ int Cuma_Main::f_reply_over_bypass_limit(QJsonObject o)
     }
 }
 
+QJsonObject cuma_protocol::basic_command_protocol(uint32_t From_Pid)
+{
+    QJsonObject recv_obj;
+
+    recv_obj["From"] = From_Pid;
+
+    return recv_obj;
+}
+
+QJsonObject cuma_protocol::basic_protocol(uint32_t From_Pid)
+{
+    QJsonObject recv_obj;
+
+    recv_obj["From"] = From_Pid;
+
+    return recv_obj;
+}
+
 QJsonObject cuma_protocol::req_unit_command_protocol(QString command)
 {
     QJsonObject command_protocol;
@@ -1158,48 +1176,105 @@ QJsonObject cuma_protocol::req_unit_command_protocol(QString command, QString na
 
 QJsonObject cuma_protocol::req_ping_protocol(uint32_t unit_id, bool reply)
 {
-    QJsonObject recv_obj = basic_command_protocol(unit_id);
+    QJsonObject recv_obj = basic_protocol(unit_id);
 
     recv_obj["process"] = "ping";
     recv_obj["reply"] = is_return;
+    recv_obj["From"] = unit_id;
+
+    return recv_obj;
 }
 
 QJsonObject cuma_protocol::req_is_file_exsist_protocol(uint32_t file_frag_index, uint32_t unit_id)
 {
+    QJsonObject recv_obj = basic_protocol(unit_id);
 
+    recv_obj["process"] = "check_file";
+    recv_obj["index"] = file_frag_index;
+
+    return recv_obj;
 }
 
 QJsonObject cuma_protocol::req_is_file_exsist_protocol(QString f_name, uint32_t unit_id, bool req_file_index)
 {
 
+    QJsonObject recv_obj = basic_protocol(unit_id);
+
+    recv_obj["process"] = "check_file";
+    recv_obj["index"] = file_frag_index;
+    recv_obj["reply"] = req_file_index;
+    return recv_obj;
 }
 
 QJsonObject cuma_protocol::req_file_binary_save_protocol(QJsonObject file_binary, uint32_t unit_id)
 {
+    QJsonObject recv_obj = basic_protocol(unit_id);
 
+    recv_obj["process"] = "save";
+    recv_obj["index"] = file_frag_index;
+    recv_obj["reply"] = true;
+    recv_obj["file_frag"] = send_frag_binary["file_frag"];
+    recv_obj["file_name"] = send_frag_binary["file_name"];
+    recv_obj["file_index"] = send_frag_binary["file_index"];
+    recv_obj["file_info_block"] = send_frag_binary["file_info_block"];
+
+    return recv_obj;
 }
 
 QJsonObject cuma_protocol::req_file_binary_read_protocol(QString binary_name, uint32_t file_frag_index, uint32_t unit_id)
 {
+    QJsonObject recv_obj = basic_protocol(unit_id);
 
+    recv_obj["process"] = "read";
+    recv_obj["file_name"] = binary_name;
+    recv_obj["index"] = file_frag_index;
+    return recv_obj;
 }
 
-QJsonObject cuma_protocol::reply_ping_protocol(uint32_t unit_id, bool is_return)
+QJsonObject cuma_protocol::reply_ping_protocol(uint32_t From_uid, bool is_return = false)
 {
+    QJsonObject recv_obj = basic_protocol(From_uid);
 
+    recv_obj["process"] = "check_file";
+    recv_obj["index"] = file_frag_index;
+    recv_obj["reply"] = is_return;
+    return recv_obj;
 }
 
-QJsonObject cuma_protocol::reply_is_file_exsist_protocol(uint32_t file_frag_index, uint32_t unit_id, bool is_exsist)
+QJsonObject cuma_protocol::reply_is_file_exsist_protocol(uint32_t From_uid,, uint32_t file_frag_index, bool is_exsist)
 {
+    QJsonObject recv_obj = basic_protocol(From_uid);
 
+    recv_obj["process"] = "ping";
+    recv_obj["file_index"] = file_frag_index;
+    recv_obj["is_exsist"] = is_exsist;
+    recv_obj["reply"] = true;
+
+    return recv_obj;
 }
 
-QJsonObject cuma_protocol::reply_file_binary_save_protocol(QString file_frag_name, uint32_t unit_id, uint32_t frag_index)
+QJsonObject cuma_protocol::reply_file_binary_save_protocol(uint32_t From_uid, QString file_frag_name, uint32_t frag_index)
 {
+    QJsonObject recv_obj = basic_command_protocol(From_uid);
 
+    recv_obj["process"] = "save";
+    recv_obj["file_name"] = file_frag_name;
+    recv_obj["file_index"] = frag_index;
+    recv_obj["reply"] = true;
+
+    return recv_obj;
 }
 
-QJsonObject cuma_protocol::reply_file_binary_read_protocol(QString file_frag_name, uint32_t file_frag_index, uint32_t unit_id, QByteArray binary)
+QJsonObject cuma_protocol::reply_file_binary_read_protocol(uint32_t From_uid, QString file_frag_name, uint32_t file_frag_index, QByteArray binary )
 {
+    QJsonObject recv_obj = basic_command_protocol(From_uid);
 
+    recv_obj["process"] = "read";
+    recv_obj["file_frag"] = binary;
+    recv_obj["file_name"] = file_frag_name;
+    recv_obj["file_index"] = file_frag_index;
+    recv_obj["index"] = file_frag_index;
+    recv_obj["reply"] = true;
+
+    return recv_obj;
 }
