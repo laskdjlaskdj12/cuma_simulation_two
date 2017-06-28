@@ -20,7 +20,7 @@
 //소스를 분활하기 위한 프랜드
 #include "Cuma_Peer_Protocol/cuma_peer_protocol.h"
 
-class Cuma_Unit :public QObject
+/*class Cuma_Unit :public QObject
 {
     Q_OBJECT
 public:
@@ -42,14 +42,14 @@ protected:
 private:
     //디폴트 대입생성자 는 금함
     Cuma_Unit(Cuma_Unit& u) = 0;
-};
+};*/
 
 class Cuma_Main : public QObject
 {
     Q_OBJECT
 public:
 
-    explicit Cuma_Main(QObject* parent = null);
+    explicit Cuma_Main(QObject* parent = nullptr);
     ~Cuma_Main();
 
     //unit 리스트 프로퍼티

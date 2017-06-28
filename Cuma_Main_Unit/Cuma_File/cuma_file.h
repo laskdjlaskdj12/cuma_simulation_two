@@ -2,6 +2,7 @@
 #define CUMA_FILE_H
 
 #include <QObject>
+#include <QDebug>
 #include <QDir>
 #include <QFile>
 #include <QVector>

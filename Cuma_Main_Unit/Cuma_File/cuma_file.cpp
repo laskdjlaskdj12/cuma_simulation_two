@@ -90,9 +90,7 @@ QSharedPointer<Cuma_File> Cuma_File_ReFectoring::get_Cuma_File_Object()
 
 }*/
 
-Cuma_File::Cuma_File(QObject *parent = 0):m_File_frag_index(0),\
-    m_File_Frag(nullptr),
-    m_File_name(nullptr)
+Cuma_File::Cuma_File(QObject *parent):m_File_Frag_Index(0)
 {
     try{
 
@@ -102,7 +100,7 @@ Cuma_File::Cuma_File(QObject *parent = 0):m_File_frag_index(0),\
             if (m_Dir.mkdir("Cuma_Frag_dir") == false)
             {
                 //권한 상승이 필요하다는 알림을 리턴
-                throw Cuma_Error("CUma_Frag_dir make fail need elevation autholize");
+                throw Cuma_Error("CUma_Frag_dir make fail need elevation autholize", __LINE__);
             }
         }
 
@@ -115,28 +113,28 @@ Cuma_File::Cuma_File(QObject *parent = 0):m_File_frag_index(0),\
 
 Cuma_File::~Cuma_File(){m_File_Frag.clear();}
 
-void Cuma_File::set_File_Frag_Count(uint32_t c){m_File_frag_index = c;}
+void Cuma_File::set_File_Frag_Count(uint32_t c){m_File_Frag_Index = c;}
 
 void Cuma_File::set_File_Name(QString n)
 {
-    m_File_name = n;
+    m_File_Name = n;
 }
 
 int Cuma_File::save_File_Frag(QVector<QByteArray> frag, QString name)
 {
     try{
         //만약 File_Frag_index와 File_name이 설정이 안되어있을경우 exception호출
-        if(m_File_Frag_Index != nullptr && m_File_Name != nullptr)
+        if(m_File_Frag_Index != 0 && m_File_Name != nullptr)
         {
-            throw Cuma_Error(m_file.errorString(), __LINE__);
+            throw Cuma_Error(m_File.errorString(), __LINE__);
         }
 
-        //아니면 mf_Save_Frag()를 실행함
+        //아니면 mf_Save_by_Frag()를 실행함
         else
         {
-            if ( mf_Save_Frag(frag, name) < 0)
+            if ( mf_Save_by_Frag(frag, name) < 0)
             {
-                throw Cuma_Error(m_file.errorString(), __LINE__);
+                throw Cuma_Error(m_File.errorString(), __LINE__);
             }
         }
 
@@ -153,20 +151,20 @@ int Cuma_File::save_File_Frag(QByteArray frag, QString name, uint32_t index)
 {
     try{
         //만약 File_Frag_index와 File_name이 설정이 안되어있을경우 exception호출
-        if(m_File_Frag_Index != nullptr && m_File_Name != nullptr)
+        if(m_File_Frag_Index != 0 && m_File_Name != nullptr)
         {
-            throw Cuma_Error(m_file.errorString(), __LINE__);
+            throw Cuma_Error(m_File.errorString(), __LINE__);
         }
 
-        //아니면 mf_Save_Frag()를 실행함
+        //아니면 mf_Save_by_Frag()를 실행함
         else
         {
             QVector<QByteArray> save_frag;
             save_frag.append(frag);
-            //mf_Save_Frag를 호출해서 파일 인덱스와 frag를 저장
-            if ( mf_Save_Frag(save_frag, name, index) < 0)
+            //mf_Save_by_Frag를 호출해서 파일 인덱스와 frag를 저장
+            if ( mf_Save_by_Frag(save_frag, name, index) < 0)
             {
-                throw Cuma_Error(m_file.errorString(), __LINE__);
+                throw Cuma_Error(m_File.errorString(), __LINE__);
             }
         }
     }
@@ -198,7 +196,8 @@ QByteArray Cuma_File::get_File_Frag_By_Index(uint32_t index)
 
 QSharedPointer<Cuma_File> Cuma_File::get_Cuma_File_Object()
 {
-    return this;
+    QSharedPointer<Cuma_File> ret_obj = QSharedPointer<Cuma_File>(this);
+    return ret_obj;
 }
 
 QByteArray Cuma_File::get_File_binary()
@@ -218,13 +217,8 @@ int Cuma_File::mf_Read_File()
 {
     try
     {
-        //만약 파일이 열려있다면 continue
-        if(m_File.isOpen() && m_File.fileName() == m_File_Name)
-        {
-            continue;
-        }
         //만약 파일이 열려있지 않다면
-        else
+        if(m_File.isOpen() == false || m_File.fileName() != m_File_Name)
         {
             m_File.close();
             m_File.setFileName(m_File_Name);
@@ -311,7 +305,7 @@ int Cuma_File::mf_Make_Frag()
     }
     catch (QFile::FileError& error)
     {
-        qDebug()<<"[Error] : File_read_and frag has been error : "<<m_File->errorString() <<" Line : "<<__LINE__;
+        qDebug()<<"[Error] : File_read_and frag has been error : "<<m_File.errorString() <<" Line : "<<__LINE__;
         return Cuma_File_Status::C_F_error;
     }
 }

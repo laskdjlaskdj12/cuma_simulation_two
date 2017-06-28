@@ -1,6 +1,7 @@
 #ifndef CUMA_DEBUG_H
 #define CUMA_DEBUG_H
 
+#include <QJsonObject>
 #include <QObject>
 
 class Cuma_Debug
@@ -8,6 +9,7 @@ class Cuma_Debug
 public:
     Cuma_Debug(QString Debug);
     Cuma_Debug(QString Debug, uint line);
+    Cuma_Debug(QJsonObject o, uint32_t pid);
     static void show_debug(bool b);
 
 protected:
@@ -21,7 +23,7 @@ private:
 class Cuma_Debug_protocol: public Cuma_Debug
 {
 public:
-    Cuma_Debug(QJsonObject o, uint32_t pid);
+    Cuma_Debug_protocol(QJsonObject o, uint32_t pid);
 };
 
 class Cuma_Error

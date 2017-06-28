@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
     //유닛테스트
     if(argc > 1 && argv[1] == "test")
     {
-        return QTest::qExec()||QTest::qExec();
+        //return QTest::qExec()||QTest::qExec();
     }
 
     //실행
