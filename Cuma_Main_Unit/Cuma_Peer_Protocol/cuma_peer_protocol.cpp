@@ -5,7 +5,7 @@ QJsonObject cuma_protocol::basic_command_protocol(uint32_t From_Pid)
 {
     QJsonObject recv_obj;
 
-    recv_obj["From"] = From_Pid;
+    recv_obj["From"] = static_cast<int>(From_Pid);
 
     return recv_obj;
 }
@@ -14,7 +14,7 @@ QJsonObject cuma_protocol::basic_protocol(uint32_t From_Pid)
 {
     QJsonObject recv_obj;
 
-    recv_obj["From"] = From_Pid;
+    recv_obj["From"] = static_cast<int>(From_Pid);
 
     return recv_obj;
 }
@@ -27,7 +27,6 @@ QJsonObject cuma_protocol::req_unit_command_protocol(QString command)
     {
         Cuma_Debug("this command is not used in this command");
         Cuma_Debug("try to use cuma_protocol::req_unit_command_protocol(QString command, uint32_t count)");
-        return nullptr;
     }
 
     if(command == "ping")
@@ -50,11 +49,6 @@ QJsonObject cuma_protocol::req_unit_command_protocol(QString command)
         command_protocol["command_trace_pass"] = true;
     }
 
-    else
-    {
-        command_protocol = nullptr;
-    }
-
     return command_protocol;
 }
 
@@ -64,12 +58,9 @@ QJsonObject cuma_protocol::req_unit_command_protocol(QString command, uint32_t c
 
     if(command == "set_file_name")
     {
-        command_protocol["command_set_unit_bypass_count"] = count;
+        command_protocol["command_set_unit_bypass_count"] = static_cast<int>(count);
     }
-    else
-    {
-        command_protocol = nullptr;
-    }
+
     return command_protocol;
 }
 
@@ -81,10 +72,7 @@ QJsonObject cuma_protocol::req_unit_command_protocol(QString command, QString na
     {
         command_protocol["command_set_file_name"] = name;
     }
-    else
-    {
-        command_protocol = nullptr;
-    }
+
     return command_protocol;
 }
 
@@ -93,8 +81,8 @@ QJsonObject cuma_protocol::req_ping_protocol(uint32_t unit_id, bool reply)
     QJsonObject recv_obj = basic_protocol(unit_id);
 
     recv_obj["process"] = "ping";
-    recv_obj["reply"] = is_return;
-    recv_obj["From"] = unit_id;
+    recv_obj["reply"] = reply;
+    recv_obj["From"] = static_cast<int>(unit_id);
 
     return recv_obj;
 }
@@ -104,21 +92,19 @@ QJsonObject cuma_protocol::req_is_file_exsist_protocol(uint32_t file_frag_index,
     QJsonObject recv_obj = basic_protocol(unit_id);
 
     recv_obj["process"] = "check_file";
-    recv_obj["index"] = file_frag_index;
+    recv_obj["index"] = static_cast<int>(file_frag_index);
 
     return recv_obj;
 }
 
-QJsonObject cuma_protocol::req_is_file_exsist_protocol(QString f_name, uint32_t unit_id, bool req_file_index = true)
+QJsonObject cuma_protocol::req_is_file_exsist_protocol(QString f_name, uint32_t unit_id, bool req_file_index)
 {
 
     QJsonObject recv_obj = basic_protocol(unit_id);
 
     recv_obj["process"] = "check_file";
-    recv_obj["index"] = file_frag_index;
     recv_obj["reply"] = req_file_index;
     recv_obj["file_name"] = f_name;
-    recv_obj["file_index"] = unit_id;
     recv_obj["file_req"] = req_file_index;
     return recv_obj;
 }
@@ -128,12 +114,23 @@ QJsonObject cuma_protocol::req_file_binary_save_protocol(QJsonObject file_binary
     QJsonObject recv_obj = basic_protocol(unit_id);
 
     recv_obj["process"] = "save";
-    recv_obj["index"] = file_frag_index;
-    recv_obj["reply"] = true;
-    recv_obj["file_frag"] = send_frag_binary["file_frag"];
-    recv_obj["file_name"] = send_frag_binary["file_name"];
-    recv_obj["file_index"] = send_frag_binary["file_index"];
-    recv_obj["file_info_block"] = send_frag_binary["file_info_block"];
+    recv_obj["reply"] = false;
+    recv_obj["file_frag"] = file_binary["file_frag"];
+    recv_obj["file_name"] = file_binary["file_name"];
+    recv_obj["file_index"] = file_binary["file_index"];
+
+    return recv_obj;
+}
+
+QJsonObject cuma_protocol::req_file_binary_save_protocol(QString binary_name, uint32_t file_frag_index, QByteArray frag_binary, uint32_t unit_id)
+{
+    QJsonObject recv_obj = basic_protocol(unit_id);
+
+    recv_obj["process"] = "save";
+    recv_obj["reply"] = false;
+    recv_obj["file_frag"] = QString(frag_binary);
+    recv_obj["file_name"] = binary_name;
+    recv_obj["file_index"] = static_cast<int>(file_frag_index);
 
     return recv_obj;
 }
@@ -144,26 +141,26 @@ QJsonObject cuma_protocol::req_file_binary_read_protocol(QString binary_name, ui
 
     recv_obj["process"] = "read";
     recv_obj["file_name"] = binary_name;
-    recv_obj["index"] = file_frag_index;
+    recv_obj["index"] = static_cast<int>(file_frag_index);
     return recv_obj;
 }
 
-QJsonObject cuma_protocol::reply_ping_protocol(uint32_t From_uid, bool is_return = false)
+QJsonObject cuma_protocol::reply_ping_protocol(uint32_t From_uid, bool is_return)
 {
     QJsonObject recv_obj = basic_protocol(From_uid);
 
     recv_obj["process"] = "check_file";
-    recv_obj["index"] = file_frag_index;
     recv_obj["reply"] = is_return;
     return recv_obj;
 }
 
-QJsonObject cuma_protocol::reply_is_file_exsist_protocol(uint32_t From_uid,, uint32_t file_frag_index, bool is_exsist)
+QJsonObject cuma_protocol::reply_is_file_exsist_protocol(QString file_name, uint32_t From_uid, uint32_t file_frag_index, bool is_exsist)
 {
     QJsonObject recv_obj = basic_protocol(From_uid);
 
     recv_obj["process"] = "ping";
-    recv_obj["file_index"] = file_frag_index;
+    recv_obj["file_name"] = file_name;
+    recv_obj["file_index"] = static_cast<int>(file_frag_index);
     recv_obj["is_exsist"] = is_exsist;
     recv_obj["reply"] = true;
 
@@ -176,7 +173,7 @@ QJsonObject cuma_protocol::reply_file_binary_save_protocol(uint32_t From_uid, QS
 
     recv_obj["process"] = "save";
     recv_obj["file_name"] = file_frag_name;
-    recv_obj["file_index"] = frag_index;
+    recv_obj["file_index"] = static_cast<int>(frag_index);
     recv_obj["reply"] = true;
 
     return recv_obj;
@@ -187,10 +184,10 @@ QJsonObject cuma_protocol::reply_file_binary_read_protocol(uint32_t From_uid, QS
     QJsonObject recv_obj = basic_command_protocol(From_uid);
 
     recv_obj["process"] = "read";
-    recv_obj["file_frag"] = binary;
+    recv_obj["file_frag"] = QString(binary);
     recv_obj["file_name"] = file_frag_name;
-    recv_obj["file_index"] = file_frag_index;
-    recv_obj["index"] = file_frag_index;
+    recv_obj["file_index"] = static_cast<int>(file_frag_index);
+    recv_obj["index"] = static_cast<int>(file_frag_index);
     recv_obj["reply"] = true;
 
     return recv_obj;

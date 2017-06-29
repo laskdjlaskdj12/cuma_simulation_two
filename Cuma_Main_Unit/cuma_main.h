@@ -53,8 +53,8 @@ public:
     ~Cuma_Main();
 
     //unit 리스트 프로퍼티
-    void mf_set_unit_list(QVector<Cuma_Main> list);
-    QVector<Cuma_Main> mf_get_unit_list();
+    void mf_set_unit_list(QVector<QSharedPointer<Cuma_Main>> list);
+    QVector<QSharedPointer<Cuma_Main>> mf_get_unit_list();
 
     //ping 리스트 리미트 프로퍼티
     void mf_set_ping_limit_time(uint32_t time);
@@ -144,10 +144,10 @@ protected:
     virtual int f_send_ping_to_unit(uint32_t limit_time);
 
     //수신 json로그 저장 프로세스
-    virtual void f_save_recv_json_report(QJsonValue protocol);
+    virtual void f_save_recv_json_report(QJsonObject protocol);
 
     //송신 json로그 저장 프로세스
-    virtual void f_save_send_json_report(QJsonValue protocol);
+    virtual void f_save_send_json_report(QJsonObject protocol);
 
 
     //서버 Area

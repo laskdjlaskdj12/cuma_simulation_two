@@ -134,7 +134,7 @@ int Cuma_File::save_File_Frag(QVector<QByteArray> frag, QString& name)
         //만약 File_Frag_index와 File_name이 설정이 안되어있을경우 exception호출
         if(m_File_Frag_Index != 0 && m_File_Name != NULL)
         {
-            return Cuma_Error("File Frag_cache is emtpy", __LINE__);
+            throw Cuma_Error("File Frag_cache is emtpy", __LINE__);
         }
 
         //아니면 mf_Save_by_Frag()를 실행함

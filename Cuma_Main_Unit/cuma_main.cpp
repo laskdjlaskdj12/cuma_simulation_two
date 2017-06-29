@@ -1,9 +1,9 @@
 #include "cuma_main.h"
 
-Cuma_Main::Cuma_Main(QObject *parent) : QObject(parent), redirect(0)
+Cuma_Main::Cuma_Main(QObject *parent) : QObject(parent)
 {
 
-    m_File = new Cuma_File;
+    m_File = QSharedPointer<Cuma_File>(new Cuma_File);
 
     //stop 시그널을 바인딩함
     connect(this, SIGNAL(s_stop_unit()), this, SLOT(sl_stop_unit()));
@@ -28,15 +28,15 @@ Cuma_Main::~Cuma_Main()
     disconnect(this, SIGNAL(s_start_spread(QString)), this, SLOT(sl_start_spread_signal(QString)));
 }
 
-void Cuma_Main::mf_set_unit_list(QVector<Cuma_Main> list)
+void Cuma_Main::mf_set_unit_list(QVector<QSharedPointer<Cuma_Main>> list)
 {
-    if (list != nullptr)
+    if (list.isEmpty() == false)
     {
         m_Cuma_unit_list = list;
     }
 }
 
-QVector<Cuma_Main> Cuma_Main::mf_get_unit_list()
+QVector<QSharedPointer<Cuma_Main>> Cuma_Main::mf_get_unit_list()
 {
     return m_Cuma_unit_list;
 }
@@ -53,7 +53,7 @@ uint32_t Cuma_Main::mf_get_ping_limit_time()
 
 void Cuma_Main::mf_set_pid(uint32_t pid)
 {
-    m_PId = pid;
+    m_Pid = pid;
 }
 
 uint32_t Cuma_Main::mf_get_pid()
@@ -95,7 +95,7 @@ void Cuma_Main::sl_stop_unit()
     }
 
     //active를 false로함
-    m_active = fasle;
+    m_active = false;
 }
 
 void Cuma_Main::sl_recv_signal(QJsonObject o)
@@ -127,10 +127,7 @@ void Cuma_Main::sl_start_command_signal(const QJsonObject command)
         {
             m_limit_bypass_count = command["command_set_unit_bypass_count"].toInt();
 
-            if (mf_command_set_unit_bypass_count(m_limit_bypass_count) < 0)
-            {
-                throw Cuma_Error("mf_command_set_unit_bypass_count is error", __LINE__, m_Pid);
-            }
+            mf_command_set_unit_bypass_count(m_limit_bypass_count);
         }
 
         //커맨드가 있는지 확인함
@@ -295,12 +292,9 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
                 QSharedPointer<Cuma_Main> temp_main =  m_Cuma_unit_list[static_cast<uint32_t>(o["From"].toInt())];
 
                 uint32_t u_ping_time = m_Unit_delay_time_array[m_Pid][static_cast<uint32_t>(o["From"].toInt())];
+
                 //만약 ping이 해당 시간 내에 들어왔다면 추가함
-                if(m_ping_limit < u_ping_time )
-                {
-                    continue;
-                }
-                else
+                if( ! (m_ping_limit < u_ping_time ) )
                 {
                     //m_Cuma_unit_list에 추가함
                     m_Cuma_unit_inside_timeout_unit_list.append(temp_main);
@@ -311,13 +305,12 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
         //아닐경우 읽을수 없는 프로토콜로 디폴트 메세지를 출력
         else
         {
-            throw Cuma_Error("Can't read recv protocol \n " + QJsonDocument(o).toJson(), __LINe__, m_Pid);
+            throw Cuma_Error("Can't read recv protocol \n " + QJsonDocument(o).toJson(), __LINE__, m_Pid);
         }
     }
     catch(Cuma_Error& e)
     {
         e.show_error_string();
-        return -1;
     }
 }
 
@@ -348,7 +341,7 @@ QSharedPointer<Cuma_Main> Cuma_Main::f_pop_unit()
 {
     QMutexLocker locker(&m_locker);
 
-    QSharedPointer<Cuma_Main> unit = m_Send_Unit_list.pop_back();
+    QSharedPointer<Cuma_Main> unit = m_Send_Unit_list.last();
 
     return unit;
 }
@@ -369,7 +362,7 @@ int Cuma_Main::f_send_ping_to_unit(uint32_t limit_time)
 
         Cuma_Debug("Wait for recv ping from Unit: PID:" +  m_Pid);
         //자기자신을 제외한 전송할 유닛리스트가 모두 모일때까지 while문으로 sleep()
-        while(m_Send_Unit_list != (m_Cuma_unit_list.count() - 1))
+        while (m_Send_Unit_list.count()  != (m_Cuma_unit_list.count() - 1))
         {
             QThread::msleep(1000);
         }
@@ -395,7 +388,7 @@ int Cuma_Main::f_send_ping_to_unit(uint32_t limit_time)
             }
 
             //유닛들의 딜레이 타임을 체크함
-            QVector<uint32_t> get_unit_delay_array = m_Unit_delay_time_array[m_pid];
+            QVector<uint32_t> get_unit_delay_array = m_Unit_delay_time_array[m_Pid];
 
             uint32_t delay_time = get_unit_delay_array[temp_unit->mf_get_pid()];
 
@@ -423,7 +416,7 @@ int Cuma_Main::f_send_ping_to_unit(uint32_t limit_time)
     }
 }
 
-void Cuma_Main::f_save_recv_json_report(QJsonValue e)
+void Cuma_Main::f_save_recv_json_report(QJsonObject e)
 {
     //타임을 적어서 넣음
     e["Time"] = unit_Timer::time.elapsed();
@@ -433,7 +426,7 @@ void Cuma_Main::f_save_recv_json_report(QJsonValue e)
     recv_arr.append(e);
 }
 
-void Cuma_Main::f_save_send_json_report(QJsonValue e)
+void Cuma_Main::f_save_send_json_report(QJsonObject e)
 {
     //타임을 적어서 넣음
     e["Time"] = unit_Timer::time.elapsed();

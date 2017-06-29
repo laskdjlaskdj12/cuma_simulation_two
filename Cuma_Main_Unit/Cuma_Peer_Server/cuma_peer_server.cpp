@@ -13,11 +13,14 @@ int Cuma_Main::f_upload_file_frag_from_unit(QJsonObject o)
             throw Cuma_Error("No Such Unit in m_Cuma_unit_list while replying the unit Pointer", __LINE__, m_Pid);
         }
 
+        QString file_name = o["file_name"].toString();
+        uint32_t file_index = static_cast<uint32_t>(o["file_index"].toInt());
+
         //요청된 저장된 파일을 읽음
-        QByteArray frag_binary = m_File->get_fragment_slite(o["file_index"].toInt());
+        QByteArray frag_binary = m_File->get_File_Frag_By_Index( file_index );
 
         //해당 유닛에 전송함
-        req_unit->s_recv(cuma_protocol::reply_file_binary_read_protocol(o["file_name"].toString(), o["file_index"].toInt(), m_Pid, frag_binary));
+        req_unit->s_recv(cuma_protocol::reply_file_binary_read_protocol(file_index, file_name, m_Pid, frag_binary));
 
     }
     catch(Cuma_Error& e)
@@ -34,7 +37,7 @@ int Cuma_Main::f_reply_upload_file_frag_to_unit(const QJsonObject o)
         //유닛의 목적지가 어디인지
         uint32_t unit_to  =  static_cast<uint32_t>(o["To"].toInt());
 
-        uint32_t next_unit_pid = nullptr;
+        uint32_t next_unit_pid = NULL;
 
         //만약 자기 유닛에게 오지 않았을 경우 적혀진 경로대로 탐색을 해서 자기 유닛이후의 다음 유닛에게 전송을 함
         if (unit_to != m_Pid)
@@ -53,7 +56,7 @@ int Cuma_Main::f_reply_upload_file_frag_to_unit(const QJsonObject o)
             }
 
             //next_unit_pid가 없을경우 예외처리
-            if (next_unit_pid == nullptr)
+            if (next_unit_pid == NULL)
             {
                 throw Cuma_Error("f_reply_upload_file_frag_to_unit::no such unit from destination", __LINE__, m_Pid);
             }
@@ -62,9 +65,9 @@ int Cuma_Main::f_reply_upload_file_frag_to_unit(const QJsonObject o)
             QSharedPointer<Cuma_Main> next_bypass_unit = nullptr;
 
             //유닛의 pid를 찾아서 next_bypass_unit에 넣음
-            for (QVector<QSharedPointer<Cuma_Main>>::iterator it = m_Cuma_unit_inside_timeout_unit_list.first(); it != m_Cuma_unit_inside_timeout_unit_list.end(); it++)
+            for (QVector<QSharedPointer<Cuma_Main>>::iterator it = m_Cuma_unit_inside_timeout_unit_list.begin(); it != m_Cuma_unit_inside_timeout_unit_list.end(); it++)
             {
-                if ((*it)->mf_get_pid == next_unit_pid)
+                if ((*it)->mf_get_pid() == next_unit_pid)
                 {
                     next_bypass_unit = (*it);
                     break;
@@ -86,16 +89,16 @@ int Cuma_Main::f_reply_upload_file_frag_to_unit(const QJsonObject o)
             uint32_t    file_index = (uint32_t)o["file_index"].toInt();
             uint32_t    file_size = (uint32_t)o["file_byte"].toInt();
             QString     frag_string = o["file_frag"].toString();
-            QByteArray  file_frag(frag_string.constData(), frag_index);
+            QByteArray  file_frag(frag_string.toUtf8());
 
             //디버그 표시
             Cuma_Debug("f_reply_upload_file_frag_to_unit", __LINE__);
             Cuma_Debug("File_Frag_size : " + QString::number(file_size), __LINE__);
-            Cuma_Debug("File_Frag_info : ", + "size : " + QString::number(file_frag.count()), __LINE__);
+            Cuma_Debug("File_Frag_info : size : " + QString::number(file_frag.count()), __LINE__);
 
             //만약 frag인덱스와 file_frag의 사이즈가 안맞을 경우 예외 처리 보냄
             //이미 파일체크 프로세스가 바이패스 프로세스를 호출해서 이미 ping이 남아있는데 없다는것은 예외처리를 통해서 exception문을 호출해야함
-            if (frag_index != file_frag.count())
+            if (file_index != file_frag.count())
             {
                 throw Cuma_Error("f_reply_upload_file_frag_to_unit error frag_index != file_frag.count() : recv frag_index and file_frag_count is not match", __LINE__, m_Pid);
             }
@@ -106,7 +109,6 @@ int Cuma_Main::f_reply_upload_file_frag_to_unit(const QJsonObject o)
             //만약 파일이 이미 존재할경우 continue함
             if ( ret_type == Cuma_File::Cuma_File_Status::C_F_Exsist)
             {
-                continue;
             }
 
             //리턴함
@@ -124,8 +126,10 @@ int Cuma_Main::f_download_file_frag_from_unit(QJsonObject o)
 {
     try
     {
+        uint32_t file_index = o["file_index"].toInt();
+
         //가지고 온 파일을 저장함
-        if (m_File->save_File_Frag(o["file_frag"].toString().toUtf8(), o["file_name"].toString(), static_cast<uint32_t>(o["file_index"].toInt())) < 0)
+        if (m_File->save_File_Frag(o["file_frag"].toString().toUtf8(), o["file_name"].toString(), file_index) < 0)
         {
             Cuma_Debug("Can't open file", __LINE__);
             return 0;
@@ -135,11 +139,11 @@ int Cuma_Main::f_download_file_frag_from_unit(QJsonObject o)
         QSharedPointer<Cuma_Main> prepare_send_unit = nullptr;
 
         //유닛의 pid를 찾아서 prepare_send_unit 넣음
-        for (QVector<QSharedPointer<Cuma_Main>>::iterator it = m_Cuma_unit_inside_timeout_unit_list.first(); it != m_Cuma_unit_inside_timeout_unit_list.end(); it++)
+        for (QVector<QSharedPointer<Cuma_Main>>::iterator it = m_Cuma_unit_inside_timeout_unit_list.begin(); it != m_Cuma_unit_inside_timeout_unit_list.end(); it++)
         {
-            if ((*it)->mf_get_pid == next_unit_pid)
+            if ((*it)->mf_get_pid() == static_cast<uint32_t>(o["From"].toInt()))
             {
-                next_bypass_unit = (*it);
+                prepare_send_unit = (*it);
                 break;
             }
         }
@@ -151,7 +155,7 @@ int Cuma_Main::f_download_file_frag_from_unit(QJsonObject o)
         }
 
         //전송을 한 유닛에게 reply_download_file_frag 프로토콜을 전송함
-        emit prepare_send_unit->s_recv(cuma_protocol::reply_file_binary_save_protocol(o["file_name"].toString(), m_Pid, o["file_index"].toInt()));
+        emit prepare_send_unit->s_recv(cuma_protocol::reply_file_binary_save_protocol( m_Pid, o["file_name"].toString(), o["file_index"].toInt()));
 
     }
 
@@ -167,13 +171,13 @@ int Cuma_Main::f_reply_download_file_frag_to_unit(QJsonObject o)
     //reply된 download_frag_file를 체크하고 파일이 저장을 한 유닛의 pid를 File_Frag의 메타데이터에 저장함
     if ( !o["reply"].isNull() && o["reply"].toBool() == true)
     {
-        Cuma_Debug("Unit : " + static_cast<uint32_t>(o["From"].toInt()) + "save file_frag  " + o["file_name"].toString() + ": " + o["file_index"].toInt());
+        Cuma_Debug("Unit : " + QString::number(static_cast<uint32_t>(o["From"].toInt())) + "save file_frag  " + o["file_name"].toString() + ": " + o["file_index"].toInt());
     }
 
     //만약 아닐경우 error를 출력함(이건 reply중요도가 떨어지기때문에 굳이 exception을 던지지 않음)
     else
     {
-        Cuma_Debug("f_reply_download_file_Frag is error", __LINE__, m_Pid);
+        Cuma_Debug("f_reply_download_file_Frag is error", __LINE__);
     }
     return 0;
 }
@@ -194,7 +198,7 @@ int Cuma_Main::f_check_file_frag_to_unit(QJsonObject o)
         if (f_over_bypass(o) < 0)
         {
             //만약 바이패스 프로토콜이 -1일경우 바이패스 리미트가 초과이므로 파일이 없다는 프로토콜을 만들어서 위에 있는 유닛으로 bypass 함
-            QJsonObject reply_bypass_protocol = cuma_protocol::reply_is_file_exsist_protocol(o["file_index"].toInt(), m_PId, false);
+            QJsonObject reply_bypass_protocol = cuma_protocol::reply_is_file_exsist_protocol(req_frag_name, m_Pid, o["file_index"].toInt(), false);
             reply_bypass_protocol["bypass"] = o["bypass"].toArray();
             reply_bypass_protocol["bypass_limit_count"] = o["bypass_limit_count"].toInt();
             reply_bypass_protocol["bypass_count"] = o["bypass_count"].toInt();
@@ -214,9 +218,9 @@ int Cuma_Main::f_check_file_frag_to_unit(QJsonObject o)
         QSharedPointer<Cuma_Main> prepare_send_unit = nullptr;
 
         //유닛의 pid를 찾아서 prepare_send_unit 넣음
-        for (QVector<QSharedPointer<Cuma_Main>>::iterator it = m_Cuma_unit_inside_timeout_unit_list.first(); it != m_Cuma_unit_inside_timeout_unit_list.end(); it++)
+        for (QVector<QSharedPointer<Cuma_Main>>::iterator it = m_Cuma_unit_inside_timeout_unit_list.begin(); it != m_Cuma_unit_inside_timeout_unit_list.end(); it++)
         {
-            if ((*it)->mf_get_pid == next_unit_pid)
+            if ((*it)->mf_get_pid() == static_cast<uint32_t>(o["From"].toInt()))
             {
                 prepare_send_unit = (*it);
                 break;
@@ -224,7 +228,7 @@ int Cuma_Main::f_check_file_frag_to_unit(QJsonObject o)
         }
 
         //프로토콜을 전송함
-        emit prepare_send_unit->s_recv(cuma_protocol::reply_is_file_exsist_protocol(req_frag_name, m_Pid, true));
+        emit prepare_send_unit->s_recv(cuma_protocol::reply_is_file_exsist_protocol(req_frag_name, m_Pid, req_frag_index, true));
 
     }
     return 0;
@@ -270,7 +274,7 @@ int Cuma_Main::f_reply_check_file_frag_to_unit(const QJsonObject o)
                 {
                     //못찾은 경우로 해당 frag_index에 nullptr을 저장함
                     QMap<uint32_t, QVector<uint32_t>> frag_index_address;
-                    frag_index_address[static_cast<uint32_t>(o["file_index"].toInt())] = nullptr;
+                    frag_index_address[static_cast<uint32_t>(o["file_index"].toInt())] = NULL;
 
                     //m_file_frag_address 저장함
                     m_file_frag_address[o["file_name"].toString()] = frag_index_address;
@@ -295,7 +299,7 @@ int Cuma_Main::f_reply_check_file_frag_to_unit(const QJsonObject o)
             {
                 QMap<uint32_t, QVector<uint32_t>> frag_index_address;
 
-                frag_index_address[static_cast<uint32_t>(o["file_index"].toInt())] = static_cast<uint32_t>(o["From"].toInt());
+                frag_index_address[static_cast<uint32_t>(o["file_index"].toInt())] = (o["From"].toInt();
 
                 //m_file_frag_address 저장함
                 m_file_frag_address[o["file_name"].toString()] = frag_index_address;
@@ -306,7 +310,7 @@ int Cuma_Main::f_reply_check_file_frag_to_unit(const QJsonObject o)
             {
                 //못찾은 경우로 해당 frag_index에 0을 저장함
                 QMap<uint32_t, QVector<uint32_t>> frag_index_address;
-                frag_index_address[static_cast<uint32_t>(o["file_index"].toInt())] = 0;
+                frag_index_address[static_cast<uint32_t>(o["file_index"].toInt())] = NULL;
 
                 //m_file_frag_address 저장함
                 m_file_frag_address[o["file_name"].toString()] = frag_index_address;
@@ -333,7 +337,8 @@ int Cuma_Main::f_over_bypass(QJsonObject o)
         o["bypass_count"] = o["bypass_limit_count"].toInt();
 
         //바이패스 에 자기 PId를 넣음
-        o["bypass"] = o["bypass"].toArray().append(m_Pid);
+        QJsonArray& arr = o["bypass"].toArray();
+        arr.append((int)m_Pid);
     }
 
     //만약 bypass의 카운트가 0일경우 이미 리미트까지 갔다는 의미
@@ -344,10 +349,10 @@ int Cuma_Main::f_over_bypass(QJsonObject o)
     }
 
     //bypass_count를 -1함
-    o["bypass_count"] -= 1;
+    o["bypass_count"] = o["bypass_count"].toInt() - 1;
 
     //ping으로 스크리밍이 된 모든 유닛들에게 bypass함
-    for (QVector<QSharedPointer<Cuma_Main>>::iterator it = m_Cuma_unit_inside_timeout_unit_list.first();
+    for (QVector<QSharedPointer<Cuma_Main>>::iterator it = m_Cuma_unit_inside_timeout_unit_list.begin();
          it != m_Cuma_unit_inside_timeout_unit_list.end();
          it++)
     {
@@ -387,7 +392,7 @@ int Cuma_Main::f_reply_over_bypass_limit(QJsonObject o)
         for (uint32_t i = 0; i < bypass_chain.count() ; i++)
         {
             //만약 바이패스 체인에 자신을 찾았을 경우 다음 바이패스 체인인의 pid를 찾음
-            if(bypass_chain.at(i) == m_Pid)
+            if(bypass_chain.at(i).toInt() == m_Pid)
             {
                 if(i == 0)
                 {
@@ -414,7 +419,7 @@ int Cuma_Main::f_reply_over_bypass_limit(QJsonObject o)
         }
 
         //만약 바이패스 유닛들을 못찾았을때 exception을 던짐
-        if(bypass_success == false || unit_addr = nullptr)
+        if(bypass_success == false || send_unit == nullptr)
         {
             throw Cuma_Error("f_reply_over_bypass_limit : Can't find bypass unit in this unit list", __LINE__, m_Pid);
         }
