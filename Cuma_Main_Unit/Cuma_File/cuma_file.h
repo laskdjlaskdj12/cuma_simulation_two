@@ -42,15 +42,38 @@ public:
     virtual uint32_t get_File_Index();
     virtual QString get_File_Name();
     virtual QVector<QByteArray> get_File_Frag();
-    virtual QByteArray get_File_Frag_By_Index(uint32_t index);
-    virtual QSharedPointer<Cuma_File> get_Cuma_File_Object();
+    virtual QByteArray get_File_Frag_By_Index(uint32_t& index);
+    virtual QSharedPointer<Cuma_File> get_Cuma_File();
     virtual QByteArray get_File_binary();
     virtual struct Cuma_File_Info_Block get_File_info_block();
 
-
     virtual int read_file_frag(QString& file_name, uint32_t& index);
+    virtual int read_file();
+
     virtual void clear_save_frag();
 
+
+    /*
+     * ========== useage ==========
+     * 1. 해당 class는 파일 바이너리를 클래스 멤버 변수로 두고있어 캐시가 잔류해 있음
+     * 2. Cuma_File_Info_Block은 파일을 읽을때 부터 생성함 여기에 파일 인덱스 정보들이 들어가있음
+     * 3. Cuma_File_Info_Block에는 파일 frag의 info와 파일 info 가 들어가 있음
+     *
+     *
+     * ========= useage =========
+     * 1. frag를 저장할때
+     * 1-1. save_File_Frag()으로 저장
+     *
+     * 2. 파일을 읽어올때
+     * 2-1. set_File_Name();
+     * 2-2. read_file();
+     *
+     * 3. 파일 frag를 읽어올대
+     * 3-1. get_File_Frag_By_Index 으로 인덱스를 설정
+     * 3-2. get_File_Frag_By_Index()으로 리턴됨 바이너리 값을 받음
+     *
+     *
+     * */
 protected:
     virtual int mf_Read_File();
     virtual int mf_Read_File_Frag();
