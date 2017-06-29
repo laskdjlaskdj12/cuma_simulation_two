@@ -12,6 +12,8 @@
 #include <QSharedPointer>
 #include <QMutex>
 #include "../../Cuma_Debug/cuma_debug.h"
+#include "cuma_file_info_struct.h"
+
 
 class Cuma_File : public QObject
 {
@@ -23,6 +25,7 @@ public:
         C_F_not_open = -2,
         C_F_Exsist = -3,
         C_F_Dir_Not_Open = -4,
+        C_F_READ_FILE_SIZE_MAXIMUM = -5,
         C_F_no_err = 0
     };
 
@@ -32,8 +35,9 @@ public:
 
     virtual void set_File_Frag_Count(uint32_t c);
     virtual void set_File_Name(QString n);
-    virtual int save_File_Frag(QVector<QByteArray> frag, QString name);
-    virtual int save_File_Frag(QByteArray frag, QString name, uint32_t index);
+    virtual void set_File_info_block(struct Cuma_File_Info_Block& block);
+    virtual int save_File_Frag(QVector<QByteArray> frag, QString& name);
+    virtual int save_File_Frag(QByteArray& frag, QString& name, uint32_t& index);
 
     virtual uint32_t get_File_Index();
     virtual QString get_File_Name();
@@ -41,8 +45,11 @@ public:
     virtual QByteArray get_File_Frag_By_Index(uint32_t index);
     virtual QSharedPointer<Cuma_File> get_Cuma_File_Object();
     virtual QByteArray get_File_binary();
+    virtual struct Cuma_File_Info_Block get_File_info_block();
 
-    virtual int read_file_frag(QString file_name, uint32_t index);
+
+    virtual int read_file_frag(QString& file_name, uint32_t& index);
+    virtual void clear_save_frag();
 
 protected:
     virtual int mf_Read_File();
@@ -56,12 +63,14 @@ protected:
     static QByteArray Save_frag_File(QString f_name, uint32_t f_index, QByteArray f_binary);
 
 private:
+    QDir m_Dir;
+    QFile m_File;
     QString m_File_Name;
     uint32_t m_File_Frag_Index;
     QVector<QByteArray> m_File_Frag;
     QByteArray m_File_Binary;
-    QFile m_File;
-    QDir m_Dir;
+
+    struct Cuma_File_Info_Block m_File_info_Block;
 
 private:
     static QMutex m_Mutex;
@@ -103,5 +112,6 @@ private:
 public:
     static QByteArray Save_frag_File(QString f_name, uint32_t f_index, QByteArray f_binary);
 };*/
+
 
 #endif // CUMA_FILE_H

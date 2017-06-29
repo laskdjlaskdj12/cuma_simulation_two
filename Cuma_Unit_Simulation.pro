@@ -38,4 +38,5 @@ HEADERS += \
     Test/cuma_main_unit_test.h \
     Cuma_Debug/cuma_debug.h \
     Test/cuma_file_test.h \
-    Cuma_Main_Unit/Cuma_Peer_Protocol/cuma_peer_protocol.h
+    Cuma_Main_Unit/Cuma_Peer_Protocol/cuma_peer_protocol.h \
+    Cuma_Main_Unit/Cuma_File/cuma_file_info_struct.h
