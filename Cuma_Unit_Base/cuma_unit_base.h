@@ -40,7 +40,7 @@ private:
     uint32_t unit_count;
     
     //유닛들 리스트
-    //QVector<QSharedPointer<Cuma_Main> Cuma_unit_list;
+    QVector<QSharedPointer<Cuma_Main>> Cuma_unit_list;
 
     //읽을 파일 이름
     QString file_name;
