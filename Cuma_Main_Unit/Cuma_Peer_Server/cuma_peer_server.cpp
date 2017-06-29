@@ -273,8 +273,9 @@ int Cuma_Main::f_reply_check_file_frag_to_unit(const QJsonObject o)
                 else
                 {
                     //못찾은 경우로 해당 frag_index에 nullptr을 저장함
+                    QVector<uint32_t> bypass_unit_list;
                     QMap<uint32_t, QVector<uint32_t>> frag_index_address;
-                    frag_index_address[static_cast<uint32_t>(o["file_index"].toInt())] = NULL;
+                    frag_index_address[static_cast<uint32_t>(o["file_index"].toInt())] = bypass_unit_list;
 
                     //m_file_frag_address 저장함
                     m_file_frag_address[o["file_name"].toString()] = frag_index_address;
@@ -297,9 +298,11 @@ int Cuma_Main::f_reply_check_file_frag_to_unit(const QJsonObject o)
             //만약 파일이 있으면 해당파일을 m_file_frag_address에 저장함
             if (o["exsist"].toBool() == true)
             {
-                QMap<uint32_t, QVector<uint32_t>> frag_index_address;
+                QVector<uint32_t> bypass_unit_list;
+                bypass_unit_list.append(o["From"].toInt());
 
-                frag_index_address[static_cast<uint32_t>(o["file_index"].toInt())] = (o["From"].toInt();
+                QMap<uint32_t, QVector<uint32_t>> frag_index_address;
+                frag_index_address[static_cast<uint32_t>(o["file_index"].toInt())] = bypass_unit_list;
 
                 //m_file_frag_address 저장함
                 m_file_frag_address[o["file_name"].toString()] = frag_index_address;
@@ -308,9 +311,11 @@ int Cuma_Main::f_reply_check_file_frag_to_unit(const QJsonObject o)
             //만약 파일이 없으면 m_file_frag_address 에 0을 저장함
             else
             {
+                QVector<uint32_t> bypass_unit_list;
+
                 //못찾은 경우로 해당 frag_index에 0을 저장함
                 QMap<uint32_t, QVector<uint32_t>> frag_index_address;
-                frag_index_address[static_cast<uint32_t>(o["file_index"].toInt())] = NULL;
+                frag_index_address[static_cast<uint32_t>(o["file_index"].toInt())] = bypass_unit_list;
 
                 //m_file_frag_address 저장함
                 m_file_frag_address[o["file_name"].toString()] = frag_index_address;
