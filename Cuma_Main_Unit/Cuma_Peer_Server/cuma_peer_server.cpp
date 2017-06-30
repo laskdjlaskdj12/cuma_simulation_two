@@ -256,7 +256,7 @@ int Cuma_Main::f_reply_check_file_frag_to_unit(const QJsonObject o)
                     QJsonArray bypass_unit_array = o["bypass"].toArray();
 
                     //bypass_unit_array를 path_unit_block으로 넣음
-                    foreach(QJsonValue& e, bypass_unit_array)
+                    foreach(QJsonValue e, bypass_unit_array)
                     {
                         path_unit_block.append(static_cast<uint32_t>(e.toInt()));
                     }
@@ -342,8 +342,9 @@ int Cuma_Main::f_over_bypass(QJsonObject o)
         o["bypass_count"] = o["bypass_limit_count"].toInt();
 
         //바이패스 에 자기 PId를 넣음
-        QJsonArray& arr = o["bypass"].toArray();
+        QJsonArray arr = o["bypass"].toArray();
         arr.append((int)m_Pid);
+        o["bypass"] = arr;
     }
 
     //만약 bypass의 카운트가 0일경우 이미 리미트까지 갔다는 의미
@@ -440,4 +441,14 @@ int Cuma_Main::f_reply_over_bypass_limit(QJsonObject o)
         e.show_error_string();
         return -1;
     }
+}
+
+QSharedPointer<Cuma_Main> Cuma_Main::f_find_unit_from_inside_timeout_unit(uint32_t unit_id)
+{
+    return nullptr;
+}
+
+QSharedPointer<Cuma_Main> Cuma_Main::f_find_unit_from_Cuma_unit_list(uint32_t unit_id)
+{
+    return nullptr;
 }

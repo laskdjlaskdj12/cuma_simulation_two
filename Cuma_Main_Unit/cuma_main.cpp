@@ -1,5 +1,8 @@
 #include "cuma_main.h"
 
+uint32_t Cuma_Main::m_limit_bypass_count = 0;
+bool unit_Timer::is_start = true;
+QTime unit_Timer::time;
 Cuma_Main::Cuma_Main(QObject *parent) : QObject(parent)
 {
 
@@ -422,8 +425,10 @@ void Cuma_Main::f_save_recv_json_report(QJsonObject e)
     e["Time"] = unit_Timer::time.elapsed();
 
     //프로토콜을 recv_arr에 넣음
-    QJsonArray& recv_arr = m_report_json["recv"].toArray();
-    recv_arr.append(e);
+    QJsonArray recv_arr = m_report_json["recv"].toArray();
+    recv_arr.push_back(e);
+    m_report_json["recv"] = recv_arr;
+
 }
 
 void Cuma_Main::f_save_send_json_report(QJsonObject e)
@@ -432,6 +437,7 @@ void Cuma_Main::f_save_send_json_report(QJsonObject e)
     e["Time"] = unit_Timer::time.elapsed();
 
     //프로토콜을 recv_arr에 넣음
-    QJsonArray& send_arr = m_report_json["send"].toArray();
-    send_arr.append(e);
+    QJsonArray send_arr = m_report_json["recv"].toArray();
+    send_arr.push_back(e);
+    m_report_json["recv"] = send_arr;
 }

@@ -155,7 +155,7 @@ int Cuma_File::save_File_Frag(QVector<QByteArray> frag, QString& name)
     }
 }
 
-int Cuma_File::save_File_Frag(QByteArray& frag, QString& name, uint32_t& index)
+int Cuma_File::save_File_Frag(QByteArray frag, QString name, uint32_t& index)
 {
     try{
 
@@ -511,4 +511,16 @@ int Cuma_File::mf_Save_by_File(QString file_name)
 
         return Cuma_File_Status::C_F_error;
     }
+}
+
+QByteArray Cuma_File::Save_frag_File(QString f_name, uint32_t f_index, QByteArray f_binary)
+{
+    QJsonObject file_binary;
+    file_binary["f_name"] = f_name;
+    file_binary["f_index"] = static_cast<int>(f_index);
+    file_binary["f_binary"] = QString(f_binary);
+
+    QJsonDocument doc(file_binary);
+
+    return doc.toJson();
 }

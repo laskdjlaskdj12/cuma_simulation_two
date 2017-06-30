@@ -4,3 +4,8 @@ Cuma_Unit_Base::Cuma_Unit_Base(QObject *parent) : QObject(parent)
 {
 
 }
+
+Cuma_Unit_Base::~Cuma_Unit_Base()
+{
+
+}

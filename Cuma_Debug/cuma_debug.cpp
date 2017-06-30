@@ -1,7 +1,16 @@
 #include "cuma_debug.h"
 
+Cuma_Debug::Cuma_Debug(QString Debug)
+{
+
+}
 
 Cuma_Debug::Cuma_Debug(QString Debug, uint line)
+{
+
+}
+
+Cuma_Debug::Cuma_Debug(QJsonObject o, uint32_t pid)
 {
 
 }
