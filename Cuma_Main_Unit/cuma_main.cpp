@@ -1,12 +1,28 @@
 #include "cuma_main.h"
 
 uint32_t Cuma_Main::m_limit_bypass_count = 0;
-bool unit_Timer::is_start = true;
+
+bool unit_Timer::is_start = false;
+
 QTime unit_Timer::time;
+
 Cuma_Main::Cuma_Main(QObject *parent) : QObject(parent)
 {
 
     m_File = QSharedPointer<Cuma_File>(new Cuma_File);
+
+    //class timer가 시작을 했는지 체크
+    if(unit_Timer::is_start == false)
+    {
+        Cuma_Debug("unit_Timer::time is start");
+
+        //유닛의 타임을 시작함
+        unit_Timer::time.start();
+
+        unit_Timer::is_start = true;
+    }
+
+    Cuma_Debug("Binding the Signal");
 
     //stop 시그널을 바인딩함
     connect(this, SIGNAL(s_stop_unit()), this, SLOT(sl_stop_unit()));
@@ -21,6 +37,8 @@ Cuma_Main::Cuma_Main(QObject *parent) : QObject(parent)
 
 Cuma_Main::~Cuma_Main()
 {
+    Cuma_Debug("Disconnect unit signal");
+
     //stop 시그널을 바인딩함
     disconnect(this, SIGNAL(s_stop_unit()), this, SLOT(sl_stop_unit()));
 
@@ -33,8 +51,10 @@ Cuma_Main::~Cuma_Main()
 
 void Cuma_Main::mf_set_unit_list(QVector<QSharedPointer<Cuma_Main>> list)
 {
+    Cuma_Debug("set unit list");
     if (list.isEmpty() == false)
     {
+        Cuma_Debug("parameter is not empty save the unit QSharedPointer<Cuma_Main> ");
         m_Cuma_unit_list = list;
     }
 }
@@ -103,6 +123,8 @@ void Cuma_Main::sl_stop_unit()
 
 void Cuma_Main::sl_recv_signal(QJsonObject o)
 {
+    Cuma_Debug("sl_recv_signal(QJsonObject o) recv the signal from " + o["From"].toString());
+
     //만약 recv_signal을 받았을 경우 f_recv_process에서 recv을 분석해서 호출함
     f_recv_process(o);
 }
@@ -376,13 +398,13 @@ int Cuma_Main::f_send_ping_to_unit(uint32_t limit_time)
         QVector<QSharedPointer<Cuma_Main>> m_Send_Unit_list_cache;
 
         //리턴된 유닛들의 딜레이 핑타임 for문으로 체크해서 허용된 딜레이 핑만 스크리밍함
-        for (QVector<QSharedPointer<Cuma_Main>>::iterator it = m_Send_Unit_list.begin(); it != m_Send_Unit_list.end(); it++)
+        for (QSharedPointer<Cuma_Main>& it: m_Send_Unit_list)
         {
             //유닛들을 pop해서 해당 유닛의 핑을 체크함
             QSharedPointer<Cuma_Main> temp_unit;
 
             //유닛들을 먼저 pop함
-            temp_unit = (*it)->f_pop_unit();
+            temp_unit = it->f_pop_unit();
 
             //만약 유닛 리스트에 유닛들이 없을 경우 break으로 탈출
             if ( temp_unit == nullptr)

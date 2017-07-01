@@ -18,7 +18,9 @@ SOURCES += main.cpp \
     Cuma_Main_Unit/Cuma_Peer_Server/cuma_peer_server.cpp \
     Cuma_Main_Unit/Cuma_Peer_Client/cuma_peer_client.cpp \
     Cuma_Main_Unit/Cuma_Peer_Protocol/cuma_peer_protocol.cpp \
-    Test/cuma_file_test.cpp
+    Test/cuma_file_test.cpp \
+    Test/cuma_client_test.cpp \
+    Test/cuma_server_test.cpp
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked deprecated (the exact warnings
@@ -39,4 +41,6 @@ HEADERS += \
     Cuma_Debug/cuma_debug.h \
     Test/cuma_file_test.h \
     Cuma_Main_Unit/Cuma_Peer_Protocol/cuma_peer_protocol.h \
-    Cuma_Main_Unit/Cuma_File/cuma_file_info_struct.h
+    Cuma_Main_Unit/Cuma_File/cuma_file_info_struct.h \
+    Test/cuma_client_test.h \
+    Test/cuma_server_test.h

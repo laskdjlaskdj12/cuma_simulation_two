@@ -242,7 +242,7 @@ int Cuma_Main::f_reply_check_file_frag_to_unit(const QJsonObject o)
         //만약 bypass 프로토콜인지 확인함
         if (!o["bypass"].isNull())
         {
-            uint32_t temp_bypass_count = o["bypass_count"].toInt();
+            uint32_t temp_bypass_count = static_cast<uint32_t>(o["bypass_count"].toInt());
 
             //만약 자기 로 오는 bypass 프로토콜일 경우 파일이 존재하는지 확인
             if(o["To"].toInt() == m_Pid)
@@ -445,10 +445,24 @@ int Cuma_Main::f_reply_over_bypass_limit(QJsonObject o)
 
 QSharedPointer<Cuma_Main> Cuma_Main::f_find_unit_from_inside_timeout_unit(uint32_t unit_id)
 {
+    for(QSharedPointer<Cuma_Main>& p: m_Cuma_unit_inside_timeout_unit_list)
+    {
+        if(p->mf_get_pid() == unit_id)
+        {
+            return p;
+        }
+    }
     return nullptr;
 }
 
 QSharedPointer<Cuma_Main> Cuma_Main::f_find_unit_from_Cuma_unit_list(uint32_t unit_id)
 {
+    for(QSharedPointer<Cuma_Main>& p: m_Cuma_unit_list)
+    {
+        if(p->mf_get_pid() == unit_id)
+        {
+            return p;
+        }
+    }
     return nullptr;
 }

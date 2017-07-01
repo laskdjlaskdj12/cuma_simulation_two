@@ -5,7 +5,7 @@
 #include <QtTest/qtest.h>
 #include "../Cuma_Main_Unit/cuma_main.h"
 
-class Cuma_Main_Unit_test : public QObject
+class Cuma_Main_Unit_test : public Cuma_Main
 {
     Q_OBJECT
 public:
