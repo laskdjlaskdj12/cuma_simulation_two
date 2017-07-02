@@ -1,6 +1,6 @@
 #include "cuma_debug.h"
 
-Cuma_Debug::m_show_debug(false);
+bool Cuma_Debug::m_show_debug = false;
 
 Cuma_Debug::Cuma_Debug(QString Debug)
 {
@@ -14,7 +14,7 @@ Cuma_Debug::Cuma_Debug(QString Debug, uint line)
 {
     if(m_show_debug == true)
     {
-        qDebug() <<"[Info] : " + Debug + " line :"+ line;
+        qDebug() <<"[Info] : " + Debug + " line :"+ QString::number(line);
     }
 }
 

@@ -3,11 +3,23 @@
 Cuma_File_test::Cuma_File_test (QObject *parent)
 {
     Cuma_Debug::show_debug(true);
+
+    //test할 디렉토리를 삭제하고 새로 생성함
+    QDir mktest;
+    if(mktest.exists("t_unit_dir") == true)
+    {
+        mktest.remove("t_unit_dir");
+    }
+
+    mktest.mkdir("t_unit_dir");
+
+    //현재 포지션을 test_dir으로 함
+    QDir::setCurrent("t_unit_dir");
 }
 
 Cuma_File_test::~Cuma_File_test ()
 {
-    
+
 }
 
 void Cuma_File_test::t_set_File_Frag_Count ()
@@ -41,7 +53,7 @@ void Cuma_File_test::t_set_File_info_block ()
 
 void Cuma_File_test::t_mf_Read_File_Frag ()
 {
-    QVERIFY (set_env () == 0);
+    QVERIFY (env_set_env () == 0);
 
     //파일을 세팅하고 읽음
     set_File_Name ("test.txt");
@@ -53,12 +65,12 @@ void Cuma_File_test::t_mf_Read_File_Frag ()
     clear_binary ();
 
     //테스트 환경을 flush함
-    clear_test_env ();
+    env_clear_test_env ();
 }
 
 void Cuma_File_test::t_mf_Make_Frag ()
 {
-    QVERIFY (set_env () == 0);
+    QVERIFY (env_set_env () == 0);
 
     set_File_Name ("test.txt");
 
@@ -77,12 +89,12 @@ void Cuma_File_test::t_mf_Make_Frag ()
     clear_binary ();
 
     //테스트 환경을 flush함
-    clear_test_env ();
+    env_clear_test_env ();
 }
 
 void Cuma_File_test::t_mf_Save_by_Frag ()
 {
-    QVERIFY (set_env () == 0);
+    QVERIFY (env_set_env () == 0);
 
     set_File_Name ("test.txt");
 
@@ -108,14 +120,14 @@ void Cuma_File_test::t_mf_Save_by_Frag ()
     clear_binary ();
 
     //테스트 환경을 flush함
-    clear_test_env ();
+    env_clear_test_env ();
 }
 
 void Cuma_File_test::t_mf_Save_by_Frag_QVector ()
 {
     // QVector로 파일을 저장하기
 
-    QVERIFY (set_env () == 0);
+    QVERIFY (env_set_env () == 0);
 
     QFile f_env;
     f_env.setFileName ("test.txt");
@@ -146,14 +158,14 @@ void Cuma_File_test::t_mf_Save_by_Frag_QVector ()
     clear_binary ();
 
     //테스트 환경을 flush함
-    clear_test_env ();
+    env_clear_test_env ();
 }
 
 void Cuma_File_test::t_mf_Save_by_File ()
 {
     //파일 바이너리 통째로 저장하기
 
-    QVERIFY (set_env () == 0);
+    QVERIFY (env_set_env () == 0);
 
     QFile f_env;
     f_env.setFileName ("test.txt");
@@ -165,19 +177,19 @@ void Cuma_File_test::t_mf_Save_by_File ()
     save_File_Frag (f_env_bin, "test.txt", index);
 
     //바이너리를 저장
-    QVERIFY (mf_Save_by_File ("test_res.txt") == Cuma_File_Status::C_F_no_err);
+    QVERIFY (mf_Save_by_File ("test.txt") == Cuma_File_Status::C_F_no_err);
 
     //바이너리 클리어
     clear_binary ();
 
     //테스트 환경을 flush함
-    clear_test_env ();
+    env_clear_test_env ();
 
 }
 
 void Cuma_File_test::t_Save_frag_File ()
 {
-    QVERIFY (set_env () == 0);
+    QVERIFY (env_set_env () == 0);
 
     QFile f_env;
     f_env.setFileName ("test.txt");
@@ -190,12 +202,12 @@ void Cuma_File_test::t_Save_frag_File ()
     QVERIFY (Save_frag_File ("test.txt", 0, f_env_bin) != nullptr);
 
     //테스트 환경을 flush함
-    clear_test_env ();
+    env_clear_test_env ();
 }
 
 void Cuma_File_test::t_save_File_Frag_QVector ()
 {
-    QVERIFY (set_env () == 0);
+    QVERIFY (env_set_env () == 0);
     
     QFile f_env;
     f_env.setFileName ("test.txt");
@@ -210,32 +222,32 @@ void Cuma_File_test::t_save_File_Frag_QVector ()
     //파일을 닫음
     f_env.close ();
 
-    sav_bin = get_test_frag_binary ("test.txt", 10);
+    sav_bin = env_get_test_frag_binary ("test.txt", 10);
 
     //sav_bin을 저장함
-    save_File_Frag (sav_bin, "test_res.txt");
+    save_File_Frag (sav_bin, "test.txt");
 
     //테스트 환경을 flush함
-    clear_test_env ();
+    env_clear_test_env ();
 }
 
 void Cuma_File_test::t_read_File_Frag ()
 {
     //파일 frag를 읽기
-    QVERIFY (set_env () == 0);
+    QVERIFY (env_set_env () == 0);
 
     //테스트 파일 의 binary vector를 비교를 위해 저장함
-    QByteArray f_array = get_test_binary ("test.txt");
+    QByteArray f_array = env_get_test_binary  ("test.txt");
     QVector<QByteArray> f_frag_arr;
     uint32_t f_count = 10;
     //파일 byte frag를 읽기
-    QVector<QByteArray> t_file = get_test_frag_binary ("test.txt", f_count);
+    QVector<QByteArray> t_file = env_get_test_frag_binary ("test.txt", f_count);
 
     //파일 이름을 세팅함
-    set_File_Name ("test_res.txt");
+    set_File_Name ("test.txt");
 
     //파일을 생성함
-    mf_Save_by_File ("test_res.txt");
+    mf_Save_by_File ("test.txt");
 
     //파일의 frag count를 생성함
     set_File_Frag_Count (f_count);
@@ -249,7 +261,7 @@ void Cuma_File_test::t_read_File_Frag ()
     //파일의 frag를 읽어옴
     for (int i = 0; i < f_count; i++)
     {
-        QVERIFY (read_file_frag ("test_res.txt", i) == Cuma_File_Status::C_F_no_err);
+        QVERIFY (read_file_frag ("test.txt", i) == Cuma_File_Status::C_F_no_err);
         f_frag_arr.append (get_File_binary ());
     }
 
@@ -257,20 +269,20 @@ void Cuma_File_test::t_read_File_Frag ()
     QVERIFY (f_frag_arr == t_file);
 
     clear_binary ();
-    clear_test_env ();
+    env_clear_test_env ();
 }
 
 void Cuma_File_test::t_read_File ()
 {
     //파일을 읽기
-    QVERIFY (set_env () == 0);
+    QVERIFY (env_set_env () == 0);
 
     //테스트 파일을 저장함
     QFile sav_test_file;
-    sav_test_file.setFileName ("test_res.txt");
+    sav_test_file.setFileName ("test.txt");
     sav_test_file.open (QFile::ReadWrite);
 
-    sav_test_file.write (get_test_binary ("test.txt"));
+    sav_test_file.write (env_get_test_binary  ("test.txt"));
     sav_test_file.close ();
 
     //파일의 바이너리를 읽음
@@ -281,45 +293,77 @@ void Cuma_File_test::t_read_File ()
     QByteArray ret_binary = get_File_binary ();
 
     //리턴된 바이너리를 테스트 파일와 비교함
-    QVERIFY (get_test_binary ("test.txt") == ret_binary);
+    QVERIFY (env_get_test_binary  ("test.txt") == ret_binary);
 
     clear_binary();
-    clear_test_env();
+    env_clear_test_env();
 }
 
 void Cuma_File_test::t_clear_save_frag ()
 {
-        clear_binary();
+    clear_binary();
 
 }
 
 void Cuma_File_test::t_mf_Read_File ()
 {
     //파일 frag를 읽기
-    QVERIFY (set_env () == 0);
+    QVERIFY (env_set_env () == 0);
 
-    //테스트 파일 의 binary vector를 비교를 위해 저장함
-    QByteArray f_array = get_test_binary ("test.txt");
-    QVector<QByteArray> f_frag_arr;
-    uint32_t f_count = 10;
-    //파일 byte frag를 읽기
-    QVector<QByteArray> t_file = get_test_frag_binary ("test.txt", f_count);
+    //test_dir에 있는 파일을 t_unit_dir로 저장함
+    QByteArray f_array = env_get_test_binary("test.txt");
 
-    //파일 이름을 세팅함
-    set_File_Name ("test_res.txt");
+    //읽을 파일 이름을 set함
+    set_File_Name("test.txt");
 
     //파일의 바이너리를 읽음
     QVERIFY (mf_Read_File () == Cuma_File_Status::C_F_no_err);
 
     //읽은 파일 바이너리 가 테스트 바이너리와 같은지 확인
+
+    QByteArray read_binary = get_File_binary();
+    Cuma_Debug("test binary size = " + QString::number(f_array.size()), __LINE__);
+    Cuma_Debug("read binary size = " + QString::number(read_binary.size()), __LINE__);
+
     QVERIFY (f_array == get_File_binary());
 
     clear_binary ();
-    clear_test_env ();
+    env_clear_test_env ();
 
 }
 
-int Cuma_File_test::set_env ()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+int Cuma_File_test::env_set_env ()
 {
     QDir t_f_dir;
     QFile t_f_env;
@@ -330,7 +374,7 @@ int Cuma_File_test::set_env ()
     }
 
     //테스트 dir에 cd함
-    t_f_dir.cd ("test_dir");
+    QDir::setCurrent("../test_dir");
 
     //테스트 텍스트를 생성함
     t_f_env.setFileName ("test.txt");
@@ -355,18 +399,18 @@ int Cuma_File_test::set_env ()
 
         t_f_env.close ();
     }
+
+    //원래 유닛테스트 dir로 이동
+    QDir::setCurrent("../t_unit_dir");
+
     return 0;
 
 
 }
 
-QByteArray Cuma_File_test::get_test_binary (QString f_name)
+QByteArray Cuma_File_test::env_get_test_binary  (QString f_name)
 {
-    QDir t_f_dir;
-    if (t_f_dir.cd ("test_dir") == false)
-    {
-        return nullptr;
-    }
+    QDir::setCurrent("test_dir");
 
     QFile t_f_file;
     QByteArray ret_byte;
@@ -374,14 +418,13 @@ QByteArray Cuma_File_test::get_test_binary (QString f_name)
     t_f_file.open (QFile::ReadWrite);
     ret_byte = t_f_file.readAll ();
 
-    t_f_dir.cdUp ();
-
+    QDir::setCurrent("../t_unit_dir");
     return ret_byte;
 }
 
-QVector<QByteArray> Cuma_File_test::get_test_frag_binary (QString f_name, uint32_t count)
+QVector<QByteArray> Cuma_File_test::env_get_test_frag_binary (QString f_name, uint32_t count)
 {
-    QByteArray f_binary = get_test_binary (f_name);
+    QByteArray f_binary = env_get_test_binary  (f_name);
 
     if (f_binary == nullptr)
     {
@@ -404,7 +447,7 @@ QVector<QByteArray> Cuma_File_test::get_test_frag_binary (QString f_name, uint32
     return bin_vec;
 }
 
-int Cuma_File_test::clear_test_env ()
+int Cuma_File_test::env_clear_test_env ()
 {
     QDir t_f_dir;
     if (t_f_dir.exists ("test_dir") == false)
@@ -418,26 +461,38 @@ int Cuma_File_test::clear_test_env ()
 
     for (int i = 0; i < dir_lst.count (); i++)
     {
-        QFileInfo file_info = dir_lst.at (i);
-
-        //만약 파일 이름이 test_dir이 아닐경우 해당 파일을 delete함
-        if (file_info.fileName () == "test_dir")
-        {
-            continue;
-        }
-
-        //만약 Cuma_Frag_dir 있을경우 cuma_frag_dir를 삭제하고 새로 디렉토리를 생성함
-        else if(file_info.fileName() == "Cuma_Frag_dir")
-        {
-            t_f_dir.remove("Cuma_Frag_dir");
-            t_f_dir.mkdir("Cuma_Frag_dir");
-        }
-        else
-        {
-            //해당 파일을 delete 함
-            t_f_dir.remove (file_info.fileName ());
-        }
+        t_f_dir.remove ( dir_lst.at(i).fileName());
     }
+
+    return 0;
+}
+
+int Cuma_File_test::env_mk_file(QByteArray &arr, QString f_name)
+{
+    //유닛테스트 디렉토리에서 테스트 파일 의 binary vector를 비교를 위해 저장함
+    QByteArray f_array = arr;
+
+    QFile sav_test_file;
+    sav_test_file.setFileName (f_name);
+    sav_test_file.open (QFile::ReadWrite);
+
+    sav_test_file.write (arr);
+    sav_test_file.close ();
+
+    return 0;
+}
+
+int Cuma_File_test::env_mk_file(QString f_name)
+{
+    //유닛테스트 디렉토리에서 테스트 파일 의 binary vector를 비교를 위해 저장함
+    QByteArray f_array = env_get_test_binary(f_name);
+
+    QFile sav_test_file;
+    sav_test_file.setFileName (f_name);
+    sav_test_file.open (QFile::ReadWrite);
+
+    sav_test_file.write (f_array);
+    sav_test_file.close ();
 
     return 0;
 }

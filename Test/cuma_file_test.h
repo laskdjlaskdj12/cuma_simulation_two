@@ -36,13 +36,17 @@ private slots:
     void t_Save_frag_File();
 
 protected:
-    int set_env();
-    QByteArray get_test_binary(QString f_name);
-    QVector<QByteArray> get_test_frag_binary(QString f_name, uint32_t count);
+
+    int env_set_env();
+    QByteArray env_get_test_binary(QString f_name);
+    QVector<QByteArray> env_get_test_frag_binary(QString f_name, uint32_t count);
 
     //test_dir만 남기고 전부 삭제
-    int clear_test_env();
+    int env_clear_test_env();
 
+    //테스트 영역에 파일을 생성하는 함수
+    int env_mk_file(QByteArray& arr, QString f_name);
+    int env_mk_file(QString f_name);
 
 };
 
