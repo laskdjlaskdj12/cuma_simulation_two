@@ -60,7 +60,7 @@ void Cuma_File_test::t_mf_Read_File ()
     QVERIFY (env_set_env () == 0);
 
     //현재 위치를 테스트 위치로 변경함
-    QDir::setCurrent("t_unit_dir");
+    QDir::setCurrent(root_path + "/t_unit_dir");
 
     //test_dir에 있는 파일을 t_unit_dir로 저장함
     QByteArray f_array = env_get_test_binary("test.txt");
@@ -91,7 +91,7 @@ void Cuma_File_test::t_mf_Read_File_Frag ()
     QVERIFY (env_set_env () == 0);
 
     //현재 위치를 테스트 위치로 변경함
-    QDir::setCurrent("t_unit_dir");
+    QDir::setCurrent(root_path + "/t_unit_dir");
 
     //현재 위치에서 파일을 만듬
     env_mk_file("test.txt");
@@ -125,22 +125,27 @@ void Cuma_File_test::t_mf_Read_File_Frag ()
     QDir::setCurrent(root_path);
 }
 
-// ============= 클래스 메소드를 위주로 테스트를 진행함 중복으로 테스트가 실행된 메소드가 없도록 함 //
 void Cuma_File_test::t_mf_Make_Frag ()
 {
     QVERIFY (env_set_env () == 0);
 
-    set_File_Name ("test.txt");
+    //현재 위치를 테스트 위치로 변경함
+    QDir::setCurrent(root_path + "/t_unit_dir");
 
-    //frag를 나눌 count를 세팅
-    set_File_Frag_Count (10);
+    //현재 위치에서 파일을 만듬
+    env_mk_file("test.txt");
 
-    //파일 읽기
-    QVERIFY (read_file () == Cuma_File::C_F_no_err);
+    set_File_Name("test.txt");
 
-    //파일의 frag를 실행
-    QVERIFY (mf_Make_Frag () == 0);
+    set_File_Frag_Count(10);
 
+    //파일을 저장함
+    QVERIFY (read_file() == Cuma_File_Status::C_F_no_err);
+
+    //파일을 frag함
+    QVERIFY (mf_Make_Frag() == Cuma_File_Status::C_F_no_err);
+
+    //frag한 파일 수가 10인지 확인
     QVERIFY (get_File_Frag ().count () == 10);
 
     //파일의 binary를 모두 flush
@@ -148,7 +153,10 @@ void Cuma_File_test::t_mf_Make_Frag ()
 
     //테스트 환경을 flush함
     env_clear_test_env ();
+    QDir::setCurrent(root_path);
 }
+
+// ============= 클래스 메소드를 위주로 테스트를 진행함 중복으로 테스트가 실행된 메소드가 없도록 함 //
 
 void Cuma_File_test::t_mf_Save_by_Frag ()
 {
@@ -449,7 +457,7 @@ QByteArray Cuma_File_test::env_get_test_binary  (QString f_name)
     t_f_file.open (QFile::ReadWrite);
     ret_byte = t_f_file.readAll ();
 
-    QDir::setCurrent(root_path + "/t_unit_dir");
+    QDir::setCurrent(root_path + "t_unit_dir");
     return ret_byte;
 }
 
