@@ -246,6 +246,10 @@ void Cuma_File::clear_binary()
     m_File_Frag_Index = NULL;
     m_File_Frag.clear();
     m_File_Binary.clear();
+    m_File_info_Block.Block_size = 0;
+    m_File_info_Block.f_Binary_Byte = 0;
+    m_File_info_Block.f_Frag_count = 0;
+    m_File_info_Block.f_Name = "NULL";
 }
 
 int Cuma_File::mf_Read_File()
@@ -298,22 +302,41 @@ int Cuma_File::mf_Read_File()
 int Cuma_File::mf_Read_File_Frag()
 {
     try{
-        for (uint32_t i = 0; i < m_File_info_Block.f_Frag_count; i++)
+
+        uint32_t frag_count = 0;
+
+        //만약 블록 정보가 nullptr이 아닐경우 해당 파일 블록을 읽어서 파일을 불러옴
+        if(m_File_info_Block.Block_size != 0)
         {
-            m_File.setFileName(m_File_Name + QString::number(m_File_Frag_Index));
-
-            if(m_File.open(QFile::ReadOnly) == false)
-            {
-                throw m_File.error();
-            }
-
-            m_File_Binary =  m_File.readAll();
-
-            if(m_File_Binary.isEmpty())
-            {
-                throw m_File.error();
-            }
+            frag_count = m_File_info_Block.f_Frag_count;
         }
+
+        //만약 블록 정보가 nullptr일경우 파일이름 + frag_count정보를 통해 불러옴
+        else
+        {
+            frag_count = m_File_Frag_Index;
+        }
+
+        m_File.setFileName(m_File_Name + QString::number(m_File_Frag_Index));
+
+        //만약 파일이 없을 경우 throw 함
+        if(QFile::exists(m_File_Name + QString::number(m_File_Frag_Index)) == false)
+        {
+            throw Cuma_File::C_F_NOT_EXSIST;
+        }
+
+        if(m_File.open(QFile::ReadOnly) == false)
+        {
+            throw m_File.error();
+        }
+
+        m_File_Binary =  m_File.readAll();
+
+        if(m_File_Binary.isEmpty())
+        {
+            throw m_File.error();
+        }
+
         return Cuma_File_Status::C_F_no_err;
     }
     catch(QString& e)
@@ -325,6 +348,7 @@ int Cuma_File::mf_Read_File_Frag()
     }
     catch(Cuma_File::Cuma_File_Status& e)
     {
+        Cuma_Debug(m_File_Name + QString::number(m_File_Frag_Index) + "is not exsist");
         return e;
     }
 }

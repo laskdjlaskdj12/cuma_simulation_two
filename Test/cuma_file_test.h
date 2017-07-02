@@ -7,7 +7,6 @@
 #include <QFileInfoList>
 #include <QFileInfo>
 #include "../Cuma_Main_Unit/Cuma_File/cuma_file.h"
-#include "cuma_file_test_env.h"
 
 class Cuma_File_test : public Cuma_File
 {
@@ -47,6 +46,9 @@ protected:
     //테스트 영역에 파일을 생성하는 함수
     int env_mk_file(QByteArray& arr, QString f_name);
     int env_mk_file(QString f_name);
+
+private:
+    QString root_path;
 
 };
 

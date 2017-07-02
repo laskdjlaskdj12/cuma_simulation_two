@@ -26,6 +26,7 @@ public:
         C_F_Exsist = -3,
         C_F_Dir_Not_Open = -4,
         C_F_READ_FILE_SIZE_MAXIMUM = -5,
+        C_F_NOT_EXSIST = -6,
         C_F_no_err = 0
     };
 
@@ -37,8 +38,6 @@ public:
     virtual void set_File_Frag_Count(uint32_t c);
     virtual void set_File_Name(QString n);
     virtual void set_File_info_block(struct Cuma_File_Info_Block& block);
-    virtual int save_File_Frag(QVector<QByteArray> frag, QString name);
-    virtual int save_File_Frag(QByteArray frag, QString name, uint32_t index);
 
     virtual uint32_t get_File_Index();
     virtual QString get_File_Name();
@@ -50,6 +49,9 @@ public:
 
     virtual int read_file_frag(QString file_name, uint32_t index);
     virtual int read_file();
+
+    virtual int save_File_Frag(QVector<QByteArray> frag, QString name);
+    virtual int save_File_Frag(QByteArray frag, QString name, uint32_t index);
 
     virtual void clear_binary();
 
