@@ -153,6 +153,7 @@ void Cuma_File_test::t_mf_Make_Frag ()
 
     //테스트 환경을 flush함
     env_clear_test_env ();
+
     QDir::setCurrent(root_path);
 }
 
