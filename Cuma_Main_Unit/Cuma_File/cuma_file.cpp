@@ -113,7 +113,10 @@ Cuma_File::Cuma_File(QObject *parent):QObject(parent)
     }
 }
 
-Cuma_File::~Cuma_File(){m_File_Frag.clear();}
+Cuma_File::~Cuma_File(){
+    m_File_Frag.clear();
+    m_File.close();
+}
 
 void Cuma_File::set_File_Frag_Count(uint32_t c){m_File_Frag_Index = c;}
 
@@ -127,7 +130,7 @@ void Cuma_File::set_File_info_block(struct Cuma_File_Info_Block& block)
     m_File_info_Block = block;
 }
 
-int Cuma_File::save_File_Frag(QVector<QByteArray> frag, QString& name)
+int Cuma_File::save_File_Frag(QVector<QByteArray> frag, QString name)
 {
     try{
 
@@ -155,7 +158,7 @@ int Cuma_File::save_File_Frag(QVector<QByteArray> frag, QString& name)
     }
 }
 
-int Cuma_File::save_File_Frag(QByteArray frag, QString name, uint32_t& index)
+int Cuma_File::save_File_Frag(QByteArray frag, QString name, uint32_t index)
 {
     try{
 
@@ -223,7 +226,7 @@ Cuma_File_Info_Block Cuma_File::get_File_info_block()
     return m_File_info_Block;
 }
 
-int Cuma_File::read_file_frag (QString& file_name, uint32_t& index)
+int Cuma_File::read_file_frag (QString file_name, uint32_t index)
 {
     m_File_Name = file_name;
     m_File_Frag_Index = index;
@@ -234,10 +237,10 @@ int Cuma_File::read_file_frag (QString& file_name, uint32_t& index)
 int Cuma_File::read_file()
 {
     if(m_File_Name != nullptr || m_File_Frag_Index )
-    return mf_Read_File();
+        return mf_Read_File();
 }
 
-void Cuma_File::clear_save_frag()
+void Cuma_File::clear_binary()
 {
     m_File_Name.clear();
     m_File_Frag_Index = NULL;
@@ -249,9 +252,12 @@ int Cuma_File::mf_Read_File()
 {
     try
     {
-        //만약 파일이 열려있지 않다면
+        Cuma_Debug("Start mf_Read_File", __LINE__);
+
         if(m_File.isOpen() == false || m_File.fileName() != m_File_Name)
         {
+            Cuma_Debug("File is not open reopen", __LINE__);
+
             m_File.close();
             m_File.setFileName(m_File_Name);
             if(m_File.open(QIODevice::ReadWrite) == false)
@@ -260,15 +266,18 @@ int Cuma_File::mf_Read_File()
             }
         }
 
+        Cuma_Debug("start read File_binary", __LINE__);
         //파일 바이너리를 읽음
         m_File_Binary = m_File.readAll();
 
+        Cuma_Debug("check byte is maximum", __LINE__);
         //만약 바이너리가 UINT_MAX일 경우 C_F_READ_FILE_SIZE_MAXIMUM 경고를 리턴함
         if(m_File_Binary.count() > UINT_MAX)
         {
             return Cuma_File_Status::C_F_READ_FILE_SIZE_MAXIMUM;
         }
 
+        Cuma_Debug("add file binary info to m_Fileinfo_block", __LINE__);
         //파일 바이너리정보를 m_File_info_Block에 넣음
         m_File_info_Block.f_Binary_Byte = m_File_Binary.size();
         m_File_info_Block.f_Name = m_File_Name;

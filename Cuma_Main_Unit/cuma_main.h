@@ -26,12 +26,16 @@ class Cuma_Main : public QObject
     Q_OBJECT
 public:
 
-    explicit Cuma_Main(QObject* parent = nullptr);
+    Cuma_Main(QObject* parent = nullptr);
+    Cuma_Main(Cuma_Main& m);
     ~Cuma_Main();
 
     //unit 리스트 프로퍼티
     void mf_set_unit_list(QVector<QSharedPointer<Cuma_Main>> list);
     QVector<QSharedPointer<Cuma_Main>> mf_get_unit_list();
+
+    void mf_set_dealy_lst(QVector<QVector<uint32_t>>& t);
+    QVector <QVector<uint32_t>> mf_get_dealy_lst();
 
     //ping 리스트 리미트 프로퍼티
     void mf_set_ping_limit_time(uint32_t time);

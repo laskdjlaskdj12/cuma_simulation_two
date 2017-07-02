@@ -11,9 +11,14 @@ class Cuma_client_test : public Cuma_Main
 public:
     explicit Cuma_client_test(QObject *parent = nullptr);
 
-signals:
+private slots:
+    void t_mf_command_set_file_name();
+    void t_mf_command_set_unit_bypass_count();
+    void t_mf_command_ping_test();
+    void t_mf_command_spread_test();
+    void t_mf_command_req_file_test();
+    void t_mf_command_trace_pass_test();
 
-public slots:
 };
 
 #endif // CUMA_CLIENT_TEST_H

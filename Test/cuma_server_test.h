@@ -11,9 +11,18 @@ class Cuma_server_test : public Cuma_Main
 public:
     explicit Cuma_server_test(QObject *parent = nullptr);
 
-signals:
+private slots:
+    void t_f_upload_file_frag_from_unit();
+    void t_f_reply_upload_file_frag_to_unit();
 
-public slots:
+    void t_f_download_file_frag_from_unit();
+    void t_f_reply_download_file_frag_to_unit();
+
+    void t_f_check_file_frag_to_unit();
+    void t_f_reply_check_file_frag_to_unit();
+
+    void t_f_over_bypass();
+    void t_f_reply_over_bypass_limit();
 };
 
 #endif // CUMA_SERVER_TEST_H

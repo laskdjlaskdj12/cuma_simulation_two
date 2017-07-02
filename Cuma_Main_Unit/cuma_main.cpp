@@ -35,6 +35,23 @@ Cuma_Main::Cuma_Main(QObject *parent) : QObject(parent)
 
 }
 
+Cuma_Main::Cuma_Main(Cuma_Main &m)
+{
+    m_Unit_delay_time_array = m.m_Unit_delay_time_array;
+    m_Cuma_unit_list = m.m_Cuma_unit_list;
+    m_Cuma_unit_inside_timeout_unit_list = m.m_Cuma_unit_inside_timeout_unit_list;
+    m_Send_Unit_list = m.m_Send_Unit_list;
+    m_File = m.m_File;
+    m_Pid = m.m_Pid;
+    m_ping_limit = m.m_ping_limit;
+    m_report_json = m.m_report_json;
+    m_active = m.m_active;
+    m_limit_bypass_count = m.m_limit_bypass_count;
+    m_file_info_block = m.m_file_info_block;
+    m_file_frag_address = m.m_file_frag_address;
+
+}
+
 Cuma_Main::~Cuma_Main()
 {
     Cuma_Debug("Disconnect unit signal");
@@ -62,6 +79,16 @@ void Cuma_Main::mf_set_unit_list(QVector<QSharedPointer<Cuma_Main>> list)
 QVector<QSharedPointer<Cuma_Main>> Cuma_Main::mf_get_unit_list()
 {
     return m_Cuma_unit_list;
+}
+
+QVector<QVector<uint32_t>> Cuma_Main::mf_get_dealy_lst()
+{
+    return m_Unit_delay_time_array;
+}
+
+void Cuma_Main::mf_set_dealy_lst(QVector<QVector<uint32_t>> &t)
+{
+    m_Unit_delay_time_array = t;
 }
 
 void Cuma_Main::mf_set_ping_limit_time(uint32_t _time)
@@ -444,7 +471,7 @@ int Cuma_Main::f_send_ping_to_unit(uint32_t limit_time)
 void Cuma_Main::f_save_recv_json_report(QJsonObject e)
 {
     //타임을 적어서 넣음
-    e["Time"] = unit_Timer::time.elapsed();
+    e["Time"] = f_tell_time();
 
     //프로토콜을 recv_arr에 넣음
     QJsonArray recv_arr = m_report_json["recv"].toArray();
@@ -456,7 +483,7 @@ void Cuma_Main::f_save_recv_json_report(QJsonObject e)
 void Cuma_Main::f_save_send_json_report(QJsonObject e)
 {
     //타임을 적어서 넣음
-    e["Time"] = unit_Timer::time.elapsed();
+    e["Time"] = f_tell_time();
 
     //프로토콜을 recv_arr에 넣음
     QJsonArray send_arr = m_report_json["recv"].toArray();

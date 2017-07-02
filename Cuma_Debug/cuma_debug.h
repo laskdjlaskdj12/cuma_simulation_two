@@ -2,7 +2,9 @@
 #define CUMA_DEBUG_H
 
 #include <QJsonObject>
+#include <QJsonDocument>
 #include <QObject>
+#include <QDebug>
 
 class Cuma_Debug
 {

@@ -30,14 +30,15 @@ public:
     };
 
 public:
-    explicit Cuma_File(QObject* parent = 0);
+     Cuma_File(QObject* parent = 0);
+     Cuma_File(Cuma_File& c);
     ~Cuma_File();
 
     virtual void set_File_Frag_Count(uint32_t c);
     virtual void set_File_Name(QString n);
     virtual void set_File_info_block(struct Cuma_File_Info_Block& block);
-    virtual int save_File_Frag(QVector<QByteArray> frag, QString& name);
-    virtual int save_File_Frag(QByteArray frag, QString name, uint32_t& index);
+    virtual int save_File_Frag(QVector<QByteArray> frag, QString name);
+    virtual int save_File_Frag(QByteArray frag, QString name, uint32_t index);
 
     virtual uint32_t get_File_Index();
     virtual QString get_File_Name();
@@ -47,10 +48,10 @@ public:
     virtual QByteArray get_File_binary();
     virtual struct Cuma_File_Info_Block get_File_info_block();
 
-    virtual int read_file_frag(QString& file_name, uint32_t& index);
+    virtual int read_file_frag(QString file_name, uint32_t index);
     virtual int read_file();
 
-    virtual void clear_save_frag();
+    virtual void clear_binary();
 
 
     /*
