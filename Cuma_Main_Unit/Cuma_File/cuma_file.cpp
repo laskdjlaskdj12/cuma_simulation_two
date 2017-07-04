@@ -134,6 +134,11 @@ void Cuma_File::set_File_info_block(struct Cuma_File_Info_Block& block)
     m_File_info_Block = block;
 }
 
+void Cuma_File::set_File_Frag(QVector<QByteArray> frag)
+{
+    m_File_Frag = frag;
+}
+
 int Cuma_File::save_File_Frag(QVector<QByteArray> frag, QString name)
 {
     try{
@@ -471,14 +476,14 @@ int Cuma_File::mf_Save_by_Frag(QVector<QByteArray> f_frag, QString f_name, uint3
         //해당 프레그단위로 여러개의 파일을 만들어서 저장함
         //파일 형식은 JSON형식으로 저장함
 
-        Cuma_Debug("set Frag save location to Cuma_Frag_dir is clear", __LINE__);
+        Cuma_Debug("set Frag save location to Cuma_Frag_dir", __LINE__);
 
         //파일 frag 카운트 대로 저장함
         for(int i = 0; i < f_frag.count(); i++)
         {
+            Cuma_Debug("generate file to Cuma_Frag_dir absolutePath", __LINE__);
             //해당 파일 이름을 (frag 이름 + frag 인덱스)으로 생성함
             QFile Frag_File(u_c_f_path + (f_name + QString::number(i)));
-            Cuma_Debug("generate file to Cuma_Frag_dir absolutePath is clear", __LINE__);
 
             //파일을 ReadWrtie로 오픈함
             Cuma_Debug("open Frag_File", __LINE__);
@@ -491,15 +496,14 @@ int Cuma_File::mf_Save_by_Frag(QVector<QByteArray> f_frag, QString f_name, uint3
                 //예외처리 던짐
                 throw Cuma_Error("Frag_File open error", __LINE__);
             }
-            Cuma_Debug("open Frag_File is clear", __LINE__);
 
+            Cuma_Debug("write file buffer", __LINE__);
             //파일의 버퍼를 씀
             Frag_File.write(f_frag[i]);
-            Cuma_Debug("write file buffer is clear", __LINE__);
 
+            Cuma_Debug("close Frag_File", __LINE__);
             //파일을 close함
             Frag_File.close();
-            Cuma_Debug("close Frag_File is clear", __LINE__);
         }
 
         return Cuma_File_Status::C_F_no_err;

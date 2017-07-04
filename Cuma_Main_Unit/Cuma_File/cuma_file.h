@@ -41,6 +41,7 @@ public:
     virtual void set_File_Frag_Count(uint32_t c);
     virtual void set_File_Name(QString n);
     virtual void set_File_info_block(struct Cuma_File_Info_Block& block);
+    virtual void set_File_Frag(QVector<QByteArray> frag);
 
     virtual uint32_t                get_File_Index();
     virtual QString                 get_File_Name();

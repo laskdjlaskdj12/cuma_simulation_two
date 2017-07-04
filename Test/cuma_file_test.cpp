@@ -292,9 +292,16 @@ void Cuma_File_test::t_mf_Save_by_Frag_QVector ()
     QVERIFY (mf_Save_by_Frag (sav_bin, "test.txt") == Cuma_File_Status::C_F_no_err);
     Cuma_Debug("mf_Save_by_Frag is clear", __LINE__);
 
-    //QVector가 저장된것을 확인함
-    QVERIFY (get_File_Frag () == sav_bin);
-    Cuma_Debug("compare get_File_Frag is same as sav_bin", __LINE__);
+    //파일 리스트를 출력함
+    QDir F_list;
+    F_list.setPath(root_path + "/t_unit_dir/Cuma_Frag_dir/");
+
+    QStringList Entry_list = F_list.entryList();
+
+    for(int i = 0; i < Entry_list.count(); i++)
+    {
+        Cuma_Debug("File_List :" + Entry_list[i]);
+    }
 
     clear_binary ();
 
@@ -311,6 +318,7 @@ void Cuma_File_test::t_mf_Save_by_File ()
     //테스트 환경 정리
     env_clear_test_env ();
 
+    QVERIFY (env_set_env () == 0);
     //파일 바이너리 통째로 저장하기
     //현재 위치를 테스트 위치로 변경함
     if (QDir::setCurrent(root_path + "/t_unit_dir") == false)
@@ -318,26 +326,38 @@ void Cuma_File_test::t_mf_Save_by_File ()
         Cuma_Debug("set test location dir is fail", __LINE__);
     }
 
-    QVERIFY (env_set_env () == 0);
+    //파일을 만들기
+    QVERIFY (env_mk_file("test.txt") == 0);
 
-    QFile f_env;
-    f_env.setFileName ("test.txt");
-    f_env.open (QFile::ReadWrite);
+    uint32_t frag_count = 10;
 
-    //f_env_bin을 끝까지 읽음
-    QByteArray f_env_bin = f_env.readAll ();
-    uint32_t index = 0;
-    save_File_Frag (f_env_bin, "test.txt", index);
+    //파일을 frag_binar의 벡터로 변환함
+    QVector<QByteArray> f_vec = env_get_test_frag_binary("test.txt", frag_count);
 
-    //바이너리를 저장
-    QVERIFY (mf_Save_by_File ("test_res.txt") == Cuma_File_Status::C_F_no_err);
+    Cuma_Debug("set env is clear");
 
-    QFile c_file("test_res.txt");
-    QVERIFY (c_file.open(QFile::ReadWrite) == true);
+    //frag을 읽음
+    set_File_Frag(f_vec);
 
-    QByteArray f_bin = c_file.readAll();
+    //파일의 frag들을 저장함
+    Cuma_Debug("save file frag to file");
+    QVERIFY (mf_Save_by_File("test_res.txt") == Cuma_File_Status::C_F_no_err);
 
-    QVERIFY(f_env_bin == f_bin);
+    //f_vec의 사이즈를 더함
+    uint32_t env_size = 0;
+    for(QByteArray& b: f_vec)
+    {
+       env_size += b.size();
+    }
+    Cuma_Debug("Env Frag  \"test_res.txt\" size is = " + QString::number(env_size));
+
+    //파일의 frag가 저장된 frag가 맞는지 확인함
+    QFile comp_file("test_res.txt");
+    comp_file.open(QFile::ReadWrite);
+    uint32_t comp_file_size = comp_file.readAll().size();
+    Cuma_Debug("comp_file size is = " + QString::number(comp_file_size));
+
+    QVERIFY (comp_file_size == env_size);
 
     //바이너리 클리어
     clear_binary ();
