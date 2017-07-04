@@ -109,7 +109,7 @@ Cuma_File::Cuma_File(QObject *parent):QObject(parent)
 
         //dir의 현재 위치를 넣음
         u_root_path = m_Dir.absolutePath();
-        u_c_f_path = u_root_path + "Cuma_Frag_dir";
+        u_c_f_path = u_root_path + "/Cuma_Frag_dir/";
     }
     catch(Cuma_Error& e)
     {
@@ -309,33 +309,39 @@ int Cuma_File::mf_Read_File_Frag()
 {
     try{
 
-        uint32_t frag_count = 0;
-
-        frag_count = m_File_Frag_Index;
-
-        m_File.setFileName(u_c_f_path + m_File_Name + QString::number(m_File_Frag_Index));
-
+        Cuma_Debug("check is file is exsist: " + m_File_Name + QString::number(m_File_Frag_Index), __LINE__);
         //만약 파일이 없을 경우 throw 함
         if(QFile::exists(u_c_f_path + m_File_Name + QString::number(m_File_Frag_Index)) == false)
         {
             throw Cuma_File::C_F_NOT_EXSIST;
         }
+        Cuma_Debug("check is file is exsist is clear", __LINE__);
+
+        //파일의 인덱스와 이름을 세팅함
+        m_File.setFileName(u_c_f_path + m_File_Name + QString::number(m_File_Frag_Index));
+        Cuma_Debug("set file name is : " + m_File_Name + QString::number(m_File_Frag_Index), __LINE__);
 
         //만약 파일이 오픈이 안되어있을시 open을 함
         if(m_File.isOpen() == false)
         {
+            Cuma_Debug("file is not open open the file", __LINE__);
             if(m_File.open(QFile::ReadOnly) == false)
             {
                 throw m_File.error();
             }
         }
-
+        Cuma_Debug("read file binary", __LINE__);
+        //파일의 바이너리를 읽음
         m_File_Binary =  m_File.readAll();
 
+        Cuma_Debug("check binary is empty", __LINE__);
         if(m_File_Binary.isEmpty())
         {
+            Cuma_Debug("binary is empty error occured", __LINE__);
             throw m_File.error();
         }
+        Cuma_Debug("end of mf_Read_File_Frag()", __LINE__);
+        Cuma_Debug("file size = " + QString::number(m_File_Binary.size()), __LINE__);
 
         return Cuma_File_Status::C_F_no_err;
     }
@@ -435,7 +441,7 @@ int Cuma_File::mf_Save_by_Frag()
             }
 
             //만약 쓰기가 에러가 났을 경우 Cuma_error를 emit함
-            if (Frag_File.write(Save_frag_File(m_File_Name, i, m_File_Frag[i])) < 0)
+            if (Frag_File.write( m_File_Frag[i]) < 0)
             {
                 throw Cuma_Error("Write Error : "+ Frag_File.errorString(), __LINE__);
             }
@@ -488,7 +494,7 @@ int Cuma_File::mf_Save_by_Frag(QVector<QByteArray> f_frag, QString f_name, uint3
             Cuma_Debug("open Frag_File is clear", __LINE__);
 
             //파일의 버퍼를 씀
-            Frag_File.write(Save_frag_File(f_name, i, f_frag[i]));
+            Frag_File.write(f_frag[i]);
             Cuma_Debug("write file buffer is clear", __LINE__);
 
             //파일을 close함

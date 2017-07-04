@@ -16,6 +16,7 @@
 #include <QException>
 
 #define Cuma_Debug_str(X) Cuma_Debug(X, __LINE__)
+#define str_num(X) QString::number(X)
 
 class Cuma_File : public QObject
 {

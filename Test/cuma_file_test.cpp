@@ -124,17 +124,15 @@ void Cuma_File_test::t_mf_Read_File_Frag ()
 
     Cuma_Debug("arr.count == "+ QString::number(arr.count()), __LINE__);
 
-    Cuma_Debug("test env is clear", __LINE__);
 
-    Cuma_Debug("generate make file is clear", __LINE__);
     //파일을 생성함
+    Cuma_Debug("generate test env file", __LINE__);
     for(int i = 0; i < arr.count() ; i++)
     {
         QVERIFY (env_mk_file(arr[i], "test.txt" + QString::number(i)) == 0);
     }
-    Cuma_Debug("generate make file is clear", __LINE__);
 
-    for(int i = 0; i < 10 ; i++)
+    for(int i = 0; i < arr.count(); i++)
     {
         Cuma_Debug("set file name", __LINE__);
         //파일을 세팅하고 읽음
@@ -143,16 +141,16 @@ void Cuma_File_test::t_mf_Read_File_Frag ()
         Cuma_Debug("set frag count = " + QString::number(i), __LINE__);
         set_File_Frag_Count(i);
 
-        Cuma_Debug("read file frag" + QString::number(i), __LINE__);
+        Cuma_Debug("read file frag index[" + QString::number(i) + "]", __LINE__);
         //파일을 읽음
         QVERIFY (mf_Read_File_Frag () == Cuma_File::C_F_no_err);
 
         Cuma_Debug("check file is same as compare test file " + QString::number(i), __LINE__);
+        Cuma_Debug("arr[" + QString::number(i) + "] size is = " + QString::number(arr[i].size()));
         //해당 파일이 arr와 같은지 확인함
         QVERIFY(arr[i] == get_File_binary());
 
         Cuma_Debug("clear binary", __LINE__);
-
         //테스트 환경 정리
         clear_binary ();
     }
