@@ -13,7 +13,9 @@
 #include <QMutex>
 #include "../../Cuma_Debug/cuma_debug.h"
 #include "cuma_file_info_struct.h"
+#include <QException>
 
+#define Cuma_Debug_str(X) Cuma_Debug(X, __LINE__)
 
 class Cuma_File : public QObject
 {
@@ -31,20 +33,20 @@ public:
     };
 
 public:
-     Cuma_File(QObject* parent = 0);
-     Cuma_File(Cuma_File& c);
+    Cuma_File(QObject* parent = 0);
+    Cuma_File(Cuma_File& c);
     ~Cuma_File();
 
     virtual void set_File_Frag_Count(uint32_t c);
     virtual void set_File_Name(QString n);
     virtual void set_File_info_block(struct Cuma_File_Info_Block& block);
 
-    virtual uint32_t get_File_Index();
-    virtual QString get_File_Name();
-    virtual QVector<QByteArray> get_File_Frag();
-    virtual QByteArray get_File_Frag_By_Index(uint32_t& index);
+    virtual uint32_t                get_File_Index();
+    virtual QString                 get_File_Name();
+    virtual QVector<QByteArray>     get_File_Frag();
+    virtual QByteArray              get_File_Frag_By_Index(uint32_t& index);
     virtual QSharedPointer<Cuma_File> get_Cuma_File();
-    virtual QByteArray get_File_binary();
+    virtual QByteArray              get_File_binary();
     virtual struct Cuma_File_Info_Block get_File_info_block();
 
     virtual int read_file_frag(QString file_name, uint32_t index);
@@ -88,6 +90,9 @@ protected:
 protected:
     static QByteArray Save_frag_File(QString f_name, uint32_t f_index, QByteArray f_binary);
 
+protected:
+    QSharedPointer<QFile> mf_Open_Frag_File(QString file_name);
+
 private:
     QDir m_Dir;
     QFile m_File;
@@ -101,43 +106,13 @@ private:
 private:
     static QMutex m_Mutex;
 
+private:
+    QString u_root_path;
+    QString u_c_f_path;
+
+
 
 };
-
-/*class Cuma_File_ReFectoring: public QObject
-{
-    Q_OBJECT
-public:
-    explicit Cuma_File_ReFectoring(QObject* parent = 0);
-    ~Cuma_File_ReFectoring();
-
-    virtual void set_File_Frag_Count(uint32_t c);
-    virtual void set_File_Name(QString n);
-    virtual void save_File_Frag(QVector<QByteArray> frag, QString name);
-    virtual void save_File_Frag(QVector<QByteArray> frag, QString name, uint32_t index);
-
-    virtual uint32_t get_File_Index();
-    virtual QString get_File_Name();
-    virtual QVector<QByteArray> get_File_Frag();
-    virtual QByteArray get_File_Frag_By_Index(uint32_t index);
-    virtual QSharedPointer<Cuma_File> get_Cuma_File_Object();
-
-protected:
-    virtual int read_file();
-    virtual int make_frag();
-    virtual int save_Frag(QVector<QByteArray> frag, QString name, uint32_t index = NULL);
-
-private:
-    QString File_name;
-    uint32_t File_frag;
-    QVector<QByteArray> File_Frag;
-};*/
-
-/*class Cuma_File_Format
-{
-public:
-    static QByteArray Save_frag_File(QString f_name, uint32_t f_index, QByteArray f_binary);
-};*/
 
 
 #endif // CUMA_FILE_H

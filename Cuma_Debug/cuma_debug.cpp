@@ -46,7 +46,7 @@ Cuma_Error::Cuma_Error(QString Error, uint line, uint32_t pid):m_Error(Error),m_
 void Cuma_Error::show_error_string()
 {
     qDebug()<<"[Error] : " + m_Error;
-    qDebug()<<"[Error] : line : "+ m_line;
+    qDebug()<<"[Error] : line : "+ QString::number(m_line);
     qDebug()<<"[Error] : pid : " + m_pid;
 }
 
