@@ -129,14 +129,14 @@ void Cuma_File::set_File_Name(QString n)
     m_File_Name = n;
 }
 
-void Cuma_File::set_File_info_block(struct Cuma_File_Info_Block& block)
-{
-    m_File_info_Block = block;
-}
-
 void Cuma_File::set_File_Frag(QVector<QByteArray> frag)
 {
     m_File_Frag = frag;
+}
+
+void Cuma_File::set_File_Binary(QByteArray &bin)
+{
+    m_File_Binary = bin;
 }
 
 int Cuma_File::save_File_Frag(QVector<QByteArray> frag, QString name)
@@ -230,11 +230,6 @@ QByteArray Cuma_File::get_File_binary()
     return m_File_Binary;
 }
 
-Cuma_File_Info_Block Cuma_File::get_File_info_block()
-{
-    return m_File_info_Block;
-}
-
 int Cuma_File::read_file_frag (QString file_name, uint32_t index)
 {
     m_File_Name = file_name;
@@ -257,10 +252,6 @@ void Cuma_File::clear_binary()
     m_File_Frag_Index = NULL;
     m_File_Frag.clear();
     m_File_Binary.clear();
-    m_File_info_Block.Block_size = 0;
-    m_File_info_Block.f_Binary_Byte = 0;
-    m_File_info_Block.f_Frag_count = 0;
-    m_File_info_Block.f_Name = "NULL";
 }
 
 int Cuma_File::mf_Read_File()
@@ -273,7 +264,9 @@ int Cuma_File::mf_Read_File()
         {
             Cuma_Debug("File is not open reopen", __LINE__);
 
-            m_File.close();
+            //m_File이 오픈되었는지 확인하는것을 체크
+            if(m_File.isOpen() != false) {m_File.close();}
+
             m_File.setFileName(m_File_Name);
             if(m_File.open(QIODevice::ReadOnly) == false)
             {
@@ -295,11 +288,6 @@ int Cuma_File::mf_Read_File()
             return Cuma_File_Status::C_F_READ_FILE_SIZE_MAXIMUM;
         }
 
-        Cuma_Debug("add file binary info to m_Fileinfo_block", __LINE__);
-        //파일 바이너리정보를 m_File_info_Block에 넣음
-        m_File_info_Block.f_Binary_Byte = m_File_Binary.size();
-        m_File_info_Block.f_Name = m_File_Name;
-
         return Cuma_File_Status::C_F_no_err;
 
     }
@@ -314,7 +302,8 @@ int Cuma_File::mf_Read_File_Frag()
 {
     try{
 
-        Cuma_Debug("check is file is exsist: " + m_File_Name + QString::number(m_File_Frag_Index), __LINE__);
+        Cuma_Debug("check is file is exsist: " + u_c_f_path + m_File_Name + QString::number(m_File_Frag_Index), __LINE__);
+
         //만약 파일이 없을 경우 throw 함
         if(QFile::exists(u_c_f_path + m_File_Name + QString::number(m_File_Frag_Index)) == false)
         {
@@ -421,7 +410,6 @@ int Cuma_File::mf_Save_by_Frag()
     try
     {
         //해당 프레그단위로 여러개의 파일을 만들어서 저장함
-        //파일 형식은 JSON형식으로 저장함
 
         Cuma_Debug("change directory to Cuma_Frag_dir", __LINE__);
 

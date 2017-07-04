@@ -19,7 +19,6 @@ public:
 private slots:
     void t_set_File_Frag_Count();
     void t_set_File_Name();
-    void t_set_File_info_block();
     
     void t_mf_Read_File();
     void t_mf_Read_File_Frag();

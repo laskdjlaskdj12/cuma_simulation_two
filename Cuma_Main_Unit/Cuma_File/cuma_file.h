@@ -40,16 +40,15 @@ public:
 
     virtual void set_File_Frag_Count(uint32_t c);
     virtual void set_File_Name(QString n);
-    virtual void set_File_info_block(struct Cuma_File_Info_Block& block);
     virtual void set_File_Frag(QVector<QByteArray> frag);
+    virtual void set_File_Binary(QByteArray& bin);
 
     virtual uint32_t                get_File_Index();
     virtual QString                 get_File_Name();
     virtual QVector<QByteArray>     get_File_Frag();
     virtual QByteArray              get_File_Frag_By_Index(uint32_t& index);
     virtual QSharedPointer<Cuma_File> get_Cuma_File();
-    virtual QByteArray              get_File_binary();
-    virtual struct Cuma_File_Info_Block get_File_info_block();
+    virtual QByteArray              get_File_binary(); 
 
     virtual int read_file_frag(QString file_name, uint32_t index);
     virtual int read_file();
@@ -79,7 +78,10 @@ public:
      * 3-1. get_File_Frag_By_Index 으로 인덱스를 설정
      * 3-2. get_File_Frag_By_Index()으로 리턴됨 바이너리 값을 받음
      *
-     *
+     * 4. frag를 만들때
+     * 4-1. set_File_Name();
+     * 4-2. read_file();
+     * 4-3. mf_
      * */
 protected:
     virtual int mf_Read_File();
@@ -103,17 +105,12 @@ private:
     QVector<QByteArray> m_File_Frag;
     QByteArray m_File_Binary;
 
-    struct Cuma_File_Info_Block m_File_info_Block;
-
 private:
     static QMutex m_Mutex;
 
 private:
     QString u_root_path;
     QString u_c_f_path;
-
-
-
 };
 
 

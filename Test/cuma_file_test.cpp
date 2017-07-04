@@ -52,28 +52,11 @@ void Cuma_File_test::t_set_File_Name ()
     QVERIFY (this->get_File_Name () == "test");
 }
 
-void Cuma_File_test::t_set_File_info_block ()
-{
-    struct Cuma_File_Info_Block i_block;
-    i_block.f_Name = "test";
-    i_block.f_Binary_Byte = 2000;
-    i_block.f_Frag_byte = 30;
-    i_block.f_Frag_count = 10;
-    
-    this->set_File_info_block (i_block);
-    struct Cuma_File_Info_Block res_block = this->get_File_info_block ();
-
-    QVERIFY (res_block.f_Name == i_block.f_Name);
-    QVERIFY (res_block.f_Binary_Byte == i_block.f_Binary_Byte);
-    QVERIFY (res_block.f_Frag_byte == i_block.f_Frag_byte);
-    QVERIFY (res_block.f_Frag_count == i_block.f_Frag_count);
-
-}
-
 
 void Cuma_File_test::t_mf_Read_File ()
 {
     //테스트 환경 정리
+    clear_binary ();
     env_clear_test_env ();
 
     //파일 frag를 읽기
@@ -82,7 +65,9 @@ void Cuma_File_test::t_mf_Read_File ()
     //현재 위치를 테스트 위치로 변경함
     QDir::setCurrent(root_path + "/t_unit_dir");
 
-    //test_dir에 있는 파일을 t_unit_dir로 저장함
+    //테스트 파일을 생성함
+    QVERIFY (env_mk_file("test.txt") == 0);
+
     QByteArray f_array = env_get_test_binary("test.txt");
 
     //읽을 파일 이름을 set함
@@ -116,6 +101,8 @@ void Cuma_File_test::t_mf_Read_File_Frag ()
     //현재 위치를 테스트 위치로 변경함
     QDir::setCurrent(root_path + "/t_unit_dir");
 
+    Cuma_Debug("current path : " + QDir::currentPath(), __LINE__);
+
     //현재 위치에서 파일을 만듬
     env_mk_file("test.txt");
 
@@ -130,6 +117,17 @@ void Cuma_File_test::t_mf_Read_File_Frag ()
     for(int i = 0; i < arr.count() ; i++)
     {
         QVERIFY (env_mk_file(arr[i], "test.txt" + QString::number(i)) == 0);
+    }
+
+    //파일을 Cuma_Frag_dir으로 카피함
+    for(int i = 0; i < arr.count(); i++)
+    {
+        QFile f_temp;
+        Cuma_Debug("current path : " + QDir::currentPath(), __LINE__);
+        f_temp.setFileName(QDir::currentPath()+"/../Cuma_Frag_dir/test.txt" + QString::number(i));
+        f_temp.open(QFile::WriteOnly);
+        f_temp.write(arr[i]);
+        f_temp.close();
     }
 
     for(int i = 0; i < arr.count(); i++)
