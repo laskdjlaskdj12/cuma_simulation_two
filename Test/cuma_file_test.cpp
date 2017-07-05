@@ -63,7 +63,7 @@ void Cuma_File_test::t_mf_Read_File ()
     QVERIFY (env_set_env () == 0);
 
     //현재 위치를 테스트 위치로 변경함
-    QDir::setCurrent(root_path + "/t_unit_dir");
+    QDir::setCurrent(root_path + "/t_unit_dir"); init_dir();
 
     //테스트 파일을 생성함
     QVERIFY (env_mk_file("test.txt") == 0);
@@ -99,7 +99,7 @@ void Cuma_File_test::t_mf_Read_File_Frag ()
     QVERIFY (env_set_env () == 0);
 
     //현재 위치를 테스트 위치로 변경함
-    QDir::setCurrent(root_path + "/t_unit_dir");
+    QDir::setCurrent(root_path + "/t_unit_dir"); init_dir();
 
     Cuma_Debug("current path : " + QDir::currentPath(), __LINE__);
 
@@ -124,7 +124,7 @@ void Cuma_File_test::t_mf_Read_File_Frag ()
     {
         QFile f_temp;
         Cuma_Debug("current path : " + QDir::currentPath(), __LINE__);
-        f_temp.setFileName(QDir::currentPath()+"/../Cuma_Frag_dir/test.txt" + QString::number(i));
+        f_temp.setFileName(QDir::currentPath()+"/Cuma_Frag_dir/test.txt" + QString::number(i));
         f_temp.open(QFile::WriteOnly);
         f_temp.write(arr[i]);
         f_temp.close();
@@ -165,7 +165,7 @@ void Cuma_File_test::t_mf_Make_Frag ()
     QVERIFY (env_set_env () == 0);
 
     //현재 위치를 테스트 위치로 변경함
-    QDir::setCurrent(root_path + "/t_unit_dir");
+    QDir::setCurrent(root_path + "/t_unit_dir"); init_dir();
 
     //현재 위치에서 파일을 만듬
     env_mk_file("test.txt");
@@ -588,7 +588,6 @@ int Cuma_File_test::env_set_env ()
 
     //원래 유닛테스트 dir로 이동
     QDir::setCurrent(root_path);
-
     return 0;
 
 

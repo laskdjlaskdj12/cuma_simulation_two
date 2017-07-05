@@ -107,9 +107,8 @@ Cuma_File::Cuma_File(QObject *parent):QObject(parent)
             }
         }
 
-        //dir의 현재 위치를 넣음
-        u_root_path = m_Dir.absolutePath();
-        u_c_f_path = u_root_path + "/Cuma_Frag_dir/";
+        //initdir로 초기화함
+        init_dir();
     }
     catch(Cuma_Error& e)
     {
@@ -157,7 +156,6 @@ int Cuma_File::save_File_Frag(QVector<QByteArray> frag, QString name)
                 throw Cuma_Error(m_File.errorString(), __LINE__);
             }
         }
-
         return Cuma_File_Status::C_F_no_err;
     }
     catch(Cuma_Error& e)
@@ -191,7 +189,6 @@ int Cuma_File::save_File_Frag(QByteArray frag, QString name, uint32_t index)
 
         return Cuma_File_Status::C_F_no_err;
     }
-
     catch(Cuma_Error& e)
     {
         e.show_error_string();
@@ -252,6 +249,14 @@ void Cuma_File::clear_binary()
     m_File_Frag_Index = NULL;
     m_File_Frag.clear();
     m_File_Binary.clear();
+}
+
+void Cuma_File::init_dir()
+{
+    u_root_path = QDir::currentPath();
+    u_root_path += "/";
+    u_c_f_path = u_root_path + "Cuma_Frag_dir/";
+
 }
 
 int Cuma_File::mf_Read_File()

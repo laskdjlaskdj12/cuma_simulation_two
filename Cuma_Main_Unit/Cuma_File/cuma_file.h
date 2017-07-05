@@ -57,7 +57,7 @@ public:
     virtual int save_File_Frag(QByteArray frag, QString name, uint32_t index);
 
     virtual void clear_binary();
-
+    virtual void init_dir();
 
     /*
      * ========== useage ==========
