@@ -2,6 +2,7 @@
 #define CUMA_CLIENT_TEST_H
 
 #include <QObject>
+#include <QSignalSpy>
 #include <QTest>
 #include "../Cuma_Main_Unit/cuma_main.h"
 
@@ -18,6 +19,10 @@ private slots:
     void t_mf_command_spread_test();
     void t_mf_command_req_file_test();
     void t_mf_command_trace_pass_test();
+
+protected:
+    int env_set_test_env_unit();
+    void env_clear_cache();
 
 };
 

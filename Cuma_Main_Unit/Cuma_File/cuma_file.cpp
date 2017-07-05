@@ -97,16 +97,6 @@ Cuma_File::Cuma_File(QObject *parent):QObject(parent)
         m_File_Name = nullptr;
         m_File_Binary = nullptr;
 
-        //만약 Cuma_Frag_dir이 없을경우 디렉토리를 만듬
-        if(m_Dir.exists("Cuma_Frag_dir") == false)
-        {
-            if (m_Dir.mkdir("Cuma_Frag_dir") == false)
-            {
-                //권한 상승이 필요하다는 알림을 리턴
-                throw Cuma_Error("Cuma_Frag_dir make fail need elevation previleage", __LINE__);
-            }
-        }
-
         //initdir로 초기화함
         init_dir();
     }
@@ -257,6 +247,8 @@ void Cuma_File::init_dir()
     u_root_path += "/";
     u_c_f_path = u_root_path + "Cuma_Frag_dir/";
 
+    //디렉토리를
+    mf_make_Cuma_Frag_dir();
 }
 
 int Cuma_File::mf_Read_File()
@@ -572,6 +564,19 @@ int Cuma_File::mf_Save_by_File(QString file_name)
         }
 
         return Cuma_File_Status::C_F_error;
+    }
+}
+
+void Cuma_File::mf_make_Cuma_Frag_dir()
+{
+    //만약 Cuma_Frag_dir이 없을경우 디렉토리를 만듬
+    if(m_Dir.exists("Cuma_Frag_dir") == false)
+    {
+        if (m_Dir.mkdir("Cuma_Frag_dir") == false)
+        {
+            //권한 상승이 필요하다는 알림을 리턴
+            throw Cuma_Error("Cuma_Frag_dir make fail need elevation previleage", __LINE__);
+        }
     }
 }
 

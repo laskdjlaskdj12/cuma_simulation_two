@@ -3,10 +3,14 @@
 
 #include <QVector>
 #include <QObject>
+#include <QSignalSpy>
 #include <QSharedPointer>
 #include <QtTest/qtest.h>
 
+#include "../Cuma_Main_Unit/Cuma_Peer_Protocol/cuma_peer_protocol.h"
 #include "../Cuma_Main_Unit/cuma_main.h"
+
+#define Cuma_Debug_str(X) Cuma_Debug(X, __LINE__)
 
 class Cuma_Main_Unit_test : public Cuma_Main
 {
@@ -17,7 +21,6 @@ public:
 private slots:
     void t_set_ulist_property();
     void t_set_ping_limit_property();
-    void t_get_json_report_property();
     void t_is_active_property();
 
     //signal
@@ -37,6 +40,9 @@ private slots:
     void t_f_send_ping_to_unit();
     void t_f_f_save_recv_json_report();
     void t_f_f_save_send_json_report();
+
+protected:
+    void env_clear_cache();
 
 };
 

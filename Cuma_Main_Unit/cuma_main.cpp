@@ -63,7 +63,7 @@ Cuma_Main::~Cuma_Main()
     disconnect(this, SIGNAL(s_recv(QJsonObject)), this, SLOT(sl_recv_signal(QJsonObject)));
 
     //s_start_spread 시그널을 바인딩함
-    disconnect(this, SIGNAL(s_start_spread(QString)), this, SLOT(sl_start_spread_signal(QString)));
+    disconnect(this, SIGNAL(s_start_command(const QJsonObject)), this, SLOT(sl_start_command_signal(const QJsonObject)));
 }
 
 void Cuma_Main::mf_set_unit_list(QVector<QSharedPointer<Cuma_Main>> list)
@@ -132,7 +132,7 @@ void Cuma_Main::sl_stop_unit()
     Cuma_Debug("stop_unit is dected : Unit ID : " + m_Pid);
 
     //전송 유닛리스트들이 현재 남아있는지 확인함
-    if (m_Send_Unit_list.count() != 0)
+    if (m_Send_Unit_list.count() > 0)
     {
         //디버그 메세지
         Cuma_Debug("m_Send_Unit_list is exsist flush them all : Unit ID : " + m_Pid);
@@ -222,6 +222,18 @@ void Cuma_Main::sl_start_command_signal(const QJsonObject command)
             {
                 throw Cuma_Error("mf_command_spread_test is error", __LINE__, m_Pid);
             }
+        }
+
+        //만약 없다면 에러 메세지를 출력함
+        if(command["command_set_file_name"].isNull() != false ||
+                command["command_set_unit_bypass_count"].isNull() != false||
+                command["command_ping_test"].isNull() != false||
+                command["command_spread_test"].isNull() != false||
+                command["command_rq_file"].isNull() != false||
+                command["command_trace_pass"].isNull() != false)
+        {
+            //에러 메세지 출력
+            Cuma_Debug("Warning : not a protocol", __LINE__);
         }
     }
     catch(Cuma_Error& e)

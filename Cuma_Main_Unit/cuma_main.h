@@ -21,6 +21,20 @@
 #include "Cuma_Peer_Protocol/cuma_peer_protocol.h"
 
 
+//유닛 타입을 정의
+//QMap<QString, QMap<uint32_t, QVector<uint32_t>>>
+typedef QVector <uint32_t> bypass_pid_list;
+typedef QMap <uint32_t, bypass_pid_list> frag_by_pid_list;
+typedef QMap <QString, frag_by_pid_list> file_by_pid_list;
+
+//테스트가 필요할때 TEST define 매크로 문을 넣음
+#define TEST
+#ifdef TEST
+#define ACCESS protected
+#else
+#define ACCESS private
+#endif
+
 class Cuma_Main : public QObject
 {
     Q_OBJECT
@@ -162,7 +176,7 @@ protected:
 
     virtual QSharedPointer<Cuma_Main> f_find_unit_from_Cuma_unit_list(uint32_t unit_id);
 
-private:
+ACCESS:
     //모든유닛들의 delay_time 행렬
     QVector<QVector<uint32_t>> m_Unit_delay_time_array;
 
@@ -200,11 +214,8 @@ private:
     QMap<QString, QJsonObject> m_file_info_block;
 
     //유닛의 frag_address를 저장함
+    //QMap<파일 이름, QMap<frag 인덱스 , QVector<바이패스 유닛 리스트>>>
     QMap<QString, QMap<uint32_t, QVector<uint32_t>>> m_file_frag_address;
-
-    //클라이언트와 서버를 peer로 하는 프로토콜을 만듬
-    friend class Cuma_Peer_Client;
-    friend class Cuma_Peer_Server;
 
 };
 class unit_Timer{

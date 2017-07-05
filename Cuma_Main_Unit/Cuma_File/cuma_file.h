@@ -91,6 +91,7 @@ protected:
     virtual int mf_Save_by_Frag(QVector<QByteArray> frag, QString name, uint32_t index = NULL);
     virtual int mf_Save_by_File(QString file_name);
 
+    virtual void mf_make_Cuma_Frag_dir();
 protected:
     static QByteArray Save_frag_File(QString f_name, uint32_t f_index, QByteArray f_binary);
 
