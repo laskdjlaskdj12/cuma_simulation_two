@@ -247,21 +247,26 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
     try
     {
 
+        Cuma_Debug("check json is empty", __LINE__);
         //만약 json이 없을 경우 예외 처리
         if (o.isEmpty()){ throw Cuma_Error("no recv process", __LINE__, m_Pid);}
 
+        Cuma_Debug("print output debug messgae", __LINE__);
         //받은 메세지를 디버그 메세지 출력
         Cuma_Debug_protocol(o, m_Pid);
 
+        Cuma_Debug("log env print get message", __LINE__);
         //받은 메세지를 로그 기록
         f_save_recv_json_report(o);
 
+        Cuma_Debug("get unit obj from pid", __LINE__);
         //pid로 유닛객체를 받음
-        QSharedPointer<Cuma_Main> send_unit = m_Cuma_unit_list[static_cast<uint32_t>(o["pid"].toInt())];
+        //QSharedPointer<Cuma_Main> send_unit = m_Cuma_unit_list[static_cast<uint32_t>(o["pid"].toInt())];
 
         //파일 frag 저장일경우
         if (o["proecess"].toString() == "save")
         {
+            Cuma_Debug("check process is save_frag", __LINE__);
 
             //수신 json 저장 프로세스를 먼저 실행함
             if (o["reply"].isNull() == true)
@@ -286,6 +291,8 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
         //파일 frag 읽기일 경우
         else if (o["process"].toString() == "read")
         {
+                    Cuma_Debug("check process is read_frag", __LINE__);
+
             //만약 응답 요청이 아닐경우 저장된 파일을 읽어서 전달을 함
             if (o["reply"].isNull() == true)
             {
@@ -320,6 +327,9 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
         //파일 체크일경우
         else if (o["process"].toString() == "check_file")
         {
+
+            Cuma_Debug("check process is check_file", __LINE__);
+
             //만약 응답 요청이 자기가 아닐경우 파일을 체크해서 리턴함
             if (o["reply"].isNull() == true)
             {
@@ -337,6 +347,8 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
         //ping 리턴 메세지일 경우
         else if (o["process"].toString() == "ping")
         {
+            Cuma_Debug("check process is ping", __LINE__);
+
             //응답 요청일경우 시간에 텀을 두고 reply를 함
             if (o["reply"].toBool() == false)
             {
@@ -369,6 +381,8 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
         //아닐경우 읽을수 없는 프로토콜로 디폴트 메세지를 출력
         else
         {
+            Cuma_Debug("if can't read process", __LINE__);
+
             throw Cuma_Error("Can't read recv protocol \n " + QJsonDocument(o).toJson(), __LINE__, m_Pid);
         }
     }
@@ -406,6 +420,7 @@ QSharedPointer<Cuma_Main> Cuma_Main::f_pop_unit()
     QMutexLocker locker(&m_locker);
 
     QSharedPointer<Cuma_Main> unit = m_Send_Unit_list.last();
+    m_Send_Unit_list.pop_back();
 
     return unit;
 }

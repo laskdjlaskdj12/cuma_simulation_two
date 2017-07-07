@@ -25,7 +25,7 @@ private slots:
     void t_is_active_property();
 
     //signal
-    void t_s_stop_unit();
+    //void t_s_stop_unit();
     void t_s_recv();
     void t_s_start_command();
 
