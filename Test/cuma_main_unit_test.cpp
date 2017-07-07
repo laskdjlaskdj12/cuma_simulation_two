@@ -39,18 +39,28 @@ void Cuma_Main_Unit_test::t_set_ping_limit_property()
     env_clear_cache();
 
     Cuma_Debug("set uint32_t vector property");
-    QVector<uint32_t> delay_list;
-    for(int i = 0; i < 10; i++)
-    {
-        delay_list.append(i);
-    }
+    another_pid_ping_array ping_list;
+
+    //핑리스트를 만듬
+    //pid가 0인 유닛이 ping 리미트를 생성
+    my_ping_list pid_1;
+    pid_1[0] = 0;
+    pid_1[1] = 10;
+
+    //pid가 1인 유닛이 ping 리미트를 생성
+    my_ping_list pid_2;
+    pid_2[0] = 9;
+    pid_2[1] = 0;
+
+    ping_list.append(pid_1);
+    ping_list.append(pid_2);
 
     Cuma_Debug("set unit_list");
     //ping 리미트 타임을 세팅함
-    mf_set_dealy_lst(delay_list);
+    mf_set_dealy_lst(ping_list);
 
     Cuma_Debug("compare unit list is same");
-    QVERIFY(mf_get_dealy_lst() == delay_list);
+    QVERIFY(mf_get_dealy_lst() == ping_list);
 
 }
 
@@ -146,7 +156,26 @@ void Cuma_Main_Unit_test::t_f_recv_process()
     Cuma_Debug("set cache env ");
     env_clear_cache();
 
-    Cuma_Debug("set uint32_t vector property");
+    Cuma_Debug("set QSignalSpy");
+    QSignalSpy check_sig(this, SIGNAL(s_recv(QJsonObject)));
+
+    Cuma_Debug("Generate recv protocol");
+    QJsonObject t_protocol;
+    t_protocol["test"] = true;
+
+    //signal을 emit함
+    Cuma_Debug("emit clear");
+    emit this->s_recv(t_protocol);
+
+    Cuma_Debug("check signal interruppte");
+    QVERIFY(check_sig.wait());
+
+    Cuma_Debug("check signal count");
+    QCOMPARE(check_sig.count(), 1);
+
+    //recv의 프로세스에서 로그된 기록을 찾음
+    Cuma_Debug("check log record of recv process");
+    QVERIFY(mf_get_report_json().isEmpty() == false);
 }
 
 void Cuma_Main_Unit_test::t_f_tell_time()
@@ -156,51 +185,141 @@ void Cuma_Main_Unit_test::t_f_tell_time()
     env_clear_cache();
 
     Cuma_Debug("set uint32_t vector property");
+
+    Cuma_Debug("check time is start");
+    //시간이 시작되었는지 체크
+    QVERIFY (unit_Timer::is_start == true);
+
 }
 
 void Cuma_Main_Unit_test::t_f_find_unit_from_inside_timeout_unit()
 {
-    //먼저 환경을 clear함
+    //먼저 환경을  clear함
     Cuma_Debug("set cache env ");
     env_clear_cache();
 
-    Cuma_Debug("set uint32_t vector property");
+    //타임아웃이 안된 유닛의 리스트에 있는 pid 로  QSharedPointer<Cuma_Main>를 리턴함
+
+
+    //비교할 QSharedPointer<Cuma_Main> QVector 를 생성함
+    Cuma_Debug("Generate compare pid_pointer");
+    QVector<QSharedPointer<Cuma_Main>> t_compare_pid_pointer;
+
+    //객체를 생성하여 포인터에 input함
+    Cuma_Debug("make test unit obj env");
+    for(int i = 0; i<10; i++)
+    {
+        QSharedPointer<Cuma_Main> m = QSharedPointer<Cuma_Main>(new Cuma_Main);
+        m->mf_set_pid(i);
+        m_Cuma_unit_inside_timeout_unit_list.append(m);
+        t_compare_pid_pointer.append(m);
+    }
+
+    Cuma_Debug("compare unit and test obj is same ");
+    QVERIFY (t_compare_pid_pointer == m_Cuma_unit_inside_timeout_unit_list);
+
+    Cuma_Debug("check f_find_unit_from_inside_timeout_unit");
+    for(int i = 0; i< 10; i++)
+    {
+        Cuma_Debug("check [" + QString::number(i) + "]");
+        QVERIFY (f_find_unit_from_inside_timeout_unit(i) == t_compare_pid_pointer[i]);
+    }
+
 }
 
 void Cuma_Main_Unit_test::t_f_find_unit_from_Cuma_unit_list()
 {
-    //먼저 환경을 clear함
+    //먼저 환경을  clear함
     Cuma_Debug("set cache env ");
     env_clear_cache();
 
-    Cuma_Debug("set uint32_t vector property");
+    //타임아웃이 안된 유닛의 리스트에 있는 pid 로  QSharedPointer<Cuma_Main>를 리턴함
+
+
+    //비교할 QSharedPointer<Cuma_Main> QVector 를 생성함
+    Cuma_Debug("Generate compare pid_pointer");
+    QVector<QSharedPointer<Cuma_Main>> t_compare_pid_pointer;
+
+    //객체를 생성하여 포인터에 input함
+    Cuma_Debug("make test unit obj env");
+    for(int i = 0; i<10; i++)
+    {
+        QSharedPointer<Cuma_Main> m = QSharedPointer<Cuma_Main>(new Cuma_Main);
+        m->mf_set_pid(i);
+        m_Cuma_unit_list.append(m);
+        t_compare_pid_pointer.append(m);
+    }
+
+    Cuma_Debug("compare unit and test obj is same ");
+    QVERIFY (t_compare_pid_pointer == m_Cuma_unit_list);
+
+    Cuma_Debug("check f_find_unit_from_inside_timeout_unit");
+    for(int i = 0; i< 10; i++)
+    {
+        Cuma_Debug("check [" + QString::number(i) + "]");
+        QVERIFY (f_find_unit_from_Cuma_unit_list(i) == t_compare_pid_pointer[i]);
+    }
 }
 
 void Cuma_Main_Unit_test::t_f_push_unit()
 {
-    //먼저 환경을 clear함
+    //먼저 환경을  clear함
     Cuma_Debug("set cache env ");
     env_clear_cache();
 
-    Cuma_Debug("set uint32_t vector property");
+    //타임아웃이 안된 유닛의 리스트에 있는 pid 로  QSharedPointer<Cuma_Main>를 리턴함
+
+
+    //비교할 QSharedPointer<Cuma_Main> QVector 를 생성함
+    Cuma_Debug("Generate compare pid_pointer");
+    QVector<QSharedPointer<Cuma_Main>> t_compare_pid_pointer;
+
+    //객체를 생성하여 포인터에 input함
+    Cuma_Debug("make test unit obj env");
+    for(int i = 0; i<10; i++)
+    {
+        QSharedPointer<Cuma_Main> m = QSharedPointer<Cuma_Main>(new Cuma_Main);
+        m->mf_set_pid(i);
+        f_push_unit(m);
+        t_compare_pid_pointer.append(m);
+    }
+
+    Cuma_Debug("compare unit and test obj is same ");
+    QVERIFY (t_compare_pid_pointer == m_Send_Unit_list);
 }
 
 void Cuma_Main_Unit_test::t_f_pop_unit()
 {
-    //먼저 환경을 clear함
+    //먼저 환경을  clear함
     Cuma_Debug("set cache env ");
     env_clear_cache();
 
-    Cuma_Debug("set uint32_t vector property");
-}
+    //타임아웃이 안된 유닛의 리스트에 있는 pid 로  QSharedPointer<Cuma_Main>를 리턴함
 
-void Cuma_Main_Unit_test::t_f_send_ping_to_unit()
-{
-    //먼저 환경을 clear함
-    Cuma_Debug("set cache env ");
-    env_clear_cache();
 
-    Cuma_Debug("set uint32_t vector property");
+    //비교할 QSharedPointer<Cuma_Main> QVector 를 생성함
+    Cuma_Debug("Generate compare pid_pointer");
+    QVector<QSharedPointer<Cuma_Main>> t_compare_pid_pointer;
+
+    //객체를 생성하여 포인터에 input함
+    Cuma_Debug("make test unit obj env");
+    for(int i = 0; i<10; i++)
+    {
+        QSharedPointer<Cuma_Main> m = QSharedPointer<Cuma_Main>(new Cuma_Main);
+        m->mf_set_pid(i);
+        f_push_unit(m);
+        t_compare_pid_pointer.append(m);
+    }
+
+    Cuma_Debug("compare unit and test obj is same ");
+    QVERIFY (t_compare_pid_pointer == m_Send_Unit_list);
+
+    Cuma_Debug("pop m_Send_Unit_list");
+    for(int i = 9; i > -1 ; i++)
+    {
+        Cuma_Debug("compare f_pop_unit == t_copmare_pid_pointer[" + QString::number(i) + "]");
+        QVERIFY(f_pop_unit() == t_compare_pid_pointer[i]);
+    }
 }
 
 void Cuma_Main_Unit_test::t_f_f_save_recv_json_report()
@@ -209,16 +328,31 @@ void Cuma_Main_Unit_test::t_f_f_save_recv_json_report()
     Cuma_Debug("set cache env ");
     env_clear_cache();
 
-    Cuma_Debug("set uint32_t vector property");
-}
+    Cuma_Debug("set QSignalSpy");
+    QSignalSpy check_sig(this, SIGNAL(s_recv(QJsonObject)));
 
-void Cuma_Main_Unit_test::t_f_f_save_send_json_report()
-{
-    //먼저 환경을 clear함
-    Cuma_Debug("set cache env ");
-    env_clear_cache();
+    Cuma_Debug("Generate recv protocol");
+    QJsonObject t_protocol;
+    t_protocol["test"] = true;
 
-    Cuma_Debug("set uint32_t vector property");
+    //signal을 emit함
+    Cuma_Debug("emit clear");
+    emit this->s_recv(t_protocol);
+
+    Cuma_Debug("check signal interruppte");
+    QVERIFY(check_sig.wait());
+
+    Cuma_Debug("check signal count");
+    QCOMPARE(check_sig.count(), 1);
+
+    //recv의 프로세스에서 로그된 기록을 찾음
+    Cuma_Debug("check log record of recv process");
+    QVERIFY(mf_get_report_json().isEmpty() == false);
+
+    //로그된 기록을 출력함
+    QJsonDocument doc(mf_get_report_json());
+    Cuma_Debug("infomation of document" + doc.toJson());
+
 }
 
 void Cuma_Main_Unit_test::env_clear_cache()
@@ -226,10 +360,66 @@ void Cuma_Main_Unit_test::env_clear_cache()
     m_Unit_delay_time_array.clear();
     m_Cuma_unit_list.clear();
     m_Cuma_unit_inside_timeout_unit_list.clear();
+    m_report_json.remove("recv");
     m_Send_Unit_list.clear();
     m_File->clear_binary();
     m_active = true;
     m_limit_bypass_count = 0;
     m_file_info_block.clear();
     m_file_frag_address.clear();
+}
+
+my_ping_list Cuma_Main_Unit_test::env_make_ping_list(uint32_t count)
+{
+    my_ping_list ret_arr;
+    for(uint32_t j = 0; j < count; j++)
+    {
+
+        //아닐 경우 랜덤으로 만든 숫자를 넣음
+        ret_arr.append( qrand()% 1000);
+    }
+    return ret_arr;
+}
+
+my_ping_list Cuma_Main_Unit_test::env_make_by_unit_ping_list(uint32_t pid, uint32_t count)
+{
+    my_ping_list ret_arr;
+    for(uint32_t j = 0; j < count; j++)
+    {
+
+        if(j == pid)
+        {
+            ret_arr.append(0);
+            continue;
+        }
+
+        //아닐 경우 랜덤으로 만든 숫자를 넣음
+        ret_arr.append( qrand()% 1000);
+    }
+    return ret_arr;
+}
+
+another_pid_ping_array Cuma_Main_Unit_test::env_make_by_unit_ping_array(uint32_t count)
+{
+    another_pid_ping_array ret_arr;
+
+    //유닛의 행렬 만큼 for문을 생성
+    for(uint32_t i = 0; i < count; i++)
+    {
+        my_ping_list temp_list;
+        for(uint32_t j = 0; j < count; j++)
+        {
+            //만약 i와 j와 같을시 0을 넣음
+            if(i == j)
+            {
+                temp_list.append(0);
+                continue;
+            }
+
+            //아닐 경우 랜덤으로 만든 숫자를 넣음
+            temp_list.append( qrand()% 1000);
+        }
+        ret_arr.append(temp_list);
+    }
+    return ret_arr;
 }

@@ -1,6 +1,7 @@
 #ifndef CUMA_MAIN_UNIT_TEST_H
 #define CUMA_MAIN_UNIT_TEST_H
 
+#include <random>
 #include <QVector>
 #include <QObject>
 #include <QSignalSpy>
@@ -37,13 +38,15 @@ private slots:
     //유닛 리스트 저장
     void t_f_push_unit();
     void t_f_pop_unit();
-    void t_f_send_ping_to_unit();
     void t_f_f_save_recv_json_report();
-    void t_f_f_save_send_json_report();
 
 protected:
     void env_clear_cache();
+    my_ping_list env_make_ping_list(uint32_t count);
 
+    //pid를 주면 해당 pid의 행렬에 해당하는 pid_ping_lst를 돌려받음
+    my_ping_list env_make_by_unit_ping_list(uint32_t pid, uint32_t count);
+    another_pid_ping_array env_make_by_unit_ping_array(uint32_t count);
 };
 
 #endif // CUMA_MAIN_UNIT_TEST_H

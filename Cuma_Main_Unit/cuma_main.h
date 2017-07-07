@@ -23,6 +23,9 @@
 
 //유닛 타입을 정의
 //QMap<QString, QMap<uint32_t, QVector<uint32_t>>>
+typedef QVector <uint32_t> my_ping_list;
+typedef QVector < my_ping_list > another_pid_ping_array;
+
 typedef QVector <uint32_t> bypass_pid_list;
 typedef QMap <uint32_t, bypass_pid_list> frag_by_pid_list;
 typedef QMap <QString, frag_by_pid_list> file_by_pid_list;
@@ -135,14 +138,8 @@ protected:
     //전송을 시작할 유닛 리스트들을 pop하는 프로세스
     virtual QSharedPointer<Cuma_Main> f_pop_unit();
 
-    //모든 유닛들의 핑을 전송해서 리턴된 핑의 딜레이 탐색 프로세스
-    virtual int f_send_ping_to_unit(uint32_t limit_time);
-
     //수신 json로그 저장 프로세스
     virtual void f_save_recv_json_report(QJsonObject protocol);
-
-    //송신 json로그 저장 프로세스
-    virtual void f_save_send_json_report(QJsonObject protocol);
 
 
     //서버 Area
