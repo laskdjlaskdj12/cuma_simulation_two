@@ -362,6 +362,12 @@ int Cuma_Main::f_over_bypass(QJsonObject o)
          it != m_Cuma_unit_inside_timeout_unit_list.end();
          it++)
     {
+        //바이패스가 온 유닛은 제외
+        if ( (*it)->mf_get_pid() == o["From"].toInt() )
+        {
+            continue;
+        }
+
         emit (*it)->s_recv(o);
     }
 

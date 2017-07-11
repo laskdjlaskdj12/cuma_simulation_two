@@ -106,6 +106,14 @@ Cuma_File::Cuma_File(QObject *parent):QObject(parent)
     }
 }
 
+Cuma_File::Cuma_File(Cuma_File &c)
+{
+    this->m_Dir = c.m_Dir;
+    this->m_File_Binary = c.m_File_Binary;
+    this->m_File_Frag = c.m_File_Frag;
+    this->m_File_Frag_Index = c.m_File_Frag_Index;
+}
+
 Cuma_File::~Cuma_File(){
     m_File_Frag.clear();
     m_File.close();

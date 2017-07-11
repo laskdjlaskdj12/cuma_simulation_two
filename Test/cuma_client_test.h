@@ -23,6 +23,26 @@ private slots:
 protected:
     int env_set_test_env_unit();
     void env_clear_cache();
+    int env_make_file(QString f_name);
+    void env_remove_file(QString f_name);
+};
+
+class Test_Unit: public Cuma_Main
+{
+    Q_OBJECT
+public:
+     Test_Unit();
+    ~Test_Unit();
+
+    void set_read_file_name(QString f_name);
+    void read_file();
+    void read_file(QString f_name);
+
+    int write_file();
+    int write_file(QString f_name, QByteArray& arr);
+
+    Cuma_File get_file_obj();
+
 
 };
 

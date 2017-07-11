@@ -46,3 +46,5 @@ HEADERS += \
     Test/cuma_client_test.h \
     Test/cuma_server_test.h \
     Test/cuma_test_env.h
+
+STATECHARTS +=

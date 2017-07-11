@@ -166,7 +166,6 @@ protected:
     // (유닛에게 리플라이가 오는 역활을 함)
     virtual int f_reply_over_bypass_limit(QJsonObject o);
 
-
     //유닛들에게 적용되는 툴
 protected:
     virtual QSharedPointer<Cuma_Main> f_find_unit_from_inside_timeout_unit(uint32_t unit_id);
