@@ -2,8 +2,10 @@
 #define CUMA_SERVER_TEST_H
 
 #include <QObject>
+#include <QVector>
 #include <QTest>
 #include <stdarg.h>
+#include <QSignalSpy>
 #include "../Cuma_Main_Unit/cuma_main.h"
 
 class Cuma_server_test : public Cuma_Main
@@ -33,9 +35,14 @@ private:
     QByteArray env_get_file_binary(QString f_name);
 
     void init_unit(uint32_t count, QVector<QSharedPointer<Cuma_Main>>& unit_vec);
-    void env_set_env(uint32_t count, ...);
+    void env_set_env(uint32_t count, QSharedPointer<Cuma_Main> a, QSharedPointer<Cuma_Main> b);
     void env_clear_env();
     void env_clear_binary();
+
+private:
+    QString root_path;
+
+
 };
 
 class Cuma_serv_test_unit : public Cuma_Main

@@ -38,6 +38,7 @@ public:
     Cuma_File(Cuma_File& c);
     ~Cuma_File();
 
+    virtual void set_File_Frag_Index(uint32_t c);
     virtual void set_File_Frag_Count(uint32_t c);
     virtual void set_File_Name(QString n);
     virtual void set_File_Frag(QVector<QByteArray> frag);

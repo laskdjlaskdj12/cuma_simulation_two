@@ -119,6 +119,11 @@ Cuma_File::~Cuma_File(){
     m_File.close();
 }
 
+void Cuma_File::set_File_Frag_Index(uint32_t c)
+{
+    m_File_Frag_Index = c;
+}
+
 void Cuma_File::set_File_Frag_Count(uint32_t c){m_File_Frag_Index = c;}
 
 void Cuma_File::set_File_Name(QString n)
@@ -281,7 +286,6 @@ int Cuma_File::mf_Read_File()
 
         Cuma_Debug("start read File_binary", __LINE__);
         //파일 바이너리를 읽음
-        m_File_Binary = m_File.readAll();
 
         Cuma_Debug("read binary size :"+ QString::number(m_File_Binary.size()), __LINE__);
 

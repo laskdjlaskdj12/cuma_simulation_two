@@ -68,6 +68,10 @@ public:
     bool mf_is_active();
     void mf_set_active(bool);
 
+    QSharedPointer<Cuma_File> get_File_obj();
+
+    void mf_t_set_limit_unit(QVector<QSharedPointer<Cuma_Main>>& v);
+
     //유닛을 제어하는 노드에서 커맨드 함수
     //Client 영역
 protected:
@@ -147,7 +151,7 @@ protected:
     // 파일 업로드 프로세스
     // (유닛으로부터 파일 frag 업로드 명령이 왔을시)
     virtual int f_upload_file_frag_from_unit(QJsonObject o);
-    virtual int f_reply_upload_file_frag_to_unit(QJsonObject o);
+    virtual int f_reply_upload_file_frag_to_unit(const QJsonObject o);
 
     // 파일 다운로드 프로세스
     // (유닛으로부터 파일 frag 를 저장 하라는 명령이 왔을시)

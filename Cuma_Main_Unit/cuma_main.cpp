@@ -126,6 +126,16 @@ void Cuma_Main::mf_set_active(bool b)
     m_active = b;
 }
 
+QSharedPointer<Cuma_File> Cuma_Main::get_File_obj()
+{
+    return m_File;
+}
+
+void Cuma_Main::mf_t_set_limit_unit(QVector<QSharedPointer<Cuma_Main> > &v)
+{
+    m_Cuma_unit_inside_timeout_unit_list = v;
+}
+
 void Cuma_Main::sl_stop_unit()
 {
     //디버그 메세지

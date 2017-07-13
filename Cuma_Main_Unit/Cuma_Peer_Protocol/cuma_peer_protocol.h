@@ -31,6 +31,7 @@ public:
     static QJsonObject req_ping_protocol(uint32_t unit_id, bool reply = false);
     static QJsonObject req_is_file_exsist_protocol(uint32_t file_frag_index, uint32_t unit_id);
     static QJsonObject req_is_file_exsist_protocol(QString f_name, uint32_t unit_id, bool req_file_index = true);
+    static QJsonObject req_is_file_exsist_protocol(QString f_name, uint32_t file_frag_index, uint32_t unit_id, bool req_file_index = true);
     static QJsonObject req_file_binary_save_protocol(QJsonObject file_binary, uint32_t unit_id);
     static QJsonObject req_file_binary_save_protocol(QString binary_name, uint32_t file_frag_index, QByteArray frag_binary, uint32_t unit_id);
     static QJsonObject req_file_binary_read_protocol(QString binary_name, uint32_t file_frag_index, uint32_t unit_id );

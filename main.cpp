@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
 
         QTest::qExec(&f_test);
         QTest::qExec(&u_test);
-        QTest::qExec(&c_test);
         QTest::qExec(&s_test);
+        QTest::qExec(&c_test);
 
 }
