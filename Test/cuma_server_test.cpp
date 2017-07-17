@@ -2,6 +2,8 @@
 
 Cuma_server_test::Cuma_server_test(QObject *parent)
 {
+    Cuma_Debug::show_debug(true);
+
     root_path = QDir::currentPath();
     
     //현재 테스트 디렉토리를 생성
@@ -33,7 +35,7 @@ Cuma_server_test::~Cuma_server_test()
     //디렉토리 위치를 현재 디렉토리로 변환
     QDir::setCurrent(root_path);
 }
-void Cuma_server_test::t_f_upload_file_frag_from_unit()
+void Cuma_server_test::t_f_upload_file_frag_from_unit_nofile()
 {
     //테스트 환경을 flush함
     Cuma_Debug("flush test env ", __LINE__);
@@ -54,6 +56,9 @@ void Cuma_server_test::t_f_upload_file_frag_from_unit()
     Cuma_Debug("generate file check protocol", __LINE__);
     QJsonObject t_protocol = cuma_protocol::req_file_binary_read_protocol("test.txt", 1, test_unit->mf_get_pid());
     
+    Cuma_Debug("show send file check protcol", __LINE__);
+    Cuma_Debug(QJsonDocument(t_protocol).toJson(), __LINE__);
+
     //각자 ping 프로토콜을 체크 함
     //프로토콜 핸들러를 실행함
     Cuma_Debug("test protocol handler", __LINE__);
@@ -67,13 +72,68 @@ void Cuma_server_test::t_f_upload_file_frag_from_unit()
     QList<QVariant> arg = t_unit_dbg_sig.takeFirst();
 
     Cuma_Debug("============ recv reply test json =================");
-    Cuma_Debug(QJsonDocument(arg.at(0).toJsonObject()).toJson());
+    Cuma_Debug(QJsonDocument(arg.at(0).toJsonObject()).toJson(), __LINE__);
 
     QVERIFY (arg.at(0).toJsonObject()["process"] == "read");
     QVERIFY (arg.at(0).toJsonObject()["file_frag"].isNull() == false);
     QVERIFY (arg.at(0).toJsonObject()["file_name"] == "test.txt");
-    QVERIFY (arg.at(0).toJsonObject()["index"] == 1);
-    QVERIFY (arg.at(0).toJsonObject()["reply"] == true);
+    QVERIFY (arg.at(0).toJsonObject()["file_index"].toInt() == 1);
+    QVERIFY (arg.at(0).toJsonObject()["reply"].toBool() == true);
+}
+
+void Cuma_server_test::t_f_upload_file_frag_form_unit_success()
+{
+    //테스트 환경을 flush함
+    Cuma_Debug("flush test env ", __LINE__);
+    env_clear_env();
+
+    //테스트 유닛을 생성함
+    Cuma_Debug("generate test unit ", __LINE__);
+    QSharedPointer<Cuma_serv_test_unit> test_unit = QSharedPointer<Cuma_serv_test_unit>(new Cuma_serv_test_unit);
+
+    //시그널 스파이
+    QSignalSpy t_unit_dbg_sig(test_unit.data(), SIGNAL(s_recv(QJsonObject)));
+
+    //env 유닛을 가지고 옴
+    Cuma_Debug("set test env", __LINE__);
+    env_set_env(2, QSharedPointer<Cuma_Main>(this), test_unit);
+
+    //파일frag를 만듬
+    Cuma_Debug("make test file frag", __LINE__);
+    QVERIFY (env_make_Frag("test.txt", 10, "Cuma_Frag_dir") == 0);
+
+    //파일을 읽음
+    Cuma_Debug("read file", __LINE__);
+    QVERIFY (m_File->read_file_frag("test.txt", 1) == Cuma_File::C_F_no_err);
+
+    //파일 체크 프로토콜을 생성함
+    Cuma_Debug("generate file check protocol", __LINE__);
+    QJsonObject t_protocol = cuma_protocol::req_file_binary_read_protocol("test.txt", 1, test_unit->mf_get_pid());
+
+    Cuma_Debug("show send file check protcol", __LINE__);
+    Cuma_Debug(QJsonDocument(t_protocol).toJson(), __LINE__);
+
+    //각자 ping 프로토콜을 체크 함
+    //프로토콜 핸들러를 실행함
+    Cuma_Debug("test protocol handler", __LINE__);
+    f_upload_file_frag_from_unit(t_protocol);
+
+    //프로토콜 reply가 정상적으로 왔는지 체크함
+    Cuma_Debug("check protocol reply is clear", __LINE__);
+    QVERIFY(t_unit_dbg_sig.count() > 0);
+
+    //리턴된 파라미터를 체크함
+    QList<QVariant> arg = t_unit_dbg_sig.takeFirst();
+
+    Cuma_Debug("============ recv reply test json =================");
+    Cuma_Debug(QJsonDocument(arg.at(0).toJsonObject()).toJson(), __LINE__);
+
+    QVERIFY (arg.at(0).toJsonObject()["process"] == "read");
+    QVERIFY (arg.at(0).toJsonObject()["file_frag"].isNull() == false);
+    QVERIFY (arg.at(0).toJsonObject()["file_name"] == "test.txt");
+    QVERIFY (arg.at(0).toJsonObject()["file_index"].toInt() == 1);
+    QVERIFY (arg.at(0).toJsonObject()["reply"].toBool() == true);
+    QVERIFY (arg.at(0).toJsonObject()["Error"].isNull() == true);
 }
 void Cuma_server_test::t_f_reply_upload_file_frag_to_unit()
 {
@@ -127,7 +187,7 @@ void Cuma_server_test::t_f_download_file_frag_from_unit()
 
     //파일 frag를 읽음
     Cuma_Debug("read file frag", __LINE__);
-    QVERIFY (m_File->read_file_frag("test.txt", 1) > 0);
+    QVERIFY (m_File->read_file_frag("test.txt", 1) == Cuma_File::C_F_no_err);
     
     //t_binary를 읽음
     Cuma_Debug("read t_binary", __LINE__);
@@ -177,7 +237,7 @@ void Cuma_server_test::t_f_reply_download_file_frag_to_unit()
     
     //파일 frag를 읽음
     Cuma_Debug("read file frag", __LINE__);
-    QVERIFY (m_File->read_file_frag("test.txt", 1) > 0);
+    QVERIFY (m_File->read_file_frag("test.txt", 1) == Cuma_File::C_F_no_err);
     
     //t_binary를 읽음
     Cuma_Debug("read t_binary", __LINE__);
@@ -211,7 +271,7 @@ void Cuma_server_test::t_f_check_file_frag_to_unit()
 
     //파일 frag를 읽음
     Cuma_Debug("read file frag", __LINE__);
-    QVERIFY (m_File->read_file_frag("test.txt", 1) > 0);
+    QVERIFY (m_File->read_file_frag("test.txt", 1) == Cuma_File::C_F_no_err);
     
     //파일 바이너리 체크 프로토콜을 작성
     Cuma_Debug("clear m_File test", __LINE__);
@@ -230,7 +290,7 @@ void Cuma_server_test::t_f_check_file_frag_to_unit()
     Cuma_Debug(QJsonDocument(arg.at(0).toJsonObject()).toJson());
 
     QVERIFY (arg.at(0).toJsonObject()["From"].toInt() == m_Pid);
-    QVERIFY (arg.at(0).toJsonObject()["process"] == "check_file");
+    QVERIFY (arg.at(0).toJsonObject()["process"].toString() == "check_file");
     QVERIFY (arg.at(0).toJsonObject()["file_name"] == "test.txt");
     QVERIFY (arg.at(0).toJsonObject()["file_index"] == 1);
     QVERIFY (arg.at(0).toJsonObject()["reply"] == true);
@@ -336,7 +396,7 @@ void Cuma_server_test::t_f_reply_over_bypass_limit()
 }
 
 int Cuma_server_test::env_make_File(QString f_name)
-{
+{ 
     QFile f(QDir::currentPath() + "/" + f_name);
     
     //만약 파일이 존재한다면 0을 리턴함
@@ -362,21 +422,21 @@ int Cuma_server_test::env_make_File(QString f_name)
     return 0;
 }
 
-int Cuma_server_test::env_make_Frag(QString f_name, uint32_t count)
+int Cuma_server_test:: env_make_Frag(QString f_name, uint32_t count)
 {
-    
+    Cuma_Debug("env_make_Frag path : " + QDir::currentPath());
     for(int i = 0; i < count; i++)
     {
-        QFile f(QDir::currentPath() + "/" + f_name + QString::number(count));
+        QFile f(QDir::currentPath() + "/" + f_name + QString::number(i));
         
         //만약 파일이 존재한다면 0을 리턴함
         if(f.exists() == true)
         {
-            return 0;
+            continue;
         }
         
         //파일을 쓰기모드로 오픈함
-        if( f.open(QFile::WriteOnly) < 0)
+        if( f.open(QFile::WriteOnly) != true)
         {
             Cuma_Error(f.errorString(), __LINE__).show_error_string();
             return -1;
@@ -390,6 +450,89 @@ int Cuma_server_test::env_make_Frag(QString f_name, uint32_t count)
         f.close();
     }
     
+    return 0;
+}
+
+int Cuma_server_test::env_make_File(QString f_name, QString path)
+{
+    QDir dir;
+
+    if (dir.exists(path) == false)
+    {
+        dir.mkdir(path);
+    }
+
+    dir.cd(path);
+
+    QFile f(dir.absolutePath() + "/" + f_name);
+
+    //만약 파일이 존재한다면 0을 리턴함
+    if(f.exists() == true)
+    {
+        return 0;
+    }
+
+    //파일을 쓰기모드로 오픈함
+    if( f.open(QFile::WriteOnly) < 0)
+    {
+        Cuma_Error(f.errorString(), __LINE__).show_error_string();
+        return -1;
+    }
+
+    //파일의 바이너리를 저장
+    for(int i = 0; i<1000; i++)
+        f.write(QString::number(LONG_MAX).toUtf8());
+
+    //파일을 닫음
+    f.close();
+
+    return 0;
+}
+
+int Cuma_server_test::env_make_Frag(QString f_name, uint32_t count, QString path)
+{
+    QDir dir;
+
+    if (dir.exists(path) == false)
+    {
+        dir.mkdir(path);
+    }
+
+    dir.cd(path);
+
+    Cuma_Debug("env_make_Frag path : " + dir.absolutePath());
+    for(int i = 0; i < count; i++)
+    {
+        QFile f(dir.absolutePath() + "/" + f_name + QString::number(i));
+
+        //만약 파일이 존재한다면 0을 리턴함
+        if(f.exists() == true)
+        {
+            continue;
+        }
+
+        //파일을 쓰기모드로 오픈함
+        if( f.open(QFile::WriteOnly) != true)
+        {
+            Cuma_Error(f.errorString(), __LINE__).show_error_string();
+            return -1;
+        }
+
+        //파일의 바이너리를 저장
+        for(int i = 0; i<1000; i++)
+            f.write(QString::number(LONG_MAX).toUtf8());
+
+        //파일을 닫음
+        f.close();
+    }
+
+    QStringList dir_entry = dir.entryList();
+
+    Cuma_Debug(" test file Entry list ");
+    for(QString e: dir_entry)
+    {
+        Cuma_Debug(e, __LINE__);
+    }
     return 0;
 }
 
@@ -445,45 +588,52 @@ void Cuma_server_test::init_unit(uint32_t count, QVector<QSharedPointer<Cuma_Mai
     try
     {
 
-
-    another_pid_ping_array t_unit_arr;
-
-    for(int i = 0; i < unit_vec.size() ; i++)
-    {
-        my_ping_list add_list;
-        add_list.resize(unit_vec.size());
-        t_unit_arr.append(add_list);
-    }
-
-    for(int i = 0; i < unit_vec.size() ; i++)
-    {
-        for(int j = 0; j < unit_vec.size() ; j ++)
+        //pid를 세팅
+        uint i = 0;
+        for(QSharedPointer<Cuma_Main>& m : unit_vec)
         {
-            if(i == j)
-            {
-                t_unit_arr[i].replace(j, 0);
-            }
-            else if(i < j)
-            {
-                uint32_t rand_num = (qrand() % 100);
+            m->mf_set_pid(i);
+            i++;
+        }
 
-                //[i][j]에 넣기
-                t_unit_arr[i].replace(j, rand_num);
+        another_pid_ping_array t_unit_arr;
 
-                //[j][i]에 넣기
-                t_unit_arr[j].replace(i, rand_num);
+        for(int i = 0; i < unit_vec.size() ; i++)
+        {
+            my_ping_list add_list;
+            add_list.resize(unit_vec.size());
+            t_unit_arr.append(add_list);
+        }
+
+        for(int i = 0; i < unit_vec.size() ; i++)
+        {
+            for(int j = 0; j < unit_vec.size() ; j ++)
+            {
+                if(i == j)
+                {
+                    t_unit_arr[i].replace(j, 0);
+                }
+                else if(i < j)
+                {
+                    uint32_t rand_num = (qrand() % 100);
+
+                    //[i][j]에 넣기
+                    t_unit_arr[i].replace(j, rand_num);
+
+                    //[j][i]에 넣기
+                    t_unit_arr[j].replace(i, rand_num);
+                }
             }
         }
-    }
 
-    
-    for(int i = 0; i < unit_vec.size() ; i++)
-    {
-        unit_vec[i]->mf_set_dealy_lst(t_unit_arr);
-        unit_vec[i]->mf_t_set_limit_unit(unit_vec);
-    }
+        //유닛 딜레이 리스트 & 유닛 리티트 유닛 포인터 등록
+        for(int i = 0; i < unit_vec.size() ; i++)
+        {
+            unit_vec[i]->mf_set_dealy_lst(t_unit_arr);
+            unit_vec[i]->mf_t_set_limit_unit(unit_vec);
+        }
 
-    /*//init 유닛의 테스트 디렉토리를 test_dir + uid으로 생성함
+        /*//init 유닛의 테스트 디렉토리를 test_dir + uid으로 생성함
     for(uint i = 0; i< count; i++)
     {
         QDir dir;

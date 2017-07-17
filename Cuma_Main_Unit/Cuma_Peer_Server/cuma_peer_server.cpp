@@ -6,7 +6,7 @@ int Cuma_Main:: f_upload_file_frag_from_unit(QJsonObject o)
     {
         //해당 파일을 요청한 uid의 유닛 포인터를 반환함
         Cuma_Debug("return request unit pid and unit pointer", __LINE__);
-        QSharedPointer<Cuma_Main> req_unit = m_Cuma_unit_inside_timeout_unit_list[static_cast<uint32_t>(o["pid"].toInt())];
+        QSharedPointer<Cuma_Main> req_unit = m_Cuma_unit_inside_timeout_unit_list[static_cast<uint32_t>(o["From"].toInt())];
 
         //만약 파일을 요청한 uid의 유닛포인터가 m_Cuma_unit_list의 검색에 없을경우 예외처리
         Cuma_Debug("check req uid is not in m_Cuma_unit_list", __LINE__);
@@ -21,6 +21,7 @@ int Cuma_Main:: f_upload_file_frag_from_unit(QJsonObject o)
         //요청된 저장된 파일을 읽음
         Cuma_Debug("read request file", __LINE__);
 
+        //보낼 응답 프로토콜을 미리 작성
         QJsonObject reply_protocol;
         switch(m_File->read_file_frag(file_name, file_index))
         {
@@ -28,8 +29,9 @@ int Cuma_Main:: f_upload_file_frag_from_unit(QJsonObject o)
         //만약 no_err일 경우
         case Cuma_File::C_F_no_err:
         {
+            Cuma_Debug("C_F_no_err", __LINE__);
             //reply_protocol에 frag 바이너리를 넣음
-            QByteArray frag_binary = m_File->get_File_Frag_By_Index( file_index );
+            QByteArray frag_binary = m_File->get_File_binary();
             reply_protocol = cuma_protocol::reply_file_binary_read_protocol(file_index, file_name, m_Pid, frag_binary);
         }
             break;
@@ -37,6 +39,7 @@ int Cuma_Main:: f_upload_file_frag_from_unit(QJsonObject o)
             //파일이 존재하지않을 경우
         case Cuma_File::C_F_NOT_EXSIST:
         {
+            Cuma_Debug("C_F_NOT_EXSIST", __LINE__);
             //파일이 존재하지 않는다는 프로토로콜을 넣음
             reply_protocol = cuma_protocol::reply_file_binary_read_protocol(file_index, file_name, m_Pid, "NONE");
             reply_protocol["Error_Type"] = "File";
@@ -46,6 +49,7 @@ int Cuma_Main:: f_upload_file_frag_from_unit(QJsonObject o)
             break;
         case Cuma_File::C_F_not_open:
         {
+            Cuma_Debug("C_F_not_open", __LINE__);
             reply_protocol = cuma_protocol::reply_file_binary_read_protocol(file_index, file_name, m_Pid, "NONE");
             reply_protocol["Error_Type"] = "File";
             reply_protocol["Error"] = Cuma_File::C_F_not_open;
@@ -54,6 +58,7 @@ int Cuma_Main:: f_upload_file_frag_from_unit(QJsonObject o)
 
         default:
         {
+            Cuma_Debug("default", __LINE__);
             reply_protocol = cuma_protocol::reply_file_binary_read_protocol(file_index, file_name, m_Pid, "NONE");
             reply_protocol["Error_Type"] = "File";
             reply_protocol["Error"] = Cuma_File::C_F_error;
@@ -240,7 +245,7 @@ int Cuma_Main::f_reply_download_file_frag_to_unit(QJsonObject o)
     if ( !o["reply"].isNull() && o["reply"].toBool() == true)
     {
         Cuma_Debug("save unit pid to file_frag metadata", __LINE__);
-        Cuma_Debug("Unit : " + QString::number(static_cast<uint32_t>(o["From"].toInt())) + "save file_frag  " + o["file_name"].toString() + ": " + o["file_index"].toInt());
+        Cuma_Debug("Unit : " + QString::number(static_cast<uint32_t>(o["From"].toInt())) + "save file_frag  " + o["file_name"].toString() + ": " + QString::number(o["file_index"].toInt()));
 
     }
 

@@ -278,6 +278,7 @@ int Cuma_File::mf_Read_File()
             if(m_File.isOpen() != false) {m_File.close();}
 
             m_File.setFileName(m_File_Name);
+
             if(m_File.open(QIODevice::ReadOnly) == false)
             {
                 throw Cuma_Error(m_File.errorString(), __LINE__);
@@ -286,9 +287,9 @@ int Cuma_File::mf_Read_File()
 
         Cuma_Debug("start read File_binary", __LINE__);
         //파일 바이너리를 읽음
+        m_File_Binary = m_File.readAll();
 
         Cuma_Debug("read binary size :"+ QString::number(m_File_Binary.size()), __LINE__);
-
 
         Cuma_Debug("check byte is maximum", __LINE__);
         //만약 바이너리가 UINT_MAX일 경우 C_F_READ_FILE_SIZE_MAXIMUM 경고를 리턴함

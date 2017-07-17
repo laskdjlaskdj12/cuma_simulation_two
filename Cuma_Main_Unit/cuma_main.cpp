@@ -27,11 +27,17 @@ Cuma_Main::Cuma_Main(QObject *parent) : QObject(parent)
     //stop 시그널을 바인딩함
     connect(this, SIGNAL(s_stop_unit()), this, SLOT(sl_stop_unit()));
 
+#ifndef TEST
     //recv 시그널을 바인딩함
     connect(this, SIGNAL(s_recv(QJsonObject)), this, SLOT(sl_recv_signal(QJsonObject)));
+#endif
+
+#ifdef TEST
+    connect (this, SIGNAL(s_recv(QJsonObject)), this, SLOT(sl_recv_test(const QJsonObject)));
+#endif
 
     //s_start_spread 시그널을 바인딩함
-    connect(this, SIGNAL(s_start_command(const QJsonObject)), this, SLOT(sl_start_command_signal(const QJsonObject)));
+    connect(this, SIGNAL(s_start_command(const QJsonObject)), this, SLOT(sl_recv_test(const QJsonObject)));
 
 }
 
@@ -64,6 +70,10 @@ Cuma_Main::~Cuma_Main()
 
     //s_start_spread 시그널을 바인딩함
     disconnect(this, SIGNAL(s_start_command(const QJsonObject)), this, SLOT(sl_start_command_signal(const QJsonObject)));
+
+#ifdef TEST
+    disconnect (this, SIGNAL(s_recv_test(QJsonObject)), this, SLOT(sl_recv_test(const QJsonObject)));
+#endif
 }
 
 void Cuma_Main::mf_set_unit_list(QVector<QSharedPointer<Cuma_Main>> list)
@@ -252,6 +262,11 @@ void Cuma_Main::sl_start_command_signal(const QJsonObject command)
     }
 }
 
+void Cuma_Main::sl_recv_test(QJsonObject o)
+{
+
+}
+
 void Cuma_Main::f_recv_process(const QJsonObject& o)
 {
     try
@@ -301,7 +316,7 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
         //파일 frag 읽기일 경우
         else if (o["process"].toString() == "read")
         {
-                    Cuma_Debug("check process is read_frag", __LINE__);
+            Cuma_Debug("check process is read_frag", __LINE__);
 
             //만약 응답 요청이 아닐경우 저장된 파일을 읽어서 전달을 함
             if (o["reply"].isNull() == true)

@@ -153,7 +153,7 @@ QJsonObject cuma_protocol::req_file_binary_read_protocol(QString binary_name, ui
 
     recv_obj["process"] = "read";
     recv_obj["file_name"] = binary_name;
-    recv_obj["index"] = static_cast<int>(file_frag_index);
+    recv_obj["file_index"] = static_cast<int>(file_frag_index);
     return recv_obj;
 }
 
@@ -161,7 +161,7 @@ QJsonObject cuma_protocol::reply_ping_protocol(uint32_t From_uid, bool is_return
 {
     QJsonObject recv_obj = basic_protocol(From_uid);
 
-    recv_obj["process"] = "check_file";
+    recv_obj["process"] = "ping";
     recv_obj["reply"] = is_return;
     return recv_obj;
 }
@@ -170,7 +170,7 @@ QJsonObject cuma_protocol::reply_is_file_exsist_protocol(QString file_name, uint
 {
     QJsonObject recv_obj = basic_protocol(From_uid);
 
-    recv_obj["process"] = "ping";
+    recv_obj["process"] = "check_file";
     recv_obj["file_name"] = file_name;
     recv_obj["file_index"] = static_cast<int>(file_frag_index);
     recv_obj["is_exsist"] = is_exsist;
@@ -191,7 +191,7 @@ QJsonObject cuma_protocol::reply_file_binary_save_protocol(uint32_t From_uid, QS
     return recv_obj;
 }
 
-QJsonObject cuma_protocol::reply_file_binary_read_protocol(uint32_t From_uid, QString file_frag_name, uint32_t file_frag_index, QByteArray binary )
+QJsonObject cuma_protocol::reply_file_binary_read_protocol(uint32_t file_frag_index, QString file_frag_name, uint32_t From_uid, QByteArray binary )
 {
     QJsonObject recv_obj = basic_command_protocol(From_uid);
 

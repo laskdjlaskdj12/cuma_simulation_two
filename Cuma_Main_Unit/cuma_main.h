@@ -113,9 +113,14 @@ signals:
     
     //다른 유닛에서 recv 요청 시그널
     void s_recv(QJsonObject o);
-    
+
     //메인 컨트롤에서 파일을 읽고 다른유닛에게 전파 명령 시그널
     void s_start_command(const QJsonObject command);
+
+#ifdef TEST
+    //만약 테스트 일때 테스트 signal
+    void s_recv_test(QJsonObject o);
+#endif
 
 protected slots:
     //s_stop_unit()의 slot
@@ -127,6 +132,11 @@ protected slots:
     //s_start_spread()의 slot
     void sl_start_command_signal(const QJsonObject command);
     
+#ifdef TEST
+    //만약 테스트 일때 테스트 signal
+    void sl_recv_test(QJsonObject o);
+#endif
+
 protected:
 
     //recv의 수신 프로세스

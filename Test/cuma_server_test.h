@@ -7,6 +7,7 @@
 #include <stdarg.h>
 #include <QSignalSpy>
 #include "../Cuma_Main_Unit/cuma_main.h"
+#include "../Cuma_Debug/cuma_debug.h"
 
 class Cuma_server_test : public Cuma_Main
 {
@@ -16,7 +17,9 @@ public:
     ~Cuma_server_test();
 
 private slots:
-    void t_f_upload_file_frag_from_unit();
+    void t_f_upload_file_frag_from_unit_nofile();
+    void t_f_upload_file_frag_form_unit_success();
+
     void t_f_reply_upload_file_frag_to_unit();
 
     void t_f_download_file_frag_from_unit();
@@ -31,6 +34,8 @@ private slots:
 private:
     int env_make_File(QString f_name);
     int env_make_Frag(QString f_name, uint32_t count);
+    int env_make_File(QString f_name, QString path);
+    int env_make_Frag(QString f_name, uint32_t count, QString path);
 
     QByteArray env_get_file_binary(QString f_name);
 

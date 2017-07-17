@@ -3,7 +3,7 @@
 Cuma_client_test::Cuma_client_test(QObject *parent)
 {
     //파일의 주소를 현재 디렉토리로 설정함
-    m_File->init_dir();
+    //m_File->init_dir();
 
 }
 
