@@ -326,6 +326,8 @@ void Cuma_server_test::t_f_reply_check_file_frag_to_unit()
 
 void Cuma_server_test::t_f_over_bypass()
 {
+    QJsonObject t_protocol;
+
     //테스트 환경을 flush함
     Cuma_Debug("flush test env", __LINE__);
     env_clear_env();
@@ -341,10 +343,14 @@ void Cuma_server_test::t_f_over_bypass()
     //test 유닛의 signalspy
     QSignalSpy test_unit_spy(test_unit_0.data(), SIGNAL(s_recv(QJsonObject)));
 
-    //프로토콜을 만듬
-    QJsonObject t_protocol;
+    //기존의 유닛 프로토콜을 넣음
+    t_protocol = cuma_protocol::req_is_file_exsist_protocol("test.txt", 0, 0, true);
 
+    //바이패스 리미트 카운트를 1로 넣음
     t_protocol["bypass_limit_count"] = 1;
+
+    Cuma_Debug("============ recv reply test json =================");
+    Cuma_Debug(QJsonDocument(t_protocol).toJson());
 
     f_over_bypass(t_protocol);
 
@@ -359,6 +365,7 @@ void Cuma_server_test::t_f_over_bypass()
 
     QVERIFY (arg.at(0).toJsonObject()["From"].toInt() == m_Pid);
     QVERIFY (arg.at(0).toJsonObject()["bypass"].toArray().isEmpty() == false);
+    QVERIFY (arg.at(0).toJsonObject()["bpass_count"].toInt() == 0);
 }
 
 void Cuma_server_test::t_f_reply_over_bypass_limit()
@@ -374,25 +381,44 @@ void Cuma_server_test::t_f_reply_over_bypass_limit()
 
     QSignalSpy test_unit_spy(test_unit_0.data(), SIGNAL(s_recv(QJsonObject)));
 
+
+
     //프로토콜을 만듬
     QJsonObject protocol;
     protocol["bypass_count"] = 1;
 
     QJsonArray bypass_arr = protocol["bypass"].toArray();
     bypass_arr.append(static_cast<int>(test_unit_0->mf_get_pid()));
+    bypass_arr.append(static_cast<int>(m_Pid));
     protocol["bypass"] = bypass_arr;
 
+    Cuma_Debug("============ recv reply test json =================");
+    Cuma_Debug(QJsonDocument(protocol).toJson());
+
     f_reply_over_bypass_limit(protocol);
+
+    //수신 시그널이 emit이 되었는지 확인
+    QVERIFY(test_unit_spy.count() > 0);
+
+    Cuma_Debug("============ signal paramter json =================");
+    QList<QVariant> arg = test_unit_spy.first();
+    Cuma_Debug(QJsonDocument(arg.at(0).toJsonObject()).toJson());
+
+
 
     //프로토콜이 0인 경우
     protocol["bypass_count"] = 0;
 
-    bypass_arr = protocol["bypass"].toArray();
-    bypass_arr.append(static_cast<int>(test_unit_0->mf_get_pid()));
-    protocol["bypass"] = bypass_arr;
+    QJsonArray bypass_arr_2;
+    bypass_arr_2.append(static_cast<int>(m_Pid));
+    protocol["bypass"] = bypass_arr_2;
+
+    Cuma_Debug("============ recv reply test json =================");
+    Cuma_Debug(QJsonDocument(protocol).toJson());
 
     f_reply_over_bypass_limit(protocol);
 
+    QVERIFY(m_bypass_protocol_queue.count() > 0);
 }
 
 int Cuma_server_test::env_make_File(QString f_name)
@@ -587,6 +613,12 @@ void Cuma_server_test::init_unit(uint32_t count, QVector<QSharedPointer<Cuma_Mai
 {
     try
     {
+
+        //유닛들을 clear함
+        for(QSharedPointer<Cuma_Main>& m : unit_vec)
+        {
+            m->get_File_obj()->clear_binary();
+        }
 
         //pid를 세팅
         uint i = 0;

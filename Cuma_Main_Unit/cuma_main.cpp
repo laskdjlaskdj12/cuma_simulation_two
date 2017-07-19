@@ -146,6 +146,16 @@ void Cuma_Main::mf_t_set_limit_unit(QVector<QSharedPointer<Cuma_Main> > &v)
     m_Cuma_unit_inside_timeout_unit_list = v;
 }
 
+void Cuma_Main::set_bypass_limit_count(uint32_t limit)
+{
+    m_limit_bypass_count = limit;
+}
+
+uint32_t Cuma_Main::get_bypass_limit_count()
+{
+    return m_limit_bypass_count;
+}
+
 void Cuma_Main::sl_stop_unit()
 {
     //디버그 메세지

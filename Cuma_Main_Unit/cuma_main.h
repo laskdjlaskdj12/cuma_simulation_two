@@ -37,6 +37,7 @@ typedef QMap <QString, frag_by_pid_list> file_by_pid_list;
 #else
 #define ACCESS private
 #endif
+#define UNUSED false
 
 class Cuma_Main : public QObject
 {
@@ -71,6 +72,10 @@ public:
     QSharedPointer<Cuma_File> get_File_obj();
 
     void mf_t_set_limit_unit(QVector<QSharedPointer<Cuma_Main>>& v);
+
+    //바이패스 리미트 카운트
+    void set_bypass_limit_count(uint32_t limit);
+    uint32_t get_bypass_limit_count();
 
     //유닛을 제어하는 노드에서 커맨드 함수
     //Client 영역
@@ -174,11 +179,15 @@ protected:
     virtual int f_reply_check_file_frag_to_unit(const QJsonObject o);
 
     //바이패스 프로세스
-    // (모든 유닛에게 받은 QJsonObject를 전송하는 역활)
+    // (모든 유닛에게 받은 QJsonObject를 뿌려주는 역활)
     virtual int f_over_bypass(QJsonObject o);
     //바이패스  초과 프로세스
     // (유닛에게 리플라이가 오는 역활을 함)
     virtual int f_reply_over_bypass_limit(QJsonObject o);
+
+    /*//바이패스 패킷 (패킷을 bypass array 경로대로 전달을 해주는 역활)
+    virtual int f_bypass_packet(QJsonObject o);
+    virtual int f_reply_bypass_packet(QJsonObject o);*/
 
     //유닛들에게 적용되는 툴
 protected:
@@ -222,6 +231,9 @@ ACCESS:
 
     //유닛의 file의 메타데이터 인덱스를 저장함
     QMap<QString, QJsonObject> m_file_info_block;
+
+    //돌아온 bypass chain의 프로토콜을 저장함
+    QVector<QJsonObject> m_bypass_protocol_queue;
 
     //유닛의 frag_address를 저장함
     //QMap<파일 이름, QMap<frag 인덱스 , QVector<바이패스 유닛 리스트>>>

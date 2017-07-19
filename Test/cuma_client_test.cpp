@@ -2,9 +2,38 @@
 
 Cuma_client_test::Cuma_client_test(QObject *parent)
 {
-    //파일의 주소를 현재 디렉토리로 설정함
-    //m_File->init_dir();
+    Cuma_Debug::show_debug(true);
 
+    root_path = QDir::currentPath();
+
+    //현재 테스트 디렉토리를 생성
+    QDir t_dir;
+    if(t_dir.exists("test_dir") == false)
+    {
+        t_dir.mkdir("test_dir");
+    }
+
+    t_dir.cd("test_dir");
+
+    QDir::setCurrent(t_dir.absolutePath());
+
+    m_File->init_dir();
+}
+
+Cuma_client_test::~Cuma_client_test()
+{
+    //테스트 디렉토리 삭제
+    QDir t_dir;
+
+    if(t_dir.currentPath() == root_path + "/test_dir")
+    {
+        //테스트 디렉토리 삭제
+        t_dir.cdUp();
+        t_dir.remove("test_dir");
+    }
+
+    //디렉토리 위치를 현재 디렉토리로 변환
+    QDir::setCurrent(root_path);
 }
 
 void Cuma_client_test::t_mf_command_set_file_name()

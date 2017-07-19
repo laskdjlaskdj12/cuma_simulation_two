@@ -11,7 +11,7 @@ class Cuma_client_test : public Cuma_Main
     Q_OBJECT
 public:
     explicit Cuma_client_test(QObject *parent = nullptr);
-
+    ~Cuma_client_test();
 private slots:
     void t_mf_command_set_file_name();
     void t_mf_command_set_unit_bypass_count();
@@ -25,6 +25,10 @@ protected:
     void env_clear_cache();
     int env_make_file(QString f_name);
     void env_remove_file(QString f_name);
+
+private:
+    QString root_path;
+
 };
 
 class Test_Unit: public Cuma_Main
