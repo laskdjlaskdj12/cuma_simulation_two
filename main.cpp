@@ -17,8 +17,8 @@ int main(int argc, char *argv[])
     Cuma_server_test s_test;
 
     //QTest::qExec(&f_test);
-    QTest::qExec(&s_test);
+    //QTest::qExec(&s_test);
     //QTest::qExec(&u_test);
-    //QTest::qExec(&c_test);
+    QTest::qExec(&c_test);
 
 }

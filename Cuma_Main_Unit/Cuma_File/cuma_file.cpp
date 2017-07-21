@@ -171,23 +171,13 @@ int Cuma_File::save_File_Frag(QVector<QByteArray> frag, QString name)
 int Cuma_File::save_File_Frag(QByteArray frag, QString name, uint32_t index)
 {
     try{
+        Cuma_Debug("Saving File_Frag .. ", __LINE__);
 
-        //만약 File_Frag_index와 File_name이 설정이 안되어있을경우 exception호출
-        if(m_File_Frag_Index != 0 && m_File_Name != nullptr)
+        //mf_Save_by_Frag를 호출해서 파일 인덱스와 frag를 저장
+        if ( mf_Save_by_Frag(frag, name, index) < 0)
         {
+            Cuma_Debug("Error of mf_Save_by_Frag ", __LINE__);
             throw Cuma_Error(m_File.errorString(), __LINE__);
-        }
-
-        //아니면 mf_Save_by_Frag()를 실행함
-        else
-        {
-            QVector<QByteArray> save_frag;
-            save_frag.append(frag);
-            //mf_Save_by_Frag를 호출해서 파일 인덱스와 frag를 저장
-            if ( mf_Save_by_Frag(save_frag, name, index) < 0)
-            {
-                throw Cuma_Error(m_File.errorString(), __LINE__);
-            }
         }
 
         return Cuma_File_Status::C_F_no_err;
@@ -264,6 +254,11 @@ void Cuma_File::init_dir()
     mf_make_Cuma_Frag_dir();
 }
 
+int Cuma_File::make_frag()
+{
+    return mf_Make_Frag();
+}
+
 int Cuma_File::mf_Read_File()
 {
     try
@@ -297,6 +292,9 @@ int Cuma_File::mf_Read_File()
         {
             return Cuma_File_Status::C_F_READ_FILE_SIZE_MAXIMUM;
         }
+
+        //파일을 close함
+        m_File.close();
 
         return Cuma_File_Status::C_F_no_err;
 
@@ -369,13 +367,11 @@ int Cuma_File::mf_Make_Frag()
     {
         uint32_t _file_frag_size = 0;
         uint32_t _frag_count = 0 ;
-
-        Cuma_Debug("check m_File is open", __LINE__);
-        if( ! m_File.isOpen()){ return Cuma_File_Status::C_F_not_open; }
-
         Cuma_Debug("frag file bianry", __LINE__);
 
         _frag_count = m_File_Frag_Index;
+        Cuma_Debug("file_frag_count = " + QString::number(_frag_count), __LINE__);
+
         //파일 바이너리를 원하는 count를기준으로 나눔
         _file_frag_size =  static_cast<uint32_t>(m_File_Binary.size() / _frag_count);
         Cuma_Debug("file_frag_size = " + QString::number(_file_frag_size), __LINE__);
@@ -516,6 +512,37 @@ int Cuma_File::mf_Save_by_Frag(QVector<QByteArray> f_frag, QString f_name, uint3
         }
 
         return Cuma_File_Status::C_F_error;
+    }
+}
+
+int Cuma_File::mf_Save_by_Frag(QByteArray f_frag, QString f_name, uint32_t f_index)
+{
+    try{
+    Cuma_Debug("set Frag save location to Cuma_Frag_dir", __LINE__);
+
+        Cuma_Debug("generate file to Cuma_Frag_dir absolutePath", __LINE__);
+
+        //해당 파일 이름을 (frag 이름 + frag 인덱스)으로 생성함
+        QFile Frag_File(u_c_f_path + (f_name + QString::number(f_index)));
+
+        if (Frag_File.open(QFile::WriteOnly) == false)
+            throw Cuma_Error("Frag_File open error", __LINE__);
+
+        Cuma_Debug("write file buffer", __LINE__);
+        //파일의 버퍼를 씀
+        Frag_File.write(f_frag);
+
+        Cuma_Debug("close Frag_File", __LINE__);
+        //파일을 close함
+        Frag_File.close();
+
+        return 0;
+    }
+
+    catch(Cuma_Error& e)
+    {
+        e.show_error_string();
+        return -1;
     }
 }
 

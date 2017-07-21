@@ -60,6 +60,7 @@ public:
     virtual void clear_binary();
     virtual void init_dir();
 
+    virtual int make_frag();
     /*
      * ========== useage ==========
      * 1. 해당 class는 파일 바이너리를 클래스 멤버 변수로 두고있어 캐시가 잔류해 있음
@@ -90,6 +91,7 @@ protected:
     virtual int mf_Make_Frag();
     virtual int mf_Save_by_Frag();
     virtual int mf_Save_by_Frag(QVector<QByteArray> frag, QString name, uint32_t index = NULL);
+    virtual int mf_Save_by_Frag(QByteArray frag, QString name, uint32_t index);
     virtual int mf_Save_by_File(QString file_name);
 
     virtual void mf_make_Cuma_Frag_dir();

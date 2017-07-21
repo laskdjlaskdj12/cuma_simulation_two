@@ -33,7 +33,7 @@ Cuma_Main::Cuma_Main(QObject *parent) : QObject(parent)
 #endif
 
 #ifdef TEST
-    connect (this, SIGNAL(s_recv(QJsonObject)), this, SLOT(sl_recv_test(const QJsonObject)));
+    connect (this, SIGNAL(s_recv(QJsonObject)), this, SLOT(sl_recv_signal(const QJsonObject)));
 #endif
 
     //s_start_spread 시그널을 바인딩함
@@ -288,23 +288,21 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
 
         Cuma_Debug("print output debug messgae", __LINE__);
         //받은 메세지를 디버그 메세지 출력
-        Cuma_Debug_protocol(o, m_Pid);
+        Cuma_Debug(QJsonDocument(o).toJson(), __LINE__);
 
         Cuma_Debug("log env print get message", __LINE__);
         //받은 메세지를 로그 기록
         f_save_recv_json_report(o);
 
         Cuma_Debug("get unit obj from pid", __LINE__);
-        //pid로 유닛객체를 받음
-        //QSharedPointer<Cuma_Main> send_unit = m_Cuma_unit_list[static_cast<uint32_t>(o["pid"].toInt())];
 
         //파일 frag 저장일경우
-        if (o["proecess"].toString() == "save")
+        if (o["process"].toString() == "save")
         {
             Cuma_Debug("check process is save_frag", __LINE__);
 
             //수신 json 저장 프로세스를 먼저 실행함
-            if (o["reply"].isNull() == true)
+            if (o["reply"].toBool() == false || o["reply"].isNull() == true)
             {
                 //파일 다운로드 프로세스
                 if (f_download_file_frag_from_unit(o) < 0)
@@ -391,10 +389,10 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
                 uint32_t u_delay_time = m_Unit_delay_time_array[m_Pid][static_cast<uint32_t>(o["From"].toInt())];
 
                 //ping의 리미트 time대로 sleep을 함
-                QThread::sleep(u_delay_time);
+                //QThread::sleep(u_delay_time);
 
                 //응답 프로토콜을 건냄
-                emit m_Cuma_unit_list[u_delay_time]->s_recv(cuma_protocol::reply_ping_protocol(m_Pid, true));
+                emit m_Cuma_unit_list[o["From"].toInt()]->s_recv(cuma_protocol::reply_ping_protocol(m_Pid, true));
             }
             //응답 reply일 경우 전송할 유닛들 리스트에 넣음
             else
@@ -418,7 +416,7 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
         {
             Cuma_Debug("if can't read process", __LINE__);
 
-            throw Cuma_Error("Can't read recv protocol \n " + QJsonDocument(o).toJson(), __LINE__, m_Pid);
+            Cuma_Error("Can't read recv protocol \n " + QJsonDocument(o).toJson(), __LINE__, m_Pid).show_error_string();
         }
     }
     catch(Cuma_Error& e)

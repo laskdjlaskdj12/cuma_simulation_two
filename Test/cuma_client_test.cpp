@@ -36,20 +36,16 @@ Cuma_client_test::~Cuma_client_test()
     QDir::setCurrent(root_path);
 }
 
-void Cuma_client_test::t_mf_command_set_file_name()
+/*void Cuma_client_test::t_mf_command_set_file_name()
 {
     //환경을 clear
-    env_clear_cache();
+    env_clear_env();
 
     //파일 이름커맨드를 emit함
-    QSignalSpy s_comm_file(this, SIGNAL(s_start_command(QJsonObject)));
     QJsonObject c_proto;
 
     c_proto["command_set_file_name"] = "test.txt";
-    emit s_start_command(c_proto);
-
-    Cuma_Debug("check signal emit");
-    QVERIFY(s_comm_file.count() > 0);
+    mf_command_set_file_name("test.txt");
 
     Cuma_Debug("check command result");
     QVERIFY(m_File->get_File_Name() == "test.txt");
@@ -59,17 +55,14 @@ void Cuma_client_test::t_mf_command_set_file_name()
 void Cuma_client_test::t_mf_command_set_unit_bypass_count()
 {
     //환경을 clear
-    env_clear_cache();
+    env_clear_env();
 
     //바이패스 카운트를 세팅
     QSignalSpy s_comm_file(this, SIGNAL(s_start_command(QJsonObject)));
     QJsonObject c_proto;
 
     c_proto["command_set_unit_bypass_count"] = 10;
-    emit s_start_command(c_proto);
-
-    Cuma_Debug("check signal emit");
-    QVERIFY(s_comm_file.count() > 0);
+    mf_command_set_unit_bypass_count(10);
 
     Cuma_Debug("check command result");
     QVERIFY(m_limit_bypass_count == 10);
@@ -77,388 +70,229 @@ void Cuma_client_test::t_mf_command_set_unit_bypass_count()
 
 void Cuma_client_test::t_mf_command_ping_test()
 {
+    //환경 clear
+    Cuma_Debug("clear env");
+    env_clear_env();
 
-    //환경을 clear
-    Cuma_Debug("make test env");
-    env_clear_cache();
+    //테스트 유닛 생성
+    QVector<QSharedPointer<Cuma_Main>> t_unit_list = env_make_unit(3);
+    t_unit_list.append(QSharedPointer<Cuma_Main>(this));
 
-    //ping 테스트 command 시그널을 detact할 signalspy를 만듬
-    Cuma_Debug("set signalspy to command");
-    QSignalSpy comm_spy(this, SIGNAL(s_start_command(QJsonObject)));
+    //테스트 유닛 pid와 리스트 등록
+    env_set_test_env_unit(t_unit_list, 100);
 
-    //ping테스트를 여기로 전송할 유닛을 생성함
-    Cuma_Debug("set test unit");
-    QSharedPointer<Cuma_Main> test_unit = QSharedPointer<Cuma_Main>(new Cuma_Main);
-
-    //여기로 전송을 보낼 pid를 세팅함
-    Cuma_Debug("set pid test unit");
-    test_unit->mf_set_pid(1);
-
-    //현재 유닛의 pid를 세팅함
-    Cuma_Debug("set pid current unit");
-    mf_set_pid(0);
-
-    //유닛의 ping의 리미트를 설정함
-    Cuma_Debug("set pid test unit");
-    another_pid_ping_array arr;
-
-    //유닛의 ping의 딜레이 타이밍을 만듬
-    Cuma_Debug("set ping delay timing list");
-    for(int i = 0; i<2; i++)
+    //테스트 유닛이 등록이되었는지 확인
+    for(int i = 0; i < 4; i++)
     {
-        for(int j = 0; j<2; j++)
-        {
-            if(i == j)
-            {
-                arr[i].append(0);
-                continue;
-            }
-            else
-            {
-                arr[i].append(qrand() % 1000);
-            }
-        }
+        QVERIFY(t_unit_list[i]->mf_get_unit_list().count() == t_unit_list.count());
+        QVERIFY(t_unit_list[i]->mf_get_dealy_lst()[i].count() == t_unit_list.count());
     }
 
-    //모든 테스트 유닛의 QSharedpointer<Cuma_Main>을 세팅
-    Cuma_Debug("make unit pointer array");
-    QVector<QSharedPointer<Cuma_Main>> ptr_arr;
+    //타임아웃 유닛 리스트의 큐를 비움
+    m_Cuma_unit_inside_timeout_unit_list.clear();
 
-    ptr_arr.append(QSharedPointer<Cuma_Main>(this));
-    ptr_arr.append(test_unit);
+    //테스트 유닛의 핑 리미트를 설정
+    m_ping_limit = 50;
 
+    //허용해야할 유닛의 리스트
+    QVector<uint32_t> compare_unit = env_allow_ping_unit(m_ping_limit, mf_get_dealy_lst()[m_Pid], m_Pid);
 
-    //딜레이 타이밍을 각 유닛에게 세팅함
-    Cuma_Debug("set delay timing to unit");
-    test_unit->mf_set_dealy_lst(arr);
-    this     ->mf_set_dealy_lst(arr);
+    //허용 유닛 리스트를 출력
+    for(uint32_t t : compare_unit)
+    {
+        Cuma_Debug("allow unit list : " + QString::number(t));
+    }
 
-    //테스트 유닛의 객체 포인터를 세팅함
-    Cuma_Debug("set test unit obj pointer");
-    test_unit->mf_set_unit_list(ptr_arr);
-    this     ->mf_set_unit_list(ptr_arr);
+    //유닛을 ping 테스트 시작함
+    mf_command_ping_test();
 
-    //프로토콜을 만듬
-    QJsonObject obj;
-    obj["command_ping_test"] = true;
+    //스크리밍이 된 ping 리스트가 있는지 확인
+    Cuma_Debug("unit inside_timeout_unit_list count = " + QString::number(m_Cuma_unit_inside_timeout_unit_list.count()), __LINE__);
+    for(QSharedPointer<Cuma_Main> p : m_Cuma_unit_inside_timeout_unit_list)
+    {
+        Cuma_Debug("unit_pid = [" + QString::number(p->mf_get_pid()) + "]", __LINE__);
+    }
 
-    //command 프로토콜을 만듬
-    Cuma_Debug("execute command");
-    emit sl_start_command_signal(obj);
+    Cuma_Debug("compare return unit count = " + QString::number(compare_unit.count()));
 
-    //시그널이 정상적으로 emit 됬는지 확인
-    Cuma_Debug("check signal is emit");
-    QVERIFY (comm_spy.count() > 0);
+    QVERIFY (m_Cuma_unit_inside_timeout_unit_list.count() == compare_unit.count());
 
-    //유닛들의 ping 리턴값이 정상적으로 되었는지확인
-    Cuma_Debug("check signal is emit");
-    QVERIFY (m_Send_Unit_list.count() > 0);
-
-    //유닛들의 ping 리턴한 유닛이 test_unit와 같은지 확인
-    Cuma_Debug("return ping unit is same as test_unit");
-    QVERIFY (test_unit == test_unit);
+    //해당 pid가 m_Cuma_unit_inside_timeout_unit_list에 있는지 확인
+    for(uint32_t i :compare_unit)
+    {
+        QVERIFY(env_find_pid(i, m_Cuma_unit_inside_timeout_unit_list));
+    }
 }
-
+*/
 void Cuma_client_test::t_mf_command_spread_test()
 {
-    //환경을 clear
-    Cuma_Debug("make test env");
-    env_clear_cache();
+    //모든 유닛에게 파일 frag를 전송하는 테스트
 
-    //파일을읽어서 m_File 의 바이너리 캐시를 만듬
-    Cuma_Debug("check env make_file");
-    QVERIFY (env_make_file("test.txt") > 0);
+    //테스트 유닛 초기화
+    env_clear_env();
 
-    //ping 테스트 command 시그널을 detact할 signalspy를 만듬
-    Cuma_Debug("set delay timing to unit");
-    QSignalSpy comm_spy(this, SIGNAL(s_start_command(QJsonObject)));
+    QVector<QSharedPointer<Cuma_Main>> t_unit_list = env_make_unit(3);
+    t_unit_list.append(QSharedPointer<Cuma_Main>(this));
 
-    //ping테스트를 여기로 전송할 유닛을 생성함
-    Cuma_Debug("set delay timing to unit");
-    QSharedPointer<Cuma_Main> test_unit = QSharedPointer<Cuma_Main>(new Cuma_Main);
+    env_set_test_env_unit(t_unit_list, 100);
 
-    //여기로 전송을 보낼 pid를 세팅함
-    Cuma_Debug("set pid to unit env");
-    test_unit->mf_set_pid(1);
+    //파일 읽기
+    QVERIFY (env_make_file("test.txt") == 0);
 
-    //현재 유닛의 pid를 세팅함
-    Cuma_Debug("set current unit pid");
-    mf_set_pid(0);
-
-    //유닛의 ping의 리미트를 설정함
-    Cuma_Debug("set unit ping limit");
-    another_pid_ping_array arr;
-
-    //유닛의 ping의 딜레이 타이밍을 만듬
-    Cuma_Debug("set unit ping delay timing");
-    for(int i = 0; i<2; i++)
-    {
-        for(int j = 0; j<2; j++)
-        {
-            if(i == j)
-            {
-                arr[i].append(0);
-                continue;
-            }
-            else
-            {
-                arr[i].append(qrand() % 1000);
-            }
-        }
-    }
-
-    //모든 테스트 유닛의 QSharedpointer<Cuma_Main>을 세팅
-    Cuma_Debug("set test unit array");
-    QVector<QSharedPointer<Cuma_Main>> ptr_arr;
-
-    ptr_arr.append(QSharedPointer<Cuma_Main>(this));
-    ptr_arr.append(test_unit);
-
-    //딜레이 타이밍을 각 유닛에게 세팅함
-    Cuma_Debug("set delay timing to unit");
-    test_unit->mf_set_dealy_lst(arr);
-    this     ->mf_set_dealy_lst(arr);
-
-    //테스트 유닛의 객체 포인터를 세팅함
-    Cuma_Debug("set test unit obj pointer");
-    test_unit->mf_set_unit_list(ptr_arr);
-    this     ->mf_set_unit_list(ptr_arr);
-
-    //프로토콜을 만듬
-    Cuma_Debug("make protocol");
-    QJsonObject obj;
-
-    //파일을 읽음
-    Cuma_Debug("read file");
+    QByteArray t_file_binary = env_get_file_binary("test.txt");
+    m_File->set_File_Binary(t_file_binary);
     m_File->set_File_Name("test.txt");
-    m_File->read_file();
 
-    //파일이 읽혀졌는지 확인
-    Cuma_Debug("check binary is read");
-    QVERIFY (m_File->get_File_binary().isEmpty() == false);
+    //Cuma_Frag_dir에 있는 모든 파일들을 삭제
+    Cuma_Debug("delete Cuma_Frag_dir file", __LINE__);
+    Cuma_Debug("current path : " + QDir::currentPath(), __LINE__);
 
-    //커맨드 실행함
-    Cuma_Debug("execute command");
-    obj["command_spread_test"] = true;
-    emit s_start_command(obj);
+    Cuma_Debug("m_Cuma_unit_inside_timeout_unit_list count : " + QString::number(m_Cuma_unit_inside_timeout_unit_list.count()));
+    QVERIFY (m_Cuma_unit_inside_timeout_unit_list.count() == m_Unit_delay_time_array.count());
 
-    //시그널이 정상적으로 emit이 되었는지 확인
-    Cuma_Debug("check signal is emit");
-    QVERIFY (comm_spy.count() > 0);
+    QVERIFY (mf_command_spread_test() == 0);
 
-    //상대방의 프로토콜 응답이 있는지 확인함
-    Cuma_Debug("check signal is emit");
-    QVERIFY (test_unit->mf_get_report_json()["send"].isNull() == false);
+    Cuma_Debug("check file frag count is same as t_unit_list.cout()", __LINE__);
+    Cuma_Debug("file frag count = " + QString::number(m_File->get_File_Frag().count()), __LINE__);
 
-    //reply ping 프로토콜이 존재하는지 확인
-    Cuma_Debug("check reply ping protocol is exsist");
-    QVERIFY (m_Send_Unit_list.count() > 0);
-}
+    QVERIFY (m_File->get_File_Frag().count() == t_unit_list.count() || m_File->get_File_Frag().count() == t_unit_list.count() + 1);
 
-void Cuma_client_test::t_mf_command_req_file_test()
-{
-    //파일 의 바이너리 정보를 req함
+    QDir dir;
+    dir.cd("Cuma_Frag_dir");
+    QStringList dir_lst = dir.entryList();
 
-    //환경을 clear
-    Cuma_Debug("make test env");
-    env_clear_cache();
-
-    //파일을읽어서 m_File 의 바이너리 캐시를 만듬
-    Cuma_Debug("check env make_file");
-    QVERIFY (env_make_file("test.txt") > 0);
-
-    //ping 테스트 command 시그널을 detact할 signalspy를 만듬
-    Cuma_Debug("set delay timing to unit");
-    QSignalSpy comm_spy(this, SIGNAL(s_start_command(QJsonObject)));
-
-    //ping테스트를 여기로 전송할 유닛을 생성함
-    Cuma_Debug("set delay timing to unit");
-    QSharedPointer<Test_Unit> test_unit = QSharedPointer<Test_Unit>(new Test_Unit);
-
-    //여기로 전송을 보낼 pid를 세팅함
-    Cuma_Debug("set pid to unit env");
-    test_unit->mf_set_pid(1);
-
-    //현재 유닛의 pid를 세팅함
-    Cuma_Debug("set current unit pid");
-    mf_set_pid(0);
-
-    //유닛의 ping의 리미트를 설정함
-    Cuma_Debug("set unit ping limit");
-    another_pid_ping_array arr;
-
-    //유닛의 ping의 딜레이 타이밍을 만듬
-    Cuma_Debug("set unit ping delay timing");
-    for(int i = 0; i<2; i++)
+    for(QString s : dir_lst)
     {
-        for(int j = 0; j<2; j++)
-        {
-            if(i == j)
-            {
-                arr[i].append(0);
-                continue;
-            }
-            else
-            {
-                arr[i].append(qrand() % 1000);
-            }
-        }
+        qDebug()<<s;
     }
-
-    //모든 테스트 유닛의 QSharedpointer<Cuma_Main>을 세팅
-    Cuma_Debug("set test unit array");
-    QVector<QSharedPointer<Cuma_Main>> ptr_arr;
-
-    ptr_arr.append(QSharedPointer<Cuma_Main>(this));
-    ptr_arr.append(test_unit);
-
-    //딜레이 타이밍을 각 유닛에게 세팅함
-    Cuma_Debug("set delay timing to unit");
-    test_unit->mf_set_dealy_lst(arr);
-    this     ->mf_set_dealy_lst(arr);
-
-    //테스트 유닛의 객체 포인터를 세팅함
-    Cuma_Debug("set test unit obj pointer");
-    test_unit->mf_set_unit_list(ptr_arr);
-    this     ->mf_set_unit_list(ptr_arr);
-
-    //테스트 유닛이 파일을 읽음
-    test_unit->read_file("test.txt");
-
-    //테스트 유닛이 파일을 정상적으로 읽었는지 확인
-    QVERIFY (test_unit->get_file_obj().get_File_binary().size() > 0);
-
-    //파일 리퀘스트 프로토콜을 만듬
-    Cuma_Debug("make protocol");
-    QJsonObject obj;
-    obj["command_rq_file"] = true;
-
-    //커맨드 실행함
-    Cuma_Debug("execute command");
-    emit s_start_command(obj);
-
-    //시그널이 정상적으로 emit이 되었는지 확인
-    Cuma_Debug("check signal is emit");
-    QVERIFY (comm_spy.count() > 0);
-
-    //상대방의 프로토콜 응답이 있는지 확인함
-    Cuma_Debug("check signal is emit");
-    QVERIFY (test_unit->mf_get_report_json()["send"].isNull() == false);
-
-    //reply ping 프로토콜이 존재하는지 확인
-    Cuma_Debug("check reply ping protocol is exsist");
-    QVERIFY (m_Send_Unit_list.count() > 0);
-
 }
+/*void Cuma_client_test::t_mf_command_req_file_test()
+{
+    //모든 유닛에게 bypass을 하는 테스트
 
+    //테스트 유닛 초기화
+    env_clear_env();
+
+    QVector<QSharedPointer<Cuma_Main>> t_unit_list = env_make_unit(3);
+    t_unit_list.append(QSharedPointer<Cuma_Main>(this));
+
+    env_set_test_env_unit(t_unit_list, 100);
+
+    //테스트 파일 생성
+    QVERIFY (env_make_file("test.txt") == 0);
+
+    //파일을 frag함
+    env_get_file_frag("test.txt", t_unit_list.count());
+
+    QByteArray f_binary = env_get_file_binary("test.txt");
+    QVector<QByteArray> arr = env_get_file_frag("test.txt", t_unit_list.count());
+    QVERIFY (f_binary != nullptr);
+
+    m_File->set_File_Frag(arr);
+    m_File->set_File_Name("test.txt");
+
+    //실행
+    QVERIFY (mf_command_spread_test() == 0);
+
+    //테스트 유닛에 파일 frag가 맞는지 확인
+    uint i = 0;
+    for(QSharedPointer<Cuma_Main> u :t_unit_list)
+    {
+        QVERIFY( u->get_File_obj()->get_File_Frag().count() > 0);
+        i++;
+    }
+}
 void Cuma_client_test::t_mf_command_trace_pass_test()
 {
-    //파일의 모든 유닛들에게 파일이 있는지 trace 체크
+    //bypass가 실행시 해당 bypass tree가 구성이 되어있는지 확인함
 
-    //파일 의 바이너리 정보를 req함
+    //테스트 유닛 초기화
+    env_clear_env();
 
-    //환경을 clear
-    Cuma_Debug("make test env");
-    env_clear_cache();
+    QVector<QSharedPointer<Cuma_Main>> t_unit_list = env_make_unit(3);
+    t_unit_list.append(QSharedPointer<Cuma_Main>(this));
 
-    //파일을읽어서 m_File 의 바이너리 캐시를 만듬
-    Cuma_Debug("check env make_file");
-    QVERIFY (env_make_file("test.txt") > 0);
+    env_set_test_env_unit(t_unit_list, 100);
 
-    //ping 테스트 command 시그널을 detact할 signalspy를 만듬
-    Cuma_Debug("set delay timing to unit");
-    QSignalSpy comm_spy(this, SIGNAL(s_start_command(QJsonObject)));
+    //ping을 보냄
+    t_mf_command_ping_test();
 
-    //ping테스트를 여기로 전송할 유닛을 생성함
-    Cuma_Debug("set delay timing to unit");
-    QSharedPointer<Test_Unit> test_unit = QSharedPointer<Test_Unit>(new Test_Unit);
+    //bypass reply 큐가 있는지 확인
+    QVERIFY(m_bypass_protocol_queue.count() > 0);
 
-    //여기로 전송을 보낼 pid를 세팅함
-    Cuma_Debug("set pid to unit env");
-    test_unit->mf_set_pid(1);
+    Cuma_Debug("========= check bypass protocol queue =======", __LINE__);
+    Cuma_Debug(QJsonDocument(m_bypass_protocol_queue[0]).toJson(), __LINE__);
 
-    //현재 유닛의 pid를 세팅함
-    Cuma_Debug("set current unit pid");
-    mf_set_pid(0);
-
-    //유닛의 ping의 리미트를 설정함
-    Cuma_Debug("set unit ping limit");
-    another_pid_ping_array arr;
-
-    //유닛의 ping의 딜레이 타이밍을 만듬
-    Cuma_Debug("set unit ping delay timing");
-    for(int i = 0; i<2; i++)
+    //바이패스 array의 카운트가 0보다 큰지 확인
+    QVERIFY (m_bypass_protocol_queue[0]["bypass"].toArray().count() > 0 );
+}
+*/
+int Cuma_client_test::env_set_test_env_unit(QVector<QSharedPointer<Cuma_Main> > &v, uint32_t max_timeout)
+{
+    //pid와 unlit_list들의 기본적인 부분을 추가함
+    int it_pid = 0;
+    for(QSharedPointer<Cuma_Main> it: v)
     {
-        for(int j = 0; j<2; j++)
+        it->mf_set_pid(it_pid);
+        it->mf_set_unit_list(v);
+        it->mf_t_set_limit_unit(v);
+        it_pid++;
+    }
+
+    QVector<QVector<uint32_t>> unit_ping_list;
+
+    for(int i = 0; i < v.size() ; i++)
+    {
+        QVector<uint32_t> ping_list;
+        ping_list.resize(v.size());
+        unit_ping_list.append(ping_list);
+    }
+
+    qsrand(10);
+    for(uint i = 0; i < v.count(); i++)
+    {
+        for(uint j = 0; j < v.count(); j++)
         {
             if(i == j)
             {
-                arr[i].append(0);
+                unit_ping_list[i].replace(j, 0);
                 continue;
             }
+
             else
             {
-                arr[i].append(qrand() % 1000);
+                uint32_t rand_num = ((uint32_t)qrand() % max_timeout);
+
+                //[i][j]에 넣기
+                unit_ping_list[i].replace(j, rand_num);
+
+                //[j][i]에 넣기
+                unit_ping_list[j].replace(i, rand_num);
             }
         }
     }
 
-    //모든 테스트 유닛의 QSharedpointer<Cuma_Main>을 세팅
-    Cuma_Debug("set test unit array");
-    QVector<QSharedPointer<Cuma_Main>> ptr_arr;
+    //딜레이 리스트를 프린트함
+    for(int i = 0; i < v.count(); i++)
+    {
+        QString list;
+        for(uint j = 0; j < v.count(); j++)
+        {
+            list += (QString::number(unit_ping_list[i][j]) + " ");
+        }
+        qDebug()<<"[" + QString::number(i) + "] = " + list;
+    }
 
-    ptr_arr.append(QSharedPointer<Cuma_Main>(this));
-    ptr_arr.append(test_unit);
+    //유닛 딜레이 리스트 등록
+    for(QSharedPointer<Cuma_Main> it: v)
+    {
+        it->mf_set_dealy_lst(unit_ping_list);
+    }
 
-    //딜레이 타이밍을 각 유닛에게 세팅함
-    Cuma_Debug("set delay timing to unit");
-    test_unit->mf_set_dealy_lst(arr);
-    this     ->mf_set_dealy_lst(arr);
-
-    //테스트 유닛의 객체 포인터를 세팅함
-    Cuma_Debug("set test unit obj pointer");
-    test_unit->mf_set_unit_list(ptr_arr);
-    this     ->mf_set_unit_list(ptr_arr);
-
-    //테스트 유닛이 파일을 읽음
-    test_unit->read_file("test.txt");
-
-    //파일이 읽혀졌는지 확인
-    Cuma_Debug("check binary is read");
-    QVERIFY (test_unit->get_file_obj().get_File_binary().size() > 0);
-
-    //테스트 유닛이 파일을 씀
-    Cuma_Debug("write test unit ");
-    QVERIFY(test_unit->write_file() > 0);
-
-    //프로토콜을 만듬
-    Cuma_Debug("make protocol");
-    QJsonObject obj;
-    obj["command_trace_pass"] = true;
-
-    //커맨드 실행함
-    Cuma_Debug("execute command");
-    emit s_start_command(obj);
-
-    //시그널이 정상적으로 emit이 되었는지 확인
-    Cuma_Debug("check signal is emit");
-    QVERIFY (comm_spy.count() > 0);
-
-    //상대방의 프로토콜 응답이 있는지 확인함
-    Cuma_Debug("check signal is emit");
-    QVERIFY (test_unit->mf_get_report_json()["send"].isNull() == false);
-
-    //reply ping 프로토콜이 존재하는지 확인
-    Cuma_Debug("check reply ping protocol is exsist");
-    QVERIFY (m_Send_Unit_list.count() > 0);
-}
-
-int Cuma_client_test::env_set_test_env_unit()
-{
     return 0;
 }
 
-void Cuma_client_test::env_clear_cache()
+void Cuma_client_test::env_clear_env()
 {
     m_Unit_delay_time_array.clear();
     m_Cuma_unit_list.clear();
@@ -469,6 +303,15 @@ void Cuma_client_test::env_clear_cache()
     m_limit_bypass_count = 0;
     m_file_info_block.clear();
     m_file_frag_address.clear();
+
+    //해당 디렉토리를 삭제하고 다시 재생성
+    QDir::setCurrent(root_path);
+
+    QDir t_dir;
+    t_dir.remove("test_dir");
+    t_dir.mkdir("test_dir");
+    QDir::setCurrent(root_path + "/test_dir");
+
 }
 
 int Cuma_client_test::env_make_file(QString f_name)
@@ -511,55 +354,99 @@ void Cuma_client_test::env_remove_file(QString f_name)
     }
 }
 
-Test_Unit::Test_Unit()
+QByteArray Cuma_client_test::env_get_file_binary(QString f_name)
 {
+    QFile f (QDir::currentPath() + "/" + f_name);
+    QByteArray ret_binary;
 
+    if(f.open(QFile::ReadOnly) == false)
+        return nullptr;
+
+    ret_binary = f.readAll();
+
+    f.close();
+
+    return ret_binary;
 }
 
-Test_Unit::~Test_Unit()
+QVector<QByteArray> Cuma_client_test::env_get_file_frag(QString f_name, uint32_t count)
 {
+    QVector<QByteArray> f_frag_list;
 
+    QFile f (QDir::currentPath() + "/" + f_name);
+    if(f.open(QFile::ReadOnly) == false)
+        return f_frag_list;
+
+    QByteArray f_binary =  f.readAll();
+
+    uint32_t f_frag_size = (f_binary.size()/ count);
+
+    if(f_binary.size() % count)
+        count += 1;
+
+    for(uint i = 0; i < count; i++)
+    {
+        f_frag_list.append(f_binary.mid(i, f_frag_size));
+    }
+
+    return f_frag_list;
 }
 
-void Test_Unit::set_read_file_name(QString f_name)
+QVector<QSharedPointer<Cuma_Main> > Cuma_client_test::env_make_unit(uint32_t count)
 {
-    this->m_File->set_File_Name(f_name);
+    QVector<QSharedPointer<Cuma_Main> > ret_unit_vec;
 
+    for(uint i = 0; i < count; i++)
+    {
+        ret_unit_vec.append(QSharedPointer<Cuma_Main>::create());
+    }
+
+    return ret_unit_vec;
 }
 
-void Test_Unit::read_file()
+QVector<uint32_t> Cuma_client_test::env_allow_ping_unit(uint32_t limit, QVector<uint32_t> delay_list, uint32_t pid)
 {
-    //세팅된 파일 이름을 읽음
-    this->m_File->read_file_frag(this->m_File->get_File_Name(), 0);
+    QVector<uint32_t> ret_lst;
+    for(int i = 0 ; i < delay_list.count(); i++)
+    {
+        if(i == pid)
+        {
+            continue;
+        }
 
+        //만약 delay_list[i]가 limit보다 크지 않다면 리턴 리스트에 append
+        if(! (delay_list[i] > limit) )
+        {
+            ret_lst.append(i);
+        }
+    }
+    return ret_lst;
 }
 
-void Test_Unit::read_file(QString f_name)
+bool Cuma_client_test::env_find_pid(uint32_t i, QVector<QSharedPointer<Cuma_Main> > &v)
 {
-    this->m_File->set_File_Name(f_name);
-    this->m_File->read_file();
+    for(QSharedPointer<Cuma_Main> it : v)
+    {
+        if(it->mf_get_pid() == i)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
-int Test_Unit::write_file()
+bool Cuma_client_test::env_compare_file_frag(QVector<QByteArray> test_unit_frag_list, QVector<QByteArray> frag_list)
 {
-    //캐시된 파일이름와 바이너리을 이용해서 저장
-    this->m_File->save_File_Frag(this->m_File->get_File_binary(), this->m_File->get_File_Name(), 0);
+    for(uint i = 0; i < test_unit_frag_list.count(); i++)
+    {
+        for(uint j = 0; j< frag_list.count(); j++)
+        {
+            if(test_unit_frag_list[i] == frag_list[j])
+            {
+                return true;
+            }
+        }
+    }
 
-    return 0;
-}
-
-int Test_Unit::write_file(QString f_name, QByteArray &arr)
-{
-    //파일 이름을 f_name으로
-    this->m_File->set_File_Name(f_name);
-
-    //인덱스를 0으로 하고 저장
-    this->m_File->save_File_Frag(arr, f_name, 0);
-
-    return 0;
-}
-
-Cuma_File Test_Unit::get_file_obj()
-{
-    return *m_File;
+    return false;
 }

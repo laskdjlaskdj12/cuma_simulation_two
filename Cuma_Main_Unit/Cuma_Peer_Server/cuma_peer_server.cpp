@@ -194,11 +194,9 @@ int Cuma_Main::f_download_file_frag_from_unit(QJsonObject o)
 {
     try
     {
-        uint32_t file_index = o["file_index"].toInt();
-
         //가지고 온 파일을 저장함
         Cuma_Debug("save recv protocol file ", __LINE__);
-        if (m_File->save_File_Frag(o["file_frag"].toString().toUtf8(), o["file_name"].toString(), file_index) < 0)
+        if (m_File->save_File_Frag(o["file_frag"].toString().toUtf8(), o["file_name"].toString(), o["file_index"].toInt()) < 0)
         {
             Cuma_Debug("Can't open file", __LINE__);
             return 0;
@@ -209,14 +207,7 @@ int Cuma_Main::f_download_file_frag_from_unit(QJsonObject o)
 
         //유닛의 pid를 찾아서 prepare_send_unit 넣음
         Cuma_Debug("find unit shared pointer in m_Pid", __LINE__);
-        for (QVector<QSharedPointer<Cuma_Main>>::iterator it = m_Cuma_unit_inside_timeout_unit_list.begin(); it != m_Cuma_unit_inside_timeout_unit_list.end(); it++)
-        {
-            if ((*it)->mf_get_pid() == static_cast<uint32_t>(o["From"].toInt()))
-            {
-                prepare_send_unit = (*it);
-                break;
-            }
-        }
+        prepare_send_unit = f_find_unit_from_inside_timeout_unit (o["From"].toInt());
 
         //만약 prepare_send_unit이 nullptr일경우 예외처리 exception문을 호출
         Cuma_Debug("check find send target unit", __LINE__);
@@ -242,10 +233,10 @@ int Cuma_Main::f_reply_download_file_frag_to_unit(QJsonObject o)
 {
     //reply된 download_frag_file를 체크하고 파일이 저장을 한 유닛의 pid를 File_Frag의 메타데이터에 저장함
     Cuma_Debug("check download_frag_file protocol ", __LINE__);
-    if ( !o["reply"].isNull() && o["reply"].toBool() == true)
+    if ( !(o["reply"].isNull()) && o["reply"].toBool() == true)
     {
         Cuma_Debug("save unit pid to file_frag metadata", __LINE__);
-        Cuma_Debug("Unit : " + QString::number(static_cast<uint32_t>(o["From"].toInt())) + "save file_frag  " + o["file_name"].toString() + ": " + QString::number(o["file_index"].toInt()));
+        Cuma_Debug("Unit : " + QString::number(static_cast<uint32_t>(o["From"].toInt())) + " save file_frag  " + o["file_name"].toString() + ": " + QString::number(o["file_index"].toInt()));
 
     }
 
@@ -538,7 +529,6 @@ int Cuma_Main::f_reply_over_bypass_limit(QJsonObject o)
         Cuma_Debug("find next pid in bypass chain", __LINE__);
         for(int i = (bypass_chain.count() - 1) ; i > -1; i--)
         {
-            Cuma_Debug("for loop i = [" + QString::number(i) + "]");
             if(bypass_chain.at(i).toInt() == m_Pid && i != 0)
             {
                 //다음 바이패스 체인을 찾음
@@ -552,7 +542,7 @@ int Cuma_Main::f_reply_over_bypass_limit(QJsonObject o)
             {
                 Cuma_Debug("my bypass ", __LINE__);
 
-                //자기 바이패스 체인이므로 바이패스 큐에 넣음
+                //자기 바이패스 체인이므로 바이패스 프로토콜 큐에 넣음
                 m_bypass_protocol_queue.append(o);
 
                 //1을 리턴함

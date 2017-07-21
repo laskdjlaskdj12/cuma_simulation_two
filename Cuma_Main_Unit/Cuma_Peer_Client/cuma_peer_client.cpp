@@ -22,10 +22,16 @@ int Cuma_Main::mf_command_ping_test()
         
         //모든 유닛들에게 전송함
         Cuma_Debug("send all unit ping protocol", __LINE__);
-        foreach(QSharedPointer<Cuma_Main> p, m_Cuma_unit_list)
+
+        for(QSharedPointer<Cuma_Main> p: m_Cuma_unit_list)
         {
+            //만약 자기 유닛차례일 경우 continue
+            if(p->mf_get_pid() == m_Pid)
+                continue;
+
             emit p->s_recv(cuma_protocol::req_ping_protocol(m_Pid));
         }
+
         return 0;
     }
     catch(Cuma_Error& e)
@@ -60,18 +66,15 @@ int Cuma_Main::mf_command_spread_test()
         //전송할 파일들을 유닛수대로 파편화를 함
         Cuma_Debug("frag the file in insdie unit size", __LINE__);
         m_File->set_File_Frag_Count(m_Cuma_unit_inside_timeout_unit_list.count());
-        
-        uint i = 0;
-        
-        //파일 정보에 대한 블록을 만듬
-        Cuma_Debug("make block for file info", __LINE__);
-        QJsonObject file_info_block;
-        file_info_block["file_frag_count"] = m_Cuma_unit_inside_timeout_unit_list.count();
-        file_info_block["file_binary_size"] = m_File->get_File_binary().count();
-        
-        //파일의 정보 블록을 저장함
-        Cuma_Debug("save block for file info", __LINE__);
-        m_file_info_block[m_File->get_File_Name()] = file_info_block;
+
+        //파일 frag를 만들기
+        Cuma_Debug("making file frag...", __LINE__);
+        if (m_File->make_frag() < 0)
+        {
+            throw Cuma_Error("mFile-> make_frag() error", __LINE__, m_Pid);
+        }
+
+        uint index = 0;
         
         //파일 유닛들의 send info 저장함
         QMap<uint32_t, QVector<uint32_t>> file_save_unit;
@@ -80,23 +83,20 @@ int Cuma_Main::mf_command_spread_test()
         Cuma_Debug("send all unit by file_fragmentation", __LINE__);
         foreach(QSharedPointer<Cuma_Main> p, m_Cuma_unit_list)
         {
-            //파편화에 대한 json을 만듬
-            Cuma_Debug("send file frag " + QString::number(p->mf_get_pid()), __LINE__);
 
-            QJsonObject send_frag_binary;
-            send_frag_binary["file_frag"] = QString(m_File->get_File_Frag_By_Index(i));
-            send_frag_binary["file_name"] = m_File->get_File_Name();
-            send_frag_binary["file_index"] = static_cast<int>(i);
-            send_frag_binary["file_info_block"] = file_info_block;
+            //파편화에 대한 json을 만듬
+            Cuma_Debug("send file frag index :" + QString::number(p->mf_get_pid()), __LINE__);
             
-            emit p->s_recv(cuma_protocol::req_file_binary_save_protocol(send_frag_binary, m_Pid));
+            Cuma_Debug("send to unit Pid : " + QString::number(m_Pid), __LINE__);
+            emit p->s_recv(cuma_protocol::req_file_binary_save_protocol(m_File->get_File_Name(), index, m_File->get_File_Frag_By_Index(index), m_Pid ));
             
+            Cuma_Debug("save send_frag_binary index : " + QString::number(index), __LINE__);
             QVector<uint32_t> file_Frag_index;
             file_Frag_index.append(p->mf_get_pid());
             
-            file_save_unit[i] = file_Frag_index;
+            file_save_unit[index] = file_Frag_index;
             
-            i++;
+            index++;
         }
         
         //File_frag를 수신한 유닛들의 주소들을 frag인덱스별로 저장함
@@ -201,34 +201,8 @@ int Cuma_Main::mf_command_req_file_test()
 int Cuma_Main::mf_command_trace_pass_test()
 {
     //모든 유닛들에게 파일이 있는지 체크를 하는 실험
-    
-    //frag_address을 전부 flush함
-    Cuma_Debug("flush frag_address", __LINE__);
-    m_file_frag_address[m_File->get_File_Name()].clear();
-    
-    //모든 유닛에게 파일 메타데이터 인덱스를 요청함
-    Cuma_Debug("request file meta data index to all unit", __LINE__);
-    foreach(QSharedPointer<Cuma_Main> p, m_Cuma_unit_inside_timeout_unit_list)
-    {
-        emit p->s_recv(cuma_protocol::req_is_file_exsist_protocol(m_File->get_File_Name(), m_Pid));
-    }
-    
-    //파일 메타데이터 인덱스가 도착했는지 체크함
-    Cuma_Debug("check metadata index is clear", __LINE__);
-    if(m_file_info_block[m_File->get_File_Name()].isEmpty())
-    {
-        throw Cuma_Error("Can't find any File_index", __LINE__);
-    }
-    
-    //인덱스가 도착했으면 인덱스를 읽어서 is_file_frag_exsist 프로토콜로 파일frag를 체크함
-    Cuma_Debug("check metadata index is clear", __LINE__);
-    for(int frag_index = 0;
-        frag_index < m_file_info_block[m_File->get_File_Name()]["file_frag_count"].toInt();
-        frag_index++)
-    {
-        //is_file_exsist_protocol을 모든 유닛에게 전송
-        emit f_find_unit_from_inside_timeout_unit(frag_index)->s_recv(cuma_protocol::req_is_file_exsist_protocol(frag_index, m_Pid));
-    }
+    f_over_bypass(cuma_protocol::basic_command_protocol(m_Pid));
+    return 0;
 }
 
 void Cuma_Main:: mf_command_set_unit_bypass_count(uint32_t count)
