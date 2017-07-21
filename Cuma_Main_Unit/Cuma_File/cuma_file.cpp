@@ -250,7 +250,7 @@ void Cuma_File::init_dir()
     u_root_path += "/";
     u_c_f_path = u_root_path + "Cuma_Frag_dir/";
 
-    //디렉토리를
+    //디렉토리를 생성
     mf_make_Cuma_Frag_dir();
 }
 
