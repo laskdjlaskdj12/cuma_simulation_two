@@ -13,12 +13,12 @@ public:
     explicit Cuma_client_test(QObject *parent = nullptr);
     ~Cuma_client_test();
 private slots:
-    /*void t_mf_command_set_file_name();
-    void t_mf_command_set_unit_bypass_count();
-    void t_mf_command_ping_test();*/
-    void t_mf_command_spread_test();
-    /*void t_mf_command_req_file_test();
-    void t_mf_command_trace_pass_test();*/
+    //void t_mf_command_set_file_name();
+    //void t_mf_command_set_unit_bypass_count();
+    //void t_mf_command_ping_test();
+    //void t_mf_command_spread_test();
+    //void t_mf_command_req_file_test();
+    void t_mf_command_trace_pass_test();
 
 protected:
     int env_set_test_env_unit(QVector<QSharedPointer<Cuma_Main>>& v, uint32_t max_timeout);

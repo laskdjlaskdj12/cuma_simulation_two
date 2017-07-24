@@ -84,104 +84,45 @@ int Cuma_Main::f_reply_upload_file_frag_to_unit(const QJsonObject o)
     {
         //유닛의 목적지가 어디인지
         Cuma_Debug("check unit destination", __LINE__);
-        uint32_t unit_to  =  static_cast<uint32_t>(o["To"].toInt());
 
-        uint32_t next_unit_pid = NULL;
+        //파일이름을 표시함
+        Cuma_Debug("save file_info", __LINE__);
+        uint32_t    unit_from = static_cast<uint32_t>(o["From"].toInt());
+        QString     file_name = o["file_name"].toString();
+        uint32_t    file_index = (uint32_t)o["file_index"].toInt();
+        uint32_t    file_size = (uint32_t)o["file_byte"].toInt();
+        QString     frag_string = o["file_frag"].toString();
+        QByteArray  file_frag(frag_string.toUtf8());
 
-        //만약 자기 유닛에게 오지 않았을 경우 적혀진 경로대로 탐색을 해서 자기 유닛이후의 다음 유닛에게 전송을 함
-        Cuma_Debug("check bypass unit", __LINE__);
-        if (unit_to != m_Pid)
+        //디버그 표시
+        Cuma_Debug("show debug data", __LINE__);
+        Cuma_Debug("f_reply_upload_file_frag_to_unit", __LINE__);
+        Cuma_Debug("File_Frag_size : " + QString::number(file_size), __LINE__);
+        Cuma_Debug("File_Frag_info : size : " + QString::number(file_frag.count()), __LINE__);
+
+        //만약 frag인덱스와 file_frag의 사이즈가 안맞을 경우 예외 처리 보냄
+        //이미 파일체크 프로세스가 바이패스 프로세스를 호출해서 이미 ping이 남아있는데 없다는것은 예외처리를 통해서 exception문을 호출해야함
+
+        Cuma_Debug("check frag_index is not match file_frag count", __LINE__);
+
+        if (file_index != file_frag.count())
         {
-            //적혀진 경로 를 json_array로 변환함
-            Cuma_Debug("convert bypass to json_arry unit pass", __LINE__);
-            QJsonArray bypass_array= o["bypass"].toArray();
-
-            //bypassarray에 있는 유닛들을 찾음
-            Cuma_Debug("search bypassarray unit", __LINE__);
-            for (int i = 0; i< bypass_array.count(); i++)
-            {
-                //만약 해당 array가 자기 pid랑 일치할경우 next_unit_pid에 값을 할당함
-                if (bypass_array.at(i).toInt() == m_Pid)
-                {
-                    next_unit_pid = static_cast<uint32_t>(bypass_array[i+1].toInt());
-                }
-            }
-
-            //next_unit_pid가 없을경우 예외처리
-            Cuma_Debug("check next pid is empty", __LINE__);
-            if (next_unit_pid == NULL)
-            {
-                throw Cuma_Error("f_reply_upload_file_frag_to_unit::no such unit from destination", __LINE__, m_Pid);
-            }
-
-            //next_unit_pid의 유닛들의 포인터를 통해 전송함
-            Cuma_Debug("send protocol by next_unit_pid unit pointer", __LINE__);
-            QSharedPointer<Cuma_Main> next_bypass_unit = nullptr;
-
-            //유닛의 pid를 찾아서 next_bypass_unit에 넣음
-            for (QVector<QSharedPointer<Cuma_Main>>::iterator it = m_Cuma_unit_inside_timeout_unit_list.begin(); it != m_Cuma_unit_inside_timeout_unit_list.end(); it++)
-            {
-                if ((*it)->mf_get_pid() == next_unit_pid)
-                {
-                    Cuma_Debug("find pointer pid : "+ QString::number((*it)->mf_get_pid()), __LINE__);
-                    next_bypass_unit = (*it);
-                    break;
-                }
-            }
-
-            //받은 recv프로토콜을 그대로 다음 유닛에게 전송
-            Cuma_Debug("send bypass protocol", __LINE__);
-            next_bypass_unit->s_recv(o);
+            throw Cuma_Error("f_reply_upload_file_frag_to_unit error frag_index != file_frag.count() : recv frag_index and file_frag_count is not match", __LINE__, m_Pid);
         }
 
-        //만약 자기 유닛일 경우 전송을 받아서 해석을 한후 저장함
-        else
+        //리턴된 파일의 바이너리를 읽고 저장함
+        Cuma_Debug("read return file binary and save", __LINE__);
+        int ret_type = m_File->save_File_Frag(file_frag, file_name, file_index);
+
+        //만약 파일이 이미 존재할경우 continue함
+        Cuma_Debug("check if file is exsist", __LINE__);
+        if ( ret_type == Cuma_File::Cuma_File_Status::C_F_Exsist)
         {
-            Cuma_Debug("protocol is mine ", __LINE__);
-            Cuma_Debug("continue save procedure", __LINE__);
-
-            //어디유닛에서 전송을 했는지 적음
-            Cuma_Debug("save witch unit is send", __LINE__);
-            uint32_t    unit_from = static_cast<uint32_t>(o["From"].toInt());
-
-            //파일이름을 표시함
-            Cuma_Debug("save file_info", __LINE__);
-            QString     file_name = o["file_name"].toString();
-            uint32_t    file_index = (uint32_t)o["file_index"].toInt();
-            uint32_t    file_size = (uint32_t)o["file_byte"].toInt();
-            QString     frag_string = o["file_frag"].toString();
-            QByteArray  file_frag(frag_string.toUtf8());
-
-            //디버그 표시
-            Cuma_Debug("show debug data", __LINE__);
-            Cuma_Debug("f_reply_upload_file_frag_to_unit", __LINE__);
-            Cuma_Debug("File_Frag_size : " + QString::number(file_size), __LINE__);
-            Cuma_Debug("File_Frag_info : size : " + QString::number(file_frag.count()), __LINE__);
-
-            //만약 frag인덱스와 file_frag의 사이즈가 안맞을 경우 예외 처리 보냄
-            //이미 파일체크 프로세스가 바이패스 프로세스를 호출해서 이미 ping이 남아있는데 없다는것은 예외처리를 통해서 exception문을 호출해야함
-
-            Cuma_Debug("check frag_index is not match file_frag count", __LINE__);
-
-            if (file_index != file_frag.count())
-            {
-                throw Cuma_Error("f_reply_upload_file_frag_to_unit error frag_index != file_frag.count() : recv frag_index and file_frag_count is not match", __LINE__, m_Pid);
-            }
-
-            //리턴된 파일의 바이너리를 읽고 저장함
-            Cuma_Debug("read return file binary and save", __LINE__);
-            int ret_type = m_File->save_File_Frag(file_frag, file_name, file_index);
-
-            //만약 파일이 이미 존재할경우 continue함
-            Cuma_Debug("check if file is exsist", __LINE__);
-            if ( ret_type == Cuma_File::Cuma_File_Status::C_F_Exsist)
-            {
-                Cuma_Debug("file is already exsist", __LINE__);
-            }
-
-            //리턴함
-            return 0;
+            Cuma_Debug("file is already exsist", __LINE__);
         }
+
+        //리턴함
+        return 0;
     }
     catch(Cuma_Error& e)
     {
@@ -340,7 +281,7 @@ int Cuma_Main::f_check_file_frag_to_unit(QJsonObject o)
 
 int Cuma_Main::f_reply_check_file_frag_to_unit(const QJsonObject o)
 {
-    #ifndef UNUSED
+#ifndef UNUSED
     try{
         //bypass의 프로토콜은 bypass_count 끝날때까지 리턴값을 못받는것으로 산정함
 
@@ -438,163 +379,175 @@ int Cuma_Main::f_reply_check_file_frag_to_unit(const QJsonObject o)
                 //m_file_frag_address 저장함
                 m_file_frag_address[o["file_name"].toString()] = frag_index_address;
             }
-        return 0;
+            return 0;
 #ifndef UNUSED
-    }
+        }
 
-    catch(Cuma_Error& e)
-    {
-        e.show_error_string();
-        return -1;
-    }
+        catch(Cuma_Error& e)
+        {
+            e.show_error_string();
+            return -1;
+        }
 #endif
-}
-
-int Cuma_Main::f_over_bypass(QJsonObject o)
-{
-
-    //bypass 핸들러 실행전에 정보 등록
-    Cuma_Debug("check bypass is exsist ", __LINE__);
-    if(o["bypass"].isNull())
-    {
-        Cuma_Debug("make new bypass ", __LINE__);
-
-        //새로운 바이패스 프로토콜을 생성함
-        o["bypass_count"] = o["bypass_limit_count"].toInt();
     }
 
-    //만약 bypass의 카운트가 0일경우 이미 리미트까지 갔다는 의미
-    Cuma_Debug("check bypass count is exsist ", __LINE__);
-    if(o["bypass_count"].toInt() == 0)
+    int Cuma_Main::f_over_bypass(QJsonObject o)
     {
-        Cuma_Debug("bypass count is 0 ", __LINE__);
 
-        //bypass 카운트가 0이므로 -1를 리턴함
-        return -1;
-    }
-
-    //bypass_count를 -1함
-    Cuma_Debug("remove 1 in bypass count ", __LINE__);
-    o["bypass_count"] = o["bypass_count"].toInt() - 1;
-
-    //바이패스 에 자기 PId를 기록함
-    Cuma_Debug("append bypass record", __LINE__);
-    QJsonArray arr;
-    arr.append((int)m_Pid);
-    o["bypass"] = arr;
-
-    //ping으로 스크리밍이 된 모든 유닛들에게 bypass함
-    for (QSharedPointer<Cuma_Main> it : m_Cuma_unit_inside_timeout_unit_list)
-    {
-        //바이패스가 온 유닛은 제외
-        if ( it->mf_get_pid() == o["From"].toInt() )
+        //bypass 핸들러 실행전에 정보 등록
+        Cuma_Debug("check bypass is exsist ", __LINE__);
+        if(o["bypass"].isNull())
         {
-            continue;
+            Cuma_Error("Bypass unit array is not exsist ", __LINE__).show_error_string();
+            return 0;
         }
 
-        emit it->s_recv(o);
-    }
-
-    return 0;
-}
-
-int Cuma_Main::f_reply_over_bypass_limit(QJsonObject o)
-{
-
-    //리플라이가 된 프로토콜을 다른 유닛에게 넘기는 프로토콜
-    Cuma_Debug("reply over bypass limit ", __LINE__);
-
-    try{
-
-        //bypass count가 초과가 됬는지 확인
-        Cuma_Debug("check bypass count is over ", __LINE__);
-        if(o["bypass_count"].toInt() < 0)
+        //만약 bypass의 카운트가 0일경우 이미 리미트까지 갔다는 의미
+        Cuma_Debug("check bypass count is exsist ", __LINE__);
+        if(o["bypass_count"].toInt() == 0)
         {
-            Cuma_Debug("bypass is < 0 ", __LINE__);
-            //만약 초과가 됬다면 에러가 발생한것으로 extion을 발생함
-            throw Cuma_Error("f_reply_over_bypass_limit: bypass_ount < bypass_limit" , __LINE__, m_Pid);
+            Cuma_Debug("bypass count is 0 ", __LINE__);
+
+            return -1;
         }
 
-        //초과가 되지 않았다면 bypass 안에 자기 pid의 체인 위에 있는 유닛에게 전송함
-        Cuma_Debug("add my pid in bypass chain", __LINE__);
-        QJsonArray bypass_chain =  o["bypass"].toArray();
-
-        //전송하려는 유닛의 pid를 찾음
-        uint32_t send_unit_id;
-
-        //전송하려는 유닛 주소
-        QSharedPointer<Cuma_Main> send_unit = nullptr;
-
-        //bypass_chain을 통해서 전송할 다음 바이패스 체인을 찾음
-        Cuma_Debug("find next pid in bypass chain", __LINE__);
-        for(int i = (bypass_chain.count() - 1) ; i > -1; i--)
+        //바이패스에 자기자신의 pid가있을때 그대로 return
+        Cuma_Debug("check bypass pid is in our pid ", __LINE__);
+        for(uint i = 0; i < o["bypass"].toArray().count(); i++)
         {
-            if(bypass_chain.at(i).toInt() == m_Pid && i != 0)
+            if (o["bypass"].toArray()[i].toInt() == m_Pid)
             {
-                //다음 바이패스 체인을 찾음
-                send_unit_id = bypass_chain.at(i - 1).toInt();
-                Cuma_Debug("next send bypass chain uid : [" + QString::number(send_unit_id) + "]", __LINE__);
-
-                //for문을 나감
-                break;
-            }
-            if(bypass_chain.at(i).toInt() == m_Pid && i == 0)
-            {
-                Cuma_Debug("my bypass ", __LINE__);
-
-                //자기 바이패스 체인이므로 바이패스 프로토콜 큐에 넣음
-                m_bypass_protocol_queue.append(o);
-
-                //1을 리턴함
-                return 1;
+                Cuma_Debug("find my pid in bypass ", __LINE__);
+                    return 0;
             }
         }
 
-        //바이패스 대상의 포인터를 찾음
-        Cuma_Debug("search bypass chain pointer", __LINE__);
-        send_unit = f_find_unit_from_inside_timeout_unit(send_unit_id);
+        //bypass_count를 -1함
+        Cuma_Debug("remove 1 in bypass count ", __LINE__);
+        o["bypass_count"] = o["bypass_count"].toInt() - 1;
 
-        //만약 바이패스 유닛들을 못찾았을때 exception을 던짐
-        Cuma_Debug("check bypass unit is nullptr", __LINE__);
-        if(send_unit == nullptr)
+        //바이패스 의 방향
+        o["bypass_reply"] = false;
+
+        //바이패스 에 자기 PId를 기록함
+        Cuma_Debug("append bypass record", __LINE__);
+        QJsonArray arr = o["bypass"].toArray();
+        arr.append((int)m_Pid);
+        o["bypass"] = arr;
+
+        //ping으로 스크리밍이 된 모든 유닛들에게 bypass함
+        for (QSharedPointer<Cuma_Main> it : m_Cuma_unit_inside_timeout_unit_list)
         {
-            throw Cuma_Error("f_reply_over_bypass_limit : Can't find bypass unit in this unit list", __LINE__, m_Pid);
-        }
+            Cuma_Debug("spread bypass protocol to unit : " + QString::number(it->mf_get_pid()), __LINE__);
+            //바이패스가 온 유닛은 제외
+            if ( it->mf_get_pid() == o["From"].toInt() )
+            {
+                continue;
+            }
 
-        //프로토콜을 전송함
-        Cuma_Debug("send protocol", __LINE__);
-        emit send_unit->s_recv(o);
+            emit it->s_recv(o);
+        }
 
         return 0;
     }
 
-    catch(Cuma_Error& e)
+    int Cuma_Main::f_reply_over_bypass_limit(QJsonObject o)
     {
-        e.show_error_string();
-        return -1;
-    }
-}
 
-QSharedPointer<Cuma_Main> Cuma_Main::f_find_unit_from_inside_timeout_unit(uint32_t unit_id)
-{
-    for(QSharedPointer<Cuma_Main>& p: m_Cuma_unit_inside_timeout_unit_list)
-    {
-        if(p->mf_get_pid() == unit_id)
+        //리플라이가 된 프로토콜을 다른 유닛에게 넘기는 프로토콜
+        Cuma_Debug("reply over bypass limit ", __LINE__);
+
+        try{
+
+            //bypass count가 초과가 됬는지 확인
+            Cuma_Debug("check bypass count is over ", __LINE__);
+            if(o["bypass_count"].toInt() < 0)
+            {
+                Cuma_Debug("bypass is < 0 ", __LINE__);
+                //만약 초과가 됬다면 에러가 발생한것으로 extion을 발생함
+                throw Cuma_Error("f_reply_over_bypass_limit: bypass_ount < bypass_limit" , __LINE__, m_Pid);
+            }
+
+            //초과가 되지 않았다면 bypass 안에 자기 pid의 체인 위에 있는 유닛에게 전송함
+            Cuma_Debug("add my pid in bypass chain", __LINE__);
+            QJsonArray bypass_chain =  o["bypass"].toArray();
+
+            //전송하려는 유닛의 pid를 찾음
+            uint32_t send_unit_id;
+
+            //전송하려는 유닛 주소
+            QSharedPointer<Cuma_Main> send_unit = nullptr;
+
+            //bypass_chain을 통해서 전송할 다음 바이패스 체인을 찾음
+            Cuma_Debug("find next pid in bypass chain", __LINE__);
+            for(int i = (bypass_chain.count() - 1) ; i > -1; i--)
+            {
+                if(bypass_chain.at(i).toInt() == m_Pid && i != 0)
+                {
+                    //다음 바이패스 체인을 찾음
+                    send_unit_id = bypass_chain.at(i - 1).toInt();
+                    Cuma_Debug("next send bypass chain uid : [" + QString::number(send_unit_id) + "]", __LINE__);
+
+                    //for문을 나감
+                    break;
+                }
+                if(bypass_chain.at(i).toInt() == m_Pid && i == 0)
+                {
+                    Cuma_Debug("my bypass ", __LINE__);
+
+                    //자기 바이패스 체인이므로 바이패스 프로토콜 큐에 넣음
+                    m_bypass_protocol_queue.append(o);
+
+                    //1을 리턴함
+                    return 1;
+                }
+            }
+
+            //바이패스 대상의 포인터를 찾음
+            Cuma_Debug("search bypass chain pointer", __LINE__);
+            send_unit = f_find_unit_from_inside_timeout_unit(send_unit_id);
+
+            //만약 바이패스 유닛들을 못찾았을때 exception을 던짐
+            Cuma_Debug("check bypass unit is nullptr", __LINE__);
+            if(send_unit == nullptr)
+            {
+                throw Cuma_Error("f_reply_over_bypass_limit : Can't find bypass unit in this unit list", __LINE__, m_Pid);
+            }
+
+            //프로토콜을 전송함
+            Cuma_Debug("send protocol", __LINE__);
+            emit send_unit->s_recv(o);
+
+            return 0;
+        }
+
+        catch(Cuma_Error& e)
         {
-            return p;
+            e.show_error_string();
+            return -1;
         }
     }
-    return nullptr;
-}
 
-QSharedPointer<Cuma_Main> Cuma_Main::f_find_unit_from_Cuma_unit_list(uint32_t unit_id)
-{
-    for(QSharedPointer<Cuma_Main>& p: m_Cuma_unit_list)
+    QSharedPointer<Cuma_Main> Cuma_Main::f_find_unit_from_inside_timeout_unit(uint32_t unit_id)
     {
-        if(p->mf_get_pid() == unit_id)
+        for(QSharedPointer<Cuma_Main>& p: m_Cuma_unit_inside_timeout_unit_list)
         {
-            return p;
+            if(p->mf_get_pid() == unit_id)
+            {
+                return p;
+            }
         }
+        return nullptr;
     }
-    return nullptr;
-}
+
+    QSharedPointer<Cuma_Main> Cuma_Main::f_find_unit_from_Cuma_unit_list(uint32_t unit_id)
+    {
+        for(QSharedPointer<Cuma_Main>& p: m_Cuma_unit_list)
+        {
+            if(p->mf_get_pid() == unit_id)
+            {
+                return p;
+            }
+        }
+        return nullptr;
+    }

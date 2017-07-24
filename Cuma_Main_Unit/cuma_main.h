@@ -77,6 +77,8 @@ public:
     void set_bypass_limit_count(uint32_t limit);
     uint32_t get_bypass_limit_count();
 
+    void mf_set_file_frag_address(QMap<QString, QMap<uint32_t, QVector<uint32_t>>>& m);
+    QMap<QString, QMap<uint32_t, QVector<uint32_t>>> mf_get_file_frag_address();
     //유닛을 제어하는 노드에서 커맨드 함수
     //Client 영역
 protected:

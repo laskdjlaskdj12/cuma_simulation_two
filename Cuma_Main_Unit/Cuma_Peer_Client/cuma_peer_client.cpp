@@ -122,8 +122,13 @@ int Cuma_Main::mf_command_req_file_test()
         //반드시 파일별 m_file_frag_address가 미리 있어야함
         
         //읽을 바이패스 파일의 블록을 저장할 리스트
-        QVector<uint32_t> req_file_frag_index;
-        
+        /*QVector<uint32_t> req_file_frag_index;
+
+        if(m_File->get_File_Name().isEmpty())
+        {
+            throw Cuma_Error("No File name", __LINE__);
+        }
+
         QJsonObject read_list = m_file_info_block[m_File->get_File_Name()];
         
         uint32_t read_list_count = static_cast<uint32_t> (read_list["file_index"].toInt());
@@ -189,6 +194,41 @@ int Cuma_Main::mf_command_req_file_test()
         }
         
         return 0;
+        */
+
+        //파일 이름이 있는지 확인
+        Cuma_Debug("check file name is exsist...", __LINE__);
+        if(m_File->get_File_Name().isEmpty())
+        {
+            throw Cuma_Error("File name is missing",__LINE__);
+        }
+
+        Cuma_Debug("check file frag address is empty ..", __LINE__);
+        if(m_file_frag_address[m_File->get_File_Name()].isEmpty())
+        {
+            throw Cuma_Error("m_file_frag_address can't find file_name", __LINE__);
+        }
+
+        //파일 frag를 리퀘스트 프로토콜을 전송함
+        Cuma_Debug("send file frag to unit ..", __LINE__);
+        for(uint i = 0; i < m_file_frag_address[m_File->get_File_Name()].count() ; i++)
+        {
+            Cuma_Debug("req file frag to unit : "+  QString::number(i), __LINE__);
+
+            QMap<uint32_t, QVector<uint32_t>>& frag_by_unit_addr = m_file_frag_address[m_File->get_File_Name()];
+
+            uint32_t unit_pid = frag_by_unit_addr[i].first();
+
+            QSharedPointer<Cuma_Main> unit = f_find_unit_from_inside_timeout_unit(unit_pid);
+
+            if(unit == nullptr)
+            {
+                throw Cuma_Error("can't find unit SharedPointer", __LINE__);
+            }
+
+            emit unit->s_recv(cuma_protocol::req_file_binary_read_protocol("test.txt", i, m_Pid));
+        }
+        return 0;
     }
     
     catch(Cuma_Error& e)
@@ -200,9 +240,32 @@ int Cuma_Main::mf_command_req_file_test()
 
 int Cuma_Main::mf_command_trace_pass_test()
 {
-    //모든 유닛들에게 파일이 있는지 체크를 하는 실험
-    f_over_bypass(cuma_protocol::basic_command_protocol(m_Pid));
-    return 0;
+    try{
+
+        //모든 유닛들에게 bypass하는 테스트
+        QJsonObject bypass_obj = cuma_protocol::req_bypass_protocol(m_Pid, m_limit_bypass_count);
+
+        if(bypass_obj["bypass_count"].toInt() < 1)
+        {
+            throw Cuma_Error("bypass_ count is under 0", __LINE__);
+        }
+
+        bypass_obj["bypass_count"] = bypass_obj["bypass_count"].toInt() - 1;
+
+        //모든 유닛들에게 spread함
+        for(QSharedPointer<Cuma_Main> it: m_Cuma_unit_inside_timeout_unit_list)
+        {
+            emit it->s_recv(bypass_obj);
+        }
+
+        return 0;
+    }
+
+    catch(Cuma_Error& e)
+    {
+        e.show_error_string();
+        return -1;
+    }
 }
 
 void Cuma_Main:: mf_command_set_unit_bypass_count(uint32_t count)

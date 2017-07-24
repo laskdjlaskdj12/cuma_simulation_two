@@ -156,6 +156,16 @@ uint32_t Cuma_Main::get_bypass_limit_count()
     return m_limit_bypass_count;
 }
 
+void Cuma_Main::mf_set_file_frag_address(QMap<QString, QMap<uint32_t, QVector<uint32_t> > > &m)
+{
+    m_file_frag_address = m;
+}
+
+QMap<QString, QMap<uint32_t, QVector<uint32_t>>> Cuma_Main::mf_get_file_frag_address()
+{
+    return m_file_frag_address;
+}
+
 void Cuma_Main::sl_stop_unit()
 {
     //디버그 메세지
@@ -180,9 +190,37 @@ void Cuma_Main::sl_stop_unit()
 
 void Cuma_Main::sl_recv_signal(QJsonObject o)
 {
-    Cuma_Debug("sl_recv_signal(QJsonObject o) recv the signal from " + o["From"].toString());
+    Cuma_Debug("sl_recv_signal(QJsonObject o) recv the signal from " + QString::number(o["From"].toInt()));
 
-    //만약 recv_signal을 받았을 경우 f_recv_process에서 recv을 분석해서 호출함
+    Cuma_Debug("log env print get message", __LINE__);
+    //받은 메세지를 로그 기록
+    f_save_recv_json_report(o);
+
+    //bypass layer
+    if(o["bypass"].isNull() == false)
+    {
+        Cuma_Debug("Bypass protocol layer is dectacted", __LINE__);
+        if(o["bypass_reply"] == false)
+        {
+            Cuma_Debug("Bypass_reply is not exsist", __LINE__);
+            //만약 자기 가 마지막 바이패스일경우 바이패스 reply를 전송
+              if ( f_over_bypass(o) == -1 )
+              {
+                  Cuma_Debug("Bypass is limit call f_reply_over_bypass_limit", __LINE__);
+                  f_reply_over_bypass_limit(o);
+              }
+        }
+
+        else
+        {
+            Cuma_Debug("Bypass is reply over bypass_limit", __LINE__);
+            f_reply_over_bypass_limit(o);
+        }
+
+        return ;
+    }
+
+    //recv_process layer
     f_recv_process(o);
 }
 
@@ -290,10 +328,6 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
         //받은 메세지를 디버그 메세지 출력
         Cuma_Debug(QJsonDocument(o).toJson(), __LINE__);
 
-        Cuma_Debug("log env print get message", __LINE__);
-        //받은 메세지를 로그 기록
-        f_save_recv_json_report(o);
-
         Cuma_Debug("get unit obj from pid", __LINE__);
 
         //파일 frag 저장일경우
@@ -327,7 +361,7 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
             Cuma_Debug("check process is read_frag", __LINE__);
 
             //만약 응답 요청이 아닐경우 저장된 파일을 읽어서 전달을 함
-            if (o["reply"].isNull() == true)
+            if (o["reply"].toBool() == false || o["reply"].isNull() == true)
             {
                 //유닛에게 파일 바이너리를 전송함
                 if (f_upload_file_frag_from_unit(o) < 0)

@@ -154,6 +154,20 @@ QJsonObject cuma_protocol::req_file_binary_read_protocol(QString binary_name, ui
     recv_obj["process"] = "read";
     recv_obj["file_name"] = binary_name;
     recv_obj["file_index"] = static_cast<int>(file_frag_index);
+    recv_obj["reply"] = false;
+    return recv_obj;
+}
+
+QJsonObject cuma_protocol::req_bypass_protocol(uint32_t from_pid, uint32_t limit_count)
+{
+    QJsonObject recv_obj = basic_protocol(from_pid);
+    QJsonArray arr;
+    arr.append(static_cast<int>(from_pid));
+
+    recv_obj["bypass"] = arr;
+    recv_obj["bypass_count"] = static_cast<int>(limit_count);
+    recv_obj["bypass_limit_count"] = static_cast<int>(limit_count);
+    recv_obj["bypass_reply"] = false;
     return recv_obj;
 }
 

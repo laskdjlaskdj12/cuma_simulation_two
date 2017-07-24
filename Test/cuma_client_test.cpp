@@ -51,8 +51,8 @@ Cuma_client_test::~Cuma_client_test()
     QVERIFY(m_File->get_File_Name() == "test.txt");
 
 }
-
-void Cuma_client_test::t_mf_command_set_unit_bypass_count()
+*/
+/*void Cuma_client_test::t_mf_command_set_unit_bypass_count()
 {
     //환경을 clear
     env_clear_env();
@@ -67,8 +67,8 @@ void Cuma_client_test::t_mf_command_set_unit_bypass_count()
     Cuma_Debug("check command result");
     QVERIFY(m_limit_bypass_count == 10);
 }
-
-void Cuma_client_test::t_mf_command_ping_test()
+*/
+/*void Cuma_client_test::t_mf_command_ping_test()
 {
     //환경 clear
     Cuma_Debug("clear env");
@@ -124,7 +124,7 @@ void Cuma_client_test::t_mf_command_ping_test()
     }
 }
 */
-void Cuma_client_test::t_mf_command_spread_test()
+/*void Cuma_client_test::t_mf_command_spread_test()
 {
     //모든 유닛에게 파일 frag를 전송하는 테스트
 
@@ -166,6 +166,7 @@ void Cuma_client_test::t_mf_command_spread_test()
         qDebug()<<s;
     }
 }
+*/
 /*void Cuma_client_test::t_mf_command_req_file_test()
 {
     //모든 유닛에게 bypass을 하는 테스트
@@ -181,27 +182,38 @@ void Cuma_client_test::t_mf_command_spread_test()
     //테스트 파일 생성
     QVERIFY (env_make_file("test.txt") == 0);
 
-    //파일을 frag함
+    //파일을 frag 생성
     env_get_file_frag("test.txt", t_unit_list.count());
 
-    QByteArray f_binary = env_get_file_binary("test.txt");
     QVector<QByteArray> arr = env_get_file_frag("test.txt", t_unit_list.count());
-    QVERIFY (f_binary != nullptr);
 
-    m_File->set_File_Frag(arr);
+    //테스트 파일 frag 을 유닛에게 저장함
+    for(int i = 0; i < t_unit_list.count(); i++)
+    {
+        QSharedPointer<Cuma_File> f = t_unit_list[i]->get_File_obj();
+        f->save_File_Frag(arr[i], "test.txt", i);
+
+        QVector<uint32_t> frag_by_unit_address;
+        frag_by_unit_address.append(t_unit_list[i]->mf_get_pid());
+
+        QMap<uint32_t, QVector<uint32_t>>& file_block_list = m_file_frag_address["test.txt"];
+        file_block_list[i] = frag_by_unit_address;
+    }
+
+    Cuma_Debug("================== End of test env set ==============", __LINE__);
+
+
     m_File->set_File_Name("test.txt");
 
+    Cuma_Debug("================== start test ==============", __LINE__);
+
     //실행
-    QVERIFY (mf_command_spread_test() == 0);
+    QVERIFY (mf_command_req_file_test() == 0);
 
     //테스트 유닛에 파일 frag가 맞는지 확인
-    uint i = 0;
-    for(QSharedPointer<Cuma_Main> u :t_unit_list)
-    {
-        QVERIFY( u->get_File_obj()->get_File_Frag().count() > 0);
-        i++;
-    }
+    QVERIFY(m_file_frag_address["test.txt"].count() == 4);
 }
+*/
 void Cuma_client_test::t_mf_command_trace_pass_test()
 {
     //bypass가 실행시 해당 bypass tree가 구성이 되어있는지 확인함
@@ -214,8 +226,12 @@ void Cuma_client_test::t_mf_command_trace_pass_test()
 
     env_set_test_env_unit(t_unit_list, 100);
 
-    //ping을 보냄
-    t_mf_command_ping_test();
+    //bypass 리미트 카운트 설정
+    mf_command_set_unit_bypass_count(4);
+
+    Cuma_Debug("========= start test =======", __LINE__);
+    //bypass
+    mf_command_trace_pass_test();
 
     //bypass reply 큐가 있는지 확인
     QVERIFY(m_bypass_protocol_queue.count() > 0);
@@ -225,8 +241,13 @@ void Cuma_client_test::t_mf_command_trace_pass_test()
 
     //바이패스 array의 카운트가 0보다 큰지 확인
     QVERIFY (m_bypass_protocol_queue[0]["bypass"].toArray().count() > 0 );
+    QVERIFY (m_bypass_protocol_queue[0]["bypass"].toArray().count() == 4 );
+
+
+    //들어있는 bypass array를 출력함
+    Cuma_Debug(QJsonDocument(m_bypass_protocol_queue[0]).toJson());
 }
-*/
+
 int Cuma_client_test::env_set_test_env_unit(QVector<QSharedPointer<Cuma_Main> > &v, uint32_t max_timeout)
 {
     //pid와 unlit_list들의 기본적인 부분을 추가함
@@ -248,7 +269,7 @@ int Cuma_client_test::env_set_test_env_unit(QVector<QSharedPointer<Cuma_Main> > 
         unit_ping_list.append(ping_list);
     }
 
-    qsrand(10);
+    qsrand(1000);
     for(uint i = 0; i < v.count(); i++)
     {
         for(uint j = 0; j < v.count(); j++)
