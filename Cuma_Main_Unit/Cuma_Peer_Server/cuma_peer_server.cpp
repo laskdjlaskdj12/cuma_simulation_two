@@ -100,15 +100,7 @@ int Cuma_Main::f_reply_upload_file_frag_to_unit(const QJsonObject o)
         Cuma_Debug("File_Frag_size : " + QString::number(file_size), __LINE__);
         Cuma_Debug("File_Frag_info : size : " + QString::number(file_frag.count()), __LINE__);
 
-        //만약 frag인덱스와 file_frag의 사이즈가 안맞을 경우 예외 처리 보냄
-        //이미 파일체크 프로세스가 바이패스 프로세스를 호출해서 이미 ping이 남아있는데 없다는것은 예외처리를 통해서 exception문을 호출해야함
-
         Cuma_Debug("check frag_index is not match file_frag count", __LINE__);
-
-        if (file_index != file_frag.count())
-        {
-            throw Cuma_Error("f_reply_upload_file_frag_to_unit error frag_index != file_frag.count() : recv frag_index and file_frag_count is not match", __LINE__, m_Pid);
-        }
 
         //리턴된 파일의 바이너리를 읽고 저장함
         Cuma_Debug("read return file binary and save", __LINE__);
@@ -154,7 +146,7 @@ int Cuma_Main::f_download_file_frag_from_unit(QJsonObject o)
         Cuma_Debug("check find send target unit", __LINE__);
         if (prepare_send_unit == nullptr)
         {
-            throw Cuma_Error("f_reply_upload_file_frag_to_unit error frag_index != file_frag.count() : recv frag_index and file_frag_count is not match", __LINE__, m_Pid);
+            throw Cuma_Error("f_reply_upload_file_frag_to_unit error frag_index != file_frag.count() : recv frag_index and file_frag_count is not match ", __LINE__, m_Pid);
         }
 
         //전송을 한 유닛에게 reply_download_file_frag 프로토콜을 전송함
@@ -166,6 +158,7 @@ int Cuma_Main::f_download_file_frag_from_unit(QJsonObject o)
     catch(Cuma_Error& e)
     {
         e.show_error_string();
+        Cuma_Error("unit id : " + QString::number(o["From"].toInt()) + " pid : " + QString::number(m_Pid), __LINE__).show_error_string();
         return -1;
     }
 }
@@ -205,15 +198,14 @@ int Cuma_Main::f_check_file_frag_to_unit(QJsonObject o)
     if ( f_flag == Cuma_File::Cuma_File_Status::C_F_Dir_Not_Open || f_flag == Cuma_File::Cuma_File_Status::C_F_not_open)
     {
         Cuma_Debug("Send None File exsist..", __LINE__);
-        protocol = cuma_protocol::reply_is_file_exsist_protocol(req_frag_name, m_Pid, o["file_index"].toInt(), false);
+        protocol = cuma_protocol::reply_is_file_exsist_protocol(req_frag_name, m_Pid, req_frag_index, false);
     }
 
     //파일이 있다는 프로토콜을 전송
     else
     {
         Cuma_Debug("Send File exsist..", __LINE__);
-        protocol = cuma_protocol::reply_is_file_exsist_protocol(req_frag_name, m_Pid, o["file_index"].toInt(), true);
-
+        protocol = cuma_protocol::reply_is_file_exsist_protocol(req_frag_name, m_Pid, req_frag_index, true);
     }
 
     //해당 유닛을 찾아서 전송

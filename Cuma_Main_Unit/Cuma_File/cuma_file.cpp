@@ -220,6 +220,12 @@ QByteArray Cuma_File::get_File_binary()
     return m_File_Binary;
 }
 
+QDir Cuma_File::get_File_Directory()
+{
+    m_Dir.refresh();
+    return m_Dir;
+}
+
 int Cuma_File::read_file_frag (QString file_name, uint32_t index)
 {
     m_File_Name = file_name;
@@ -231,7 +237,37 @@ int Cuma_File::read_file_frag (QString file_name, uint32_t index)
 int Cuma_File::read_file()
 {
     if(m_File_Name != nullptr || m_File_Frag_Index )
+    {
         return mf_Read_File();
+    }
+    else
+    {
+        Cuma_Error("m_File_Name is nullptr and m_File_frag_Index is empty", __LINE__).show_error_string();
+        return -1;
+    }
+}
+
+int Cuma_File::save_file(QString f_name, QByteArray &arr)
+{
+    try{
+        m_File.setFileName(f_name);
+
+        if (m_File.open(QFile::ReadWrite) == false)
+        {
+            throw Cuma_Error("File is not open", __LINE__);
+        }
+        if (m_File.write(arr) == -1)
+        {
+            throw Cuma_Error("File write is error", __LINE__);
+        }
+
+        return 0;
+    }
+    catch(Cuma_Error& e)
+    {
+        e.show_error_string();
+        return -1;
+    }
 }
 
 void Cuma_File::clear_binary()
@@ -252,6 +288,9 @@ void Cuma_File::init_dir()
 
     //디렉토리를 생성
     mf_make_Cuma_Frag_dir();
+
+    //path를 설정함
+    m_Dir.setPath(u_c_f_path);
 }
 
 int Cuma_File::make_frag()
@@ -518,7 +557,7 @@ int Cuma_File::mf_Save_by_Frag(QVector<QByteArray> f_frag, QString f_name, uint3
 int Cuma_File::mf_Save_by_Frag(QByteArray f_frag, QString f_name, uint32_t f_index)
 {
     try{
-    Cuma_Debug("set Frag save location to Cuma_Frag_dir", __LINE__);
+        Cuma_Debug("set Frag save location to Cuma_Frag_dir", __LINE__);
 
         Cuma_Debug("generate file to Cuma_Frag_dir absolutePath", __LINE__);
 

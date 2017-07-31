@@ -47,7 +47,7 @@ void Cuma_Error::show_error_string()
 {
     qDebug()<<"[Error] : " + m_Error;
     qDebug()<<"[Error] : line : "+ QString::number(m_line);
-    qDebug()<<"[Error] : pid : " + m_pid;
+    qDebug()<<"[Error] : pid : " + QString::number(m_pid);
 }
 
 Cuma_Debug_protocol::Cuma_Debug_protocol(QJsonObject o, uint32_t pid):Cuma_Debug(o["Error_str"].toString())

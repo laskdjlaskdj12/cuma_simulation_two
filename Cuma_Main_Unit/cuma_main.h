@@ -72,6 +72,7 @@ public:
     QSharedPointer<Cuma_File> get_File_obj();
 
     void mf_t_set_limit_unit(QVector<QSharedPointer<Cuma_Main>>& v);
+    QVector<QSharedPointer<Cuma_Main>> mf_t_get_unit_inside_timeout();
 
     //바이패스 리미트 카운트
     void set_bypass_limit_count(uint32_t limit);
@@ -100,6 +101,8 @@ protected:
     //이 유닛이 파일 track의 메인 유닛 (반드시 자기자신이 bypass_limit_count이고 프로토콜 전송하기전에 -1를 할것)
     virtual int mf_command_trace_pass_test();
 
+    //유닛이 파일이 있는지 확인을 할때
+    virtual int mf_command_req_file_exsist();
 
 signals:
 
@@ -129,6 +132,9 @@ signals:
     void s_recv_test(QJsonObject o);
 #endif
 
+public slots:
+    void sl_start_idle();
+
 protected slots:
     //s_stop_unit()의 slot
     void sl_stop_unit();
@@ -138,11 +144,6 @@ protected slots:
 
     //s_start_spread()의 slot
     void sl_start_command_signal(const QJsonObject command);
-    
-#ifdef TEST
-    //만약 테스트 일때 테스트 signal
-    void sl_recv_test(QJsonObject o);
-#endif
 
 protected:
 
@@ -162,6 +163,8 @@ protected:
     //수신 json로그 저장 프로세스
     virtual void f_save_recv_json_report(QJsonObject protocol);
 
+    //송신 json로그 저장 프로세스
+    //virtual void f_save_send_json_report(QJsonObject protocol);
 
     //서버 Area
 protected:

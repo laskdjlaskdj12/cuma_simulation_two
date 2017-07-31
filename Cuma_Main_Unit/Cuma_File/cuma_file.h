@@ -49,11 +49,13 @@ public:
     virtual QVector<QByteArray>     get_File_Frag();
     virtual QByteArray              get_File_Frag_By_Index(uint32_t& index);
     virtual QSharedPointer<Cuma_File> get_Cuma_File();
-    virtual QByteArray              get_File_binary(); 
+    virtual QByteArray              get_File_binary();
+    virtual QDir                        get_File_Directory();
 
     virtual int read_file_frag(QString file_name, uint32_t index);
     virtual int read_file();
 
+    virtual int save_file(QString f_name, QByteArray& arr);
     virtual int save_File_Frag(QVector<QByteArray> frag, QString name);
     virtual int save_File_Frag(QByteArray frag, QString name, uint32_t index);
 

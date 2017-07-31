@@ -8,6 +8,7 @@ QTime unit_Timer::time;
 
 Cuma_Main::Cuma_Main(QObject *parent) : QObject(parent)
 {
+    Cuma_Debug::show_debug(true);
 
     m_File = QSharedPointer<Cuma_File>(new Cuma_File);
 
@@ -27,18 +28,21 @@ Cuma_Main::Cuma_Main(QObject *parent) : QObject(parent)
     //stop 시그널을 바인딩함
     connect(this, SIGNAL(s_stop_unit()), this, SLOT(sl_stop_unit()));
 
-#ifndef TEST
+    //#ifndef TEST
     //recv 시그널을 바인딩함
     connect(this, SIGNAL(s_recv(QJsonObject)), this, SLOT(sl_recv_signal(QJsonObject)));
-#endif
+
+    //s_start_spread 시그널을 바인딩함
+    connect(this, SIGNAL(s_start_command(QJsonObject)), this, SLOT(sl_start_command_signal(QJsonObject)));
+    /*#endif
 
 #ifdef TEST
     connect (this, SIGNAL(s_recv(QJsonObject)), this, SLOT(sl_recv_signal(const QJsonObject)));
-#endif
 
     //s_start_spread 시그널을 바인딩함
     connect(this, SIGNAL(s_start_command(const QJsonObject)), this, SLOT(sl_recv_test(const QJsonObject)));
 
+#endif*/
 }
 
 Cuma_Main::Cuma_Main(Cuma_Main &m)
@@ -71,9 +75,6 @@ Cuma_Main::~Cuma_Main()
     //s_start_spread 시그널을 바인딩함
     disconnect(this, SIGNAL(s_start_command(const QJsonObject)), this, SLOT(sl_start_command_signal(const QJsonObject)));
 
-#ifdef TEST
-    disconnect (this, SIGNAL(s_recv_test(QJsonObject)), this, SLOT(sl_recv_test(const QJsonObject)));
-#endif
 }
 
 void Cuma_Main::mf_set_unit_list(QVector<QSharedPointer<Cuma_Main>> list)
@@ -146,6 +147,11 @@ void Cuma_Main::mf_t_set_limit_unit(QVector<QSharedPointer<Cuma_Main> > &v)
     m_Cuma_unit_inside_timeout_unit_list = v;
 }
 
+QVector<QSharedPointer<Cuma_Main> > Cuma_Main::mf_t_get_unit_inside_timeout()
+{
+    return m_Cuma_unit_inside_timeout_unit_list;
+}
+
 void Cuma_Main::set_bypass_limit_count(uint32_t limit)
 {
     m_limit_bypass_count = limit;
@@ -168,7 +174,6 @@ QMap<QString, QMap<uint32_t, QVector<uint32_t>>> Cuma_Main::mf_get_file_frag_add
 
 void Cuma_Main::sl_stop_unit()
 {
-    //디버그 메세지
     Cuma_Debug("stop_unit is dected : Unit ID : " + m_Pid);
 
     //전송 유닛리스트들이 현재 남아있는지 확인함
@@ -204,11 +209,11 @@ void Cuma_Main::sl_recv_signal(QJsonObject o)
         {
             Cuma_Debug("Bypass_reply is not exsist", __LINE__);
             //만약 자기 가 마지막 바이패스일경우 바이패스 reply를 전송
-              if ( f_over_bypass(o) == -1 )
-              {
-                  Cuma_Debug("Bypass is limit call f_reply_over_bypass_limit", __LINE__);
-                  f_reply_over_bypass_limit(o);
-              }
+            if ( f_over_bypass(o) == -1 )
+            {
+                Cuma_Debug("Bypass is limit call f_reply_over_bypass_limit", __LINE__);
+                f_reply_over_bypass_limit(o);
+            }
         }
 
         else
@@ -227,13 +232,19 @@ void Cuma_Main::sl_recv_signal(QJsonObject o)
 void Cuma_Main::sl_start_command_signal(const QJsonObject command)
 {
 
+    Cuma_Debug("Recv Command To : " + QString::number(m_Pid), __LINE__);
+
+    Cuma_Debug("============= command ============", __LINE__);
+    Cuma_Debug(QJsonDocument(command).toJson(), __LINE__);
     try
     {
         //커맨드에 있는 파라미터를 나열하기
-        if (command["command_set_file_name"].isNull() == false)
+        if (command["command"].toString() == "file_name")
         {
+            Cuma_Debug("set file name is commanded", __LINE__);
+
             //읽을 파일이름이 세팅이 되어있으면 현재 유닛의 읽을 파일 이름을 세팅
-            QString f_name = command ["command_set_file_name"].toString();
+            QString f_name = command ["filename"].toString();
 
             //커맨드를 실행함 만약 리턴값이 -1일경우 Cuma_Error를 Emit함
             if ( mf_command_set_file_name(f_name) < 0)
@@ -243,9 +254,21 @@ void Cuma_Main::sl_start_command_signal(const QJsonObject command)
         }
 
         //바이패스 카운트를 세팅함
-        if (command["command_set_unit_bypass_count"].isNull() == false)
+        else if (command["command"].toString() == "file_index")
         {
-            m_limit_bypass_count = command["command_set_unit_bypass_count"].toInt();
+            Cuma_Debug("command set file index is commanded", __LINE__);
+
+            uint32_t file_index = command["index"].toInt();
+
+            get_File_obj()->set_File_Frag_Index(file_index);
+        }
+
+        //바이패스 카운트를 세팅함
+        else if (command["command"].toString() == "bypass_count")
+        {
+            Cuma_Debug("command set bypass count  is commanded", __LINE__);
+
+            m_limit_bypass_count = command["bypass_count"].toInt();
 
             mf_command_set_unit_bypass_count(m_limit_bypass_count);
         }
@@ -253,8 +276,10 @@ void Cuma_Main::sl_start_command_signal(const QJsonObject command)
         //커맨드가 있는지 확인함
 
         //모든 유닛의 ping을 스크리밍 하는 테스트
-        if (command["command_ping_test"].isNull() == false)
+        else if (command["command"].toString() == "ping")
         {
+            Cuma_Debug("command ping test is commanded", __LINE__);
+
             //ping 커맨드를 실행함
             if (mf_command_ping_test() < 0)
             {
@@ -263,8 +288,10 @@ void Cuma_Main::sl_start_command_signal(const QJsonObject command)
         }
 
         //이 유닛에게 파일을 spread 하는 테스트
-        if (command["command_spread_test"].isNull() == false)
+        else if (command["command"].toString() == "upload")
         {
+            Cuma_Debug("command spread test is commanded", __LINE__);
+
             //ping 커맨드를 실행함
             if (mf_command_spread_test() < 0)
             {
@@ -273,46 +300,50 @@ void Cuma_Main::sl_start_command_signal(const QJsonObject command)
         }
 
         //이유닛에게 파일을 요청하는 메인 유닛
-        if (command["command_rq_file"].isNull() == false)
+        else if (command["command"].toString() == "download")
         {
+            Cuma_Debug("command request file test is commanded", __LINE__);
+
             //ping 커맨드를 실행함
             if (mf_command_req_file_test() < 0)
             {
-                throw Cuma_Error("mf_command_spread_test is error", __LINE__, m_Pid);
+                throw Cuma_Error("mf_command_request_file is error", __LINE__, m_Pid);
             }
         }
 
         //이 유닛이 파일 track 의 메인 유닛
-        if (command["command_trace_pass"].isNull() == false)
+        else if (command["command"].toString() == "bypass")
         {
-            //ping 커맨드를 실행함
+            Cuma_Debug("command trace pass test is commanded", __LINE__);
+
+            //trace pass 커맨드를 실행함
             if (mf_command_trace_pass_test() < 0)
             {
-                throw Cuma_Error("mf_command_spread_test is error", __LINE__, m_Pid);
+                throw Cuma_Error("mf_command_trace_pass is error", __LINE__, m_Pid);
             }
         }
 
-        //만약 없다면 에러 메세지를 출력함
-        if(command["command_set_file_name"].isNull() != false ||
-                command["command_set_unit_bypass_count"].isNull() != false||
-                command["command_ping_test"].isNull() != false||
-                command["command_spread_test"].isNull() != false||
-                command["command_rq_file"].isNull() != false||
-                command["command_trace_pass"].isNull() != false)
+        else if (command["command"].toString() == "filecheck")
         {
-            //에러 메세지 출력
-            Cuma_Debug("Warning : not a protocol", __LINE__);
+            Cuma_Debug("command file_check test is commanded", __LINE__);
+
+            //trace pass 커맨드를 실행함
+            if (mf_command_req_file_exsist() < 0)
+            {
+                throw Cuma_Error("mf_command_trace_pass is error", __LINE__, m_Pid);
+            }
         }
+
+        else
+        {
+            Cuma_Debug("Warning : not a command protocol", __LINE__);
+        }
+
     }
     catch(Cuma_Error& e)
     {
         e.show_error_string();
     }
-}
-
-void Cuma_Main::sl_recv_test(QJsonObject o)
-{
-
 }
 
 void Cuma_Main::f_recv_process(const QJsonObject& o)
@@ -336,7 +367,7 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
             Cuma_Debug("check process is save_frag", __LINE__);
 
             //수신 json 저장 프로세스를 먼저 실행함
-            if (o["reply"].toBool() == false || o["reply"].isNull() == true)
+            if (o["reply"].isNull() == true|| o["reply"].toBool() == false)
             {
                 //파일 다운로드 프로세스
                 if (f_download_file_frag_from_unit(o) < 0)
@@ -361,7 +392,7 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
             Cuma_Debug("check process is read_frag", __LINE__);
 
             //만약 응답 요청이 아닐경우 저장된 파일을 읽어서 전달을 함
-            if (o["reply"].toBool() == false || o["reply"].isNull() == true)
+            if (o["reply"].isNull() == true|| o["reply"].toBool() == false)
             {
                 //유닛에게 파일 바이너리를 전송함
                 if (f_upload_file_frag_from_unit(o) < 0)
@@ -373,21 +404,8 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
             //만약 응답 요청일 경우
             else
             {
-                uint32_t rcv_unit_id = static_cast<uint32_t>(o["pid"].toInt());
-
-                //받으려는 유닛이 자기가 아닐경우
-                if ( rcv_unit_id != m_Pid)
-                {
-                    //프로토콜에 명시된 다음 바이패스로 전달함
-                    f_over_bypass(o);
-                }
-
-                //받으려는 유닛이 자기일경우
-                else
-                {
-                    //f_reply_upload_file_frag_to_unit의 프로시저를 실행함
-                    f_reply_upload_file_frag_to_unit(o);
-                }
+                //f_reply_upload_file_frag_to_unit의 프로시저를 실행함
+                f_reply_upload_file_frag_to_unit(o);
             }
         }
 
@@ -398,7 +416,7 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
             Cuma_Debug("check process is check_file", __LINE__);
 
             //만약 응답 요청이 자기가 아닐경우 파일을 체크해서 리턴함
-            if (o["reply"].isNull() == true)
+            if (o["reply"].isNull() == true|| o["reply"].toBool() == false)
             {
                 f_check_file_frag_to_unit(o);
             }
@@ -417,13 +435,10 @@ void Cuma_Main::f_recv_process(const QJsonObject& o)
             Cuma_Debug("check process is ping", __LINE__);
 
             //응답 요청일경우 시간에 텀을 두고 reply를 함
-            if (o["reply"].toBool() == false)
+            if (o["reply"].isNull() == true|| o["reply"].toBool() == false)
             {
                 //해당 유닛와의 연결된 시간을 array에서 찾음
                 uint32_t u_delay_time = m_Unit_delay_time_array[m_Pid][static_cast<uint32_t>(o["From"].toInt())];
-
-                //ping의 리미트 time대로 sleep을 함
-                //QThread::sleep(u_delay_time);
 
                 //응답 프로토콜을 건냄
                 emit m_Cuma_unit_list[o["From"].toInt()]->s_recv(cuma_protocol::reply_ping_protocol(m_Pid, true));
@@ -495,11 +510,24 @@ QSharedPointer<Cuma_Main> Cuma_Main::f_pop_unit()
 void Cuma_Main::f_save_recv_json_report(QJsonObject e)
 {
     //타임을 적어서 넣음
+    e["To"] = static_cast<int> (m_Pid);
     e["Time"] = f_tell_time();
 
     //프로토콜을 recv_arr에 넣음
     QJsonArray recv_arr = m_report_json["recv"].toArray();
-    recv_arr.push_back(e);
+    recv_arr.append(e);
     m_report_json["recv"] = recv_arr;
 
 }
+
+/*void Cuma_Main::f_save_send_json_report(QJsonObject protocol)
+{
+    //타임을 적어서 넣음
+    e["Time"] = f_tell_time();
+
+    //프로토콜을 recv_arr에 넣음
+    QJsonArray recv_arr = m_report_json["send"].toArray();
+    recv_arr.push_back(e);
+    m_report_json["send"] = recv_arr;
+}
+*/

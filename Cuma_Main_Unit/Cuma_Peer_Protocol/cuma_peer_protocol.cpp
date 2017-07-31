@@ -103,7 +103,6 @@ QJsonObject cuma_protocol::req_is_file_exsist_protocol(QString f_name, uint32_t 
     QJsonObject recv_obj = basic_protocol(unit_id);
 
     recv_obj["process"] = "check_file";
-    recv_obj["reply"] = req_file_index;
     recv_obj["file_name"] = f_name;
     recv_obj["file_index"] = req_file_index;
     return recv_obj;
@@ -114,7 +113,6 @@ QJsonObject cuma_protocol::req_is_file_exsist_protocol(QString f_name, uint32_t 
     QJsonObject recv_obj = basic_protocol(unit_id);
 
     recv_obj["process"] = "check_file";
-    recv_obj["reply"] = req_file_index;
     recv_obj["file_name"] = f_name;
     recv_obj["file_index"] = static_cast<int> (file_frag_index);
     recv_obj["req_file_index"] = req_file_index;

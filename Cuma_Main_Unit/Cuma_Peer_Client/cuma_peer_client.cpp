@@ -27,7 +27,9 @@ int Cuma_Main::mf_command_ping_test()
         {
             //만약 자기 유닛차례일 경우 continue
             if(p->mf_get_pid() == m_Pid)
+            {
                 continue;
+            }
 
             emit p->s_recv(cuma_protocol::req_ping_protocol(m_Pid));
         }
@@ -81,7 +83,7 @@ int Cuma_Main::mf_command_spread_test()
         
         //파일 파편화를 모든 유닛들에게 전송함
         Cuma_Debug("send all unit by file_fragmentation", __LINE__);
-        foreach(QSharedPointer<Cuma_Main> p, m_Cuma_unit_list)
+        foreach(QSharedPointer<Cuma_Main> p, m_Cuma_unit_inside_timeout_unit_list)
         {
 
             //파편화에 대한 json을 만듬
@@ -266,6 +268,24 @@ int Cuma_Main::mf_command_trace_pass_test()
         e.show_error_string();
         return -1;
     }
+}
+
+int Cuma_Main::mf_command_req_file_exsist()
+{
+    QJsonObject protocol = cuma_protocol::req_is_file_exsist_protocol(m_File->get_File_Name(), m_File->get_File_Index(), m_Pid);
+
+    //모든 유닛들에게 전송함
+    for(QSharedPointer<Cuma_Main> it: m_Cuma_unit_inside_timeout_unit_list)
+    {
+        emit it->s_recv(protocol);
+    }
+
+    return 0;
+}
+
+void Cuma_Main::sl_start_idle()
+{
+    Cuma_Debug("Attach Thread to unit  : " + QString::number(m_Pid));
 }
 
 void Cuma_Main:: mf_command_set_unit_bypass_count(uint32_t count)
