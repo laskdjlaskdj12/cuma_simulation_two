@@ -11,6 +11,7 @@ class Cuma_Debug
 public:
     Cuma_Debug(QString Debug);
     Cuma_Debug(QString Debug, uint line);
+    Cuma_Debug(QString Func_name, QString Debug, uint line);
     Cuma_Debug(QJsonObject o, uint32_t pid);
     static void show_debug(bool b);
 
@@ -32,10 +33,11 @@ class Cuma_Error
 {
 public:
     Cuma_Error(QString Error, uint line, uint32_t pid = 0);
-
+    Cuma_Error(QString Func_name, QString Error, uint line, uint32_t pid = 0);
     void show_error_string();
 
 private:
+    QString m_Function;
     QString m_Error;
     uint m_line;
     uint32_t m_pid;

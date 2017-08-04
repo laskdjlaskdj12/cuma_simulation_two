@@ -17,7 +17,7 @@ public:
     ~Cuma_Unit_Base_Test();
 
 private slots:
-    void testSetUnitCount();
+    /*void testSetUnitCount();
     void testAllocUnit();
     void testMakeUnitPid();
     void testMakeUnitPingLimit();
@@ -28,8 +28,10 @@ private slots:
     void start_unit_file_binary_spread_test();
     void testUnitRemoveAllFile();
     void start_unit_file_binary_exsist_test();
-    void start_unit_file_binary_request_test();
-    void start_unit_bypass_test();
+    void start_unit_file_binary_request_test();*/
+    void testBypassUnit();
+    void testBypassPayload();
+    //void start_unit_bypass_test();
 };
 
 #endif // CUMA_UNIT_BASE_TEST_H

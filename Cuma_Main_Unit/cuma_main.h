@@ -69,6 +69,9 @@ public:
     bool mf_is_active();
     void mf_set_active(bool);
 
+    bool mf_get_client_bypass_protocol_layer();
+    void mf_set_client_bypass_protocol_layer(bool);
+
     QSharedPointer<Cuma_File> get_File_obj();
 
     void mf_t_set_limit_unit(QVector<QSharedPointer<Cuma_Main>>& v);
@@ -145,10 +148,22 @@ protected slots:
     //s_start_spread()의 slot
     void sl_start_command_signal(const QJsonObject command);
 
+public:
+    QJsonObject mf_parse_bypass_protocol(QJsonObject o);
+
+    void client_send(QJsonObject req_send_protocol, QSharedPointer<Cuma_Main> &target_unit);
+
+    void server_send(QJsonObject req_send_protocol, QSharedPointer<Cuma_Main> &target_unit);
+
+    void server_bypass_send(QJsonObject req_send_protocol, QJsonObject recv_protocol, QSharedPointer<Cuma_Main> &target_unit);
+
+protected:
+        QSharedPointer<Cuma_Main> find_bypass_reply_obj(QJsonArray arr);
+
 protected:
 
     //recv의 수신 프로세스
-    virtual void f_recv_process(const QJsonObject& o);
+    virtual void f_recv_process(const QJsonObject o);
 
     //현재 타이머의 milisec를 알려주는 프로세스
     virtual int f_tell_time();
@@ -230,6 +245,8 @@ ACCESS:
 
     //이 유닛이 active했는지 확인함
     bool m_active;
+
+    bool m_bypass_protocol_layer_active;
 
     //유닛의 바이패스 리미트 카운트를 잼
     static uint32_t m_limit_bypass_count;
