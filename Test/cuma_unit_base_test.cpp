@@ -37,7 +37,9 @@ void Cuma_Unit_Base_Test::testBypassUnit()
     Cuma_Debug("=============== unit : "  + QString::number(target_unit->mf_get_pid()) + "===============", __LINE__);
     Cuma_Debug(QJsonDocument(report_json).toJson(), __LINE__);
 
-    QVERIFY (report_json["recv"].toArray().at(3).toObject().find("bypass_reply") != report_json["recv"].toArray().at(3).toObject().end());
+    QVERIFY (report_json["recv"].toArray().at(2).toObject().find("bypass_reply") != report_json["recv"].toArray().at(3).toObject().end());
+
+    unit_base.finish_thread();
 }
 
 void Cuma_Unit_Base_Test::testBypassPayload()
