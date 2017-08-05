@@ -291,12 +291,6 @@ int Cuma_Main::f_over_bypass(QJsonObject o)
         return 0;
     }
 
-    //바이패스 에 자기 PId를 기록함
-    Cuma_Debug("append bypass record", __LINE__);
-    QJsonArray arr = o["bypass"].toArray();
-    arr.append((int)m_Pid);
-    o["bypass"] = arr;
-
     //만약 bypass의 카운트가 0일경우 이미 리미트까지 갔다는 의미
     Cuma_Debug("check bypass count is exsist ", __LINE__);
     if(o["bypass_count"].toInt() < 1)
@@ -319,18 +313,23 @@ int Cuma_Main::f_over_bypass(QJsonObject o)
     {
         Cuma_Debug("spread bypass protocol to unit : " + QString::number(it->mf_get_pid()), __LINE__);
         //바이패스가 온 유닛은 제외
-        if ( it->mf_get_pid() == o["From"].toInt() )
+        if ( it->mf_get_pid() == o["From"].toInt())
         {
             continue;
         }
 
-        emit it->s_recv(o);
+        //From을 자기자신의 pid로 변경함
+        QJsonObject send_protocol = o;
+        send_protocol["From"] = static_cast<int>(m_Pid);
+        emit it->s_recv(send_protocol);
+
+        send_count ++;
     }
 
     if(send_count == 0)
     {
         Cuma_Debug("There is no Unit to send", __LINE__);
-        return 1;
+        return 2;
     }
 
     return 0;

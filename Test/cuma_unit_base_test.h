@@ -29,7 +29,7 @@ private slots:
     void testUnitRemoveAllFile();
     void start_unit_file_binary_exsist_test();
     void start_unit_file_binary_request_test();*/
-    void testBypassUnit();
+    //void testBypassUnit();
     void testBypassPayload();
     //void start_unit_bypass_test();
 };

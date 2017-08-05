@@ -352,15 +352,22 @@ QJsonObject Cuma_Main::mf_parse_bypass_protocol(QJsonObject o)
         return o;
     }
 
+    //바이패스 프로토콜을 보여줌
+    Cuma_Debug("==== mf_parse_bypass_protocol ===");
+    Cuma_Debug(QJsonDocument(o).toJson());
     QJsonArray bypass_chain_array = o["bypass"].toArray();
-    bypass_chain_array.append(static_cast<int>(m_Pid));
-    o["bypass"] = bypass_chain_array;
 
     //만약 bypass_reply일경우
     Cuma_Debug("Bypass protocol layer is dectacted", __LINE__);
     if(o["bypass_reply"].toBool() == true)
     {
         Cuma_Debug("Bypass protocol reply.. send reply_over_bypass_limit ", __LINE__);
+
+        if(bypass_chain_array.count() < 2)
+        {
+            Cuma_Debug("bypass_chain count is 2 Drop the protocol", __LINE__);
+            return_protocol["no_payload"] = true;
+        }
 
         if (f_reply_over_bypass_limit(o) == 1)
         {
@@ -377,6 +384,11 @@ QJsonObject Cuma_Main::mf_parse_bypass_protocol(QJsonObject o)
     //만약 bypass_reply이 아닐경우
     else
     {
+        Cuma_Debug("add bypass chain m_Pid,", __LINE__);
+        QJsonArray bypass_chain_array = o["bypass"].toArray();
+        bypass_chain_array.append(static_cast<int>(m_Pid));
+        o["bypass"] = bypass_chain_array;
+
         Cuma_Debug("Bypass protocol is not reply.. send reply_over_bypass_limit ", __LINE__);
         if (f_over_bypass(o) == 1)
         {
@@ -394,7 +406,6 @@ QJsonObject Cuma_Main::mf_parse_bypass_protocol(QJsonObject o)
             return_protocol = o;
         }
     }
-
     return return_protocol;
 }
 
@@ -408,16 +419,18 @@ void Cuma_Main::client_send(QJsonObject req_send_protocol, QSharedPointer<Cuma_M
 
     Cuma_Debug("make bypass_protocol",  __LINE__);
     QJsonObject bypass_protocol_layer = cuma_protocol::req_bypass_protocol(m_Pid, m_limit_bypass_count);
+    bypass_protocol_layer["bypass_count"] = static_cast<int>(m_limit_bypass_count - 1);
 
     for(QJsonObject::iterator it = bypass_protocol_layer.begin(); it != bypass_protocol_layer.end(); it++)
     {
         req_send_protocol.insert(it.key(), it.value());
     }
 
-    bypass_protocol_layer["bypass_count"] = static_cast<int>(m_limit_bypass_count - 1);
+    Cuma_Debug("==================== send protocol ====================", __LINE__);
+    Cuma_Debug(QJsonDocument(req_send_protocol).toJson());
 
     Cuma_Debug("send bypass_protocol", __LINE__);
-    emit target_unit->s_recv(bypass_protocol_layer);
+    emit target_unit->s_recv(req_send_protocol);
 }
 
 void Cuma_Main::server_send(QJsonObject req_send_protocol, QSharedPointer<Cuma_Main>& target_unit)
@@ -432,6 +445,8 @@ void Cuma_Main::server_bypass_send(QJsonObject req_send_protocol, QJsonObject re
     req_send_protocol["bypass_limit_count"] = recv_protocol["bypass_limit_count"];
     req_send_protocol["bypass_reply"]  = recv_protocol["bypass_reply"];
 
+    Cuma_Debug("==================== server_send protocol ====================", __LINE__);
+    Cuma_Debug(QJsonDocument(req_send_protocol).toJson());
     emit target_unit->s_recv(req_send_protocol);
 }
 

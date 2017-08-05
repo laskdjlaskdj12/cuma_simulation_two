@@ -10,7 +10,7 @@ Cuma_Unit_Base_Test::~Cuma_Unit_Base_Test()
 
 }
 
-void Cuma_Unit_Base_Test::testBypassUnit()
+/*void Cuma_Unit_Base_Test::testBypassUnit()
 {
     Cuma_Unit_Base unit_base;
 
@@ -41,10 +41,37 @@ void Cuma_Unit_Base_Test::testBypassUnit()
 
     unit_base.finish_thread();
 }
-
+*/
 void Cuma_Unit_Base_Test::testBypassPayload()
 {
+    Cuma_Unit_Base unit_base;
 
+    unit_base.set_Cuma_Unit_Ping_Timeout(5000);
+    unit_base.init_Cuma_Unit(3, true);
+    unit_base.init_Cuma_Unit_File_Frag_dir();
+
+    QVERIFY (unit_base.set_target_unit( 0) == 0);
+    QVERIFY (unit_base.start_all_unit_ping_spread() == 0);
+
+    unit_base.get_target_unit()->mf_set_client_bypass_protocol_layer(true);
+    QVERIFY (unit_base.get_target_unit()->mf_get_client_bypass_protocol_layer() == true);
+
+    QSharedPointer<Cuma_Main> target_unit = unit_base.get_target_unit();
+    target_unit->set_bypass_limit_count(2);
+
+    Cuma_Debug("active Cuma_bypass protocol by target_uit");
+    QVERIFY (unit_base.start_unit_file_binary_exsist() == 0);
+
+    QThread::sleep(2);
+
+    QJsonObject report_json = target_unit->mf_get_report_json();
+
+    Cuma_Debug("=============== unit : "  + QString::number(target_unit->mf_get_pid()) + "===============", __LINE__);
+    Cuma_Debug(QJsonDocument(report_json).toJson(), __LINE__);
+
+    QVERIFY (report_json["recv"].toArray().at(2).toObject().find("bypass_reply") != report_json["recv"].toArray().at(3).toObject().end());
+
+    unit_base.finish_thread();
 }
 /*
 void Cuma_Unit_Base_Test::testSetUnitCount()
