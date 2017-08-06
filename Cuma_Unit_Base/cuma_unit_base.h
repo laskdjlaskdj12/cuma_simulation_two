@@ -38,6 +38,7 @@ public:
     void Make_Unit_Random_Delay_time();    
     int init_Cuma_Unit(uint32_t count);
     int init_Cuma_Unit(uint32_t count, bool limit_timeout);
+    int init_Cuma_Unit(uint32_t count, bool limit_timeout, bool thread_enable);
     void init_Cuma_Unit_File_Frag_dir();
 
     void remove_all_unit_file();

@@ -222,7 +222,7 @@ void Cuma_Main::sl_recv_signal(QJsonObject o)
     }
 
     //recv_process layer
-    f_recv_process(o);
+    f_recv_process(after_bypass_protocol);
 }
 
 void Cuma_Main::sl_start_command_signal(const QJsonObject command)
@@ -355,6 +355,7 @@ QJsonObject Cuma_Main::mf_parse_bypass_protocol(QJsonObject o)
     //바이패스 프로토콜을 보여줌
     Cuma_Debug("==== mf_parse_bypass_protocol ===");
     Cuma_Debug(QJsonDocument(o).toJson());
+
     QJsonArray bypass_chain_array = o["bypass"].toArray();
 
     //만약 bypass_reply일경우
@@ -372,8 +373,18 @@ QJsonObject Cuma_Main::mf_parse_bypass_protocol(QJsonObject o)
         if (f_reply_over_bypass_limit(o) == 1)
         {
             Cuma_Debug("This bypass_reply is mine", __LINE__);
-            return_protocol = o;
+
+            if(o.find("reply") == o.end())
+            {
+                Cuma_Debug("This protocol have no reply DROP!!", __LINE__);
+                return_protocol["no_payload"] = true;
+            }
+            else
+            {
+                return_protocol = o;
+            }
         }
+
         else
         {
             Cuma_Debug("Protocol Reply_Bypassing this unit : " + QString::number(m_Pid), __LINE__);

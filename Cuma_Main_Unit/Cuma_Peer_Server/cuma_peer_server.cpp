@@ -362,8 +362,8 @@ int Cuma_Main::f_reply_over_bypass_limit(QJsonObject o)
         //전송하려는 유닛 주소
         QSharedPointer<Cuma_Main> send_unit = nullptr;
 
-        //bypass_index = bypass_limit_count - bypass_count
-        int next_bypass_index = (o["bypass_limit_count"].toInt() - o["bypass_count"].toInt() - 1);
+        int current_bypass_index = o["bypass_limit_count"].toInt() - o["bypass_count"].toInt();
+        int next_bypass_index = (current_bypass_index - 1);
 
         send_unit_id = bypass_chain.at(next_bypass_index).toInt();
         Cuma_Debug("send bypass reply to unit : " + QString::number(send_unit_id));

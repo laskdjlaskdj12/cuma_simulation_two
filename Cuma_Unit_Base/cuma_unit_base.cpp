@@ -277,6 +277,32 @@ int Cuma_Unit_Base::init_Cuma_Unit(uint32_t count, bool limit_timeout)
     return 0;
 }
 
+int Cuma_Unit_Base::init_Cuma_Unit(uint32_t count, bool limit_timeout, bool thread_enable)
+{
+    this->set_Cuma_Unit_Count( count);
+    if ( this->alloc_unit() < 0)
+    {
+        Cuma_Error("alloc_unit() Cuma_Unit lists is fail", __LINE__);
+        return -1;
+    }
+
+    else if(this->init_unit(limit_timeout) < 0)
+    {
+        Cuma_Error("init_unit() Cuma_Unit lists is fail", __LINE__);
+        return -1;
+    }
+
+    if(thread_enable == true)
+    {
+        if(this->Attach_Cuma_Unit_to_Thread() < 0)
+        {
+            Cuma_Error("Attach_Cuma_Unit_to_Thread() Cuma_Unit lists is fail", __LINE__);
+            return -1;
+        }
+    }
+    return 0;
+}
+
 void Cuma_Unit_Base::init_Cuma_Unit_File_Frag_dir()
 {
     try{
