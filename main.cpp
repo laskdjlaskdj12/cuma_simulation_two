@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
     Cuma_Debug::show_debug(true);
 
     unit_base.set_Cuma_Unit_Ping_Timeout(5000);
-    unit_base.init_Cuma_Unit(100);
+    unit_base.init_Cuma_Unit(100, true);
     unit_base.init_Cuma_Unit_File_Frag_dir();
 
     unit_base.set_target_unit( 0);
@@ -39,13 +39,14 @@ int main(int argc, char *argv[])
     unit_base.get_target_unit()->mf_get_client_bypass_protocol_layer();
 
     QSharedPointer<Cuma_Main> target_unit = unit_base.get_target_unit();
-    target_unit->set_bypass_limit_count(90);
+    target_unit->set_bypass_limit_count(20);
 
     Cuma_Debug("active Cuma_bypass protocol by target_uit");
-    unit_base.start_unit_file_binary_exsist("test.txt", 0);
+    //unit_base.start_unit_file_binary_exsist("test.txt", 0);
+    unit_base.start_unit_bypass();
+    QThread::sleep(1);
 
-    QThread::sleep(2);
-
+    Cuma_Debug("Sleep is over", __LINE__);
     //모든 유닛들이 stop명령이 true일때까지 stop
     while(unit_base.wait_until_unit_is_finish() == true);
 

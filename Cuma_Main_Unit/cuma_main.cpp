@@ -81,6 +81,7 @@ Cuma_Main::~Cuma_Main()
     //s_start_spread 시그널을 바인딩함
     disconnect(this, SIGNAL(s_start_command(const QJsonObject)), this, SLOT(sl_start_command_signal(const QJsonObject)));
 
+    m_unit_idle = true;
 }
 
 void Cuma_Main::mf_set_unit_list(QVector<QSharedPointer<Cuma_Main>> list)
@@ -234,14 +235,15 @@ void Cuma_Main::sl_recv_signal(QJsonObject o)
     if(after_bypass_protocol.find("no_payload") != after_bypass_protocol.end())
     {
         Cuma_Error("no_payload bypass protocol", __LINE__, m_Pid);
+        m_unit_idle = true;
         return;
     }
 
     //recv_process layer
     f_recv_process(after_bypass_protocol);
 
-    //idel_unit으로 보냄
-    sl_start_idle();
+    Cuma_Debug("SetIdle", __LINE__);
+    m_unit_idle = true;
 }
 
 void Cuma_Main::sl_start_command_signal(const QJsonObject command)
@@ -359,6 +361,9 @@ void Cuma_Main::sl_start_command_signal(const QJsonObject command)
     {
         e.show_error_string();
     }
+
+    Cuma_Debug("Set_Idle", __LINE__);
+    m_unit_idle = true;
 }
 
 QJsonObject Cuma_Main::mf_parse_bypass_protocol(QJsonObject o)
