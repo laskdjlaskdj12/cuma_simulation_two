@@ -25,7 +25,6 @@ int main(int argc, char *argv[])
     //QTest::qExec(&c_test);
     //QTest::qExec(&base_test);
 
-
     Cuma_Unit_Base unit_base;
     Cuma_Debug::show_debug(true);
 
@@ -52,11 +51,17 @@ int main(int argc, char *argv[])
 
     QJsonObject report_json = target_unit->mf_get_report_json();
 
-    Cuma_Debug("=============== unit : "  + QString::number(target_unit->mf_get_pid()) + "===============", __LINE__);
+    for(const QSharedPointer<Cuma_Main>& m : unit_base.get_alloc_unit())
+    {
+        QJsonObject report_json = m->mf_get_report_json();
+        Cuma_Debug("=============== unit : "  + QString::number(m->mf_get_pid()) + "===============", __LINE__);
+        Cuma_Debug(QJsonDocument(report_json).toJson(), __LINE__);
+    }
+
+    Cuma_Debug("=============== Tagetunit : "  + QString::number(target_unit->mf_get_pid()) + "===============", __LINE__);
     Cuma_Debug(QJsonDocument(report_json).toJson(), __LINE__);
 
     unit_base.finish_thread();
-
 
     a.exec();
 
