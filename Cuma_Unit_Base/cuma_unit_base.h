@@ -48,7 +48,7 @@ public:
     int start_all_unit_ping_spread();
     int start_unit_file_binary_spread();
     int start_unit_file_binary_request();
-    int start_unit_file_binary_exsist();
+    int start_unit_file_binary_exsist(QString f_name, int f_index);
     int start_unit_bypass();
 public:
     void finish_thread();

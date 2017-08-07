@@ -562,7 +562,7 @@ int Cuma_Unit_Base::start_unit_file_binary_request()
     return 0;
 }
 
-int Cuma_Unit_Base::start_unit_file_binary_exsist()
+int Cuma_Unit_Base::start_unit_file_binary_exsist(QString f_name, int f_index)
 {
     if(this->Cuma_Thread_list.empty())
     {
@@ -594,14 +594,14 @@ int Cuma_Unit_Base::start_unit_file_binary_exsist()
 
     QJsonObject command;
     command["command"] = "file_name";
-    command["filename"] = "test.txt";
+    command["filename"] = f_name;
     emit target_Cuma_Unit->s_start_command(command);
 
     command.remove("command");
     command.remove("filename");
 
     command["command"] = "file_index";
-    command["index"] = 0;
+    command["index"] = f_index;
     emit target_Cuma_Unit->s_start_command(command);
 
     command.remove("command");

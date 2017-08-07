@@ -47,7 +47,7 @@ void Cuma_Unit_Base_Test::testBypassPayload()
     Cuma_Unit_Base unit_base;
 
     unit_base.set_Cuma_Unit_Ping_Timeout(5000);
-    unit_base.init_Cuma_Unit(100, true);
+    unit_base.init_Cuma_Unit(100);
     unit_base.init_Cuma_Unit_File_Frag_dir();
 
     QVERIFY (unit_base.set_target_unit( 0) == 0);
@@ -60,7 +60,7 @@ void Cuma_Unit_Base_Test::testBypassPayload()
     target_unit->set_bypass_limit_count(90);
 
     Cuma_Debug("active Cuma_bypass protocol by target_uit");
-    QVERIFY (unit_base.start_unit_file_binary_exsist() == 0);
+    QVERIFY (unit_base.start_unit_file_binary_exsist("test.txt", 0) == 0);
 
     QThread::sleep(2);
 
