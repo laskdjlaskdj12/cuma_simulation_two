@@ -45,6 +45,8 @@ Cuma_Main::Cuma_Main(QObject *parent) : QObject(parent)
 #endif*/
 
     m_bypass_protocol_layer_active = false;
+
+    m_unit_idle = false;
 }
 
 Cuma_Main::Cuma_Main(Cuma_Main &m)
@@ -61,6 +63,8 @@ Cuma_Main::Cuma_Main(Cuma_Main &m)
     m_limit_bypass_count = m.m_limit_bypass_count;
     m_file_info_block = m.m_file_info_block;
     m_file_frag_address = m.m_file_frag_address;
+    m_bypass_protocol_layer_active = m.m_bypass_protocol_layer_active;
+    m_unit_idle = m.m_unit_idle;
 
 }
 
@@ -149,6 +153,16 @@ void Cuma_Main::mf_set_client_bypass_protocol_layer(bool b)
     m_bypass_protocol_layer_active = b;
 }
 
+bool Cuma_Main::mf_is_unit_idle()
+{
+    return m_unit_idle;
+}
+
+void Cuma_Main::mf_set_unit_idle(bool b)
+{
+    m_unit_idle = b;
+}
+
 QSharedPointer<Cuma_File> Cuma_Main::get_File_obj()
 {
     return m_File;
@@ -207,6 +221,8 @@ void Cuma_Main::sl_stop_unit()
 
 void Cuma_Main::sl_recv_signal(QJsonObject o)
 {
+    m_unit_idle = false;
+
     Cuma_Debug("sl_recv_signal(QJsonObject o) recv the signal from " + QString::number(o["From"].toInt()));
 
     Cuma_Debug("log env print get message", __LINE__);
@@ -223,6 +239,9 @@ void Cuma_Main::sl_recv_signal(QJsonObject o)
 
     //recv_process layer
     f_recv_process(after_bypass_protocol);
+
+    //idel_unit으로 보냄
+    sl_start_idle();
 }
 
 void Cuma_Main::sl_start_command_signal(const QJsonObject command)

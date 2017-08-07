@@ -207,7 +207,8 @@ int Cuma_Main::mf_command_req_file_exsist()
 
 void Cuma_Main::sl_start_idle()
 {
-    Cuma_Debug("Attach Thread to unit  : " + QString::number(m_Pid));
+    m_unit_idle = true;
+    Cuma_Debug("Unit  : " + QString::number(m_Pid) + "is idle");
 }
 
 void Cuma_Main:: mf_command_set_unit_bypass_count(uint32_t count)

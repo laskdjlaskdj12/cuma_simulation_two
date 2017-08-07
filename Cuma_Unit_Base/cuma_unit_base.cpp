@@ -377,6 +377,29 @@ void Cuma_Unit_Base::remove_all_unit_file()
     }
 }
 
+bool Cuma_Unit_Base::wait_until_unit_is_finish()
+{
+    uint i = 0;
+    for(const QSharedPointer<Cuma_Main>& m: Cuma_unit_list)
+    {
+        if(m->mf_is_unit_idle() == false)
+        {
+            i++;
+        }
+    }
+
+    Cuma_Debug("Active_Unit_Count : " + QString::number(i), __LINE__);
+    if(i > 0)
+    {
+        QThread::sleep(1);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 int Cuma_Unit_Base::start_unit_ping_spread()
 {
     if(this->Cuma_Thread_list.empty())

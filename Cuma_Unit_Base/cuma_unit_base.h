@@ -42,6 +42,7 @@ public:
     void init_Cuma_Unit_File_Frag_dir();
 
     void remove_all_unit_file();
+    bool wait_until_unit_is_finish();
 public:
     int start_unit_ping_spread();
     int start_all_unit_ping_spread();

@@ -47,7 +47,7 @@ void Cuma_Unit_Base_Test::testBypassPayload()
     Cuma_Unit_Base unit_base;
 
     unit_base.set_Cuma_Unit_Ping_Timeout(5000);
-    unit_base.init_Cuma_Unit(3, true);
+    unit_base.init_Cuma_Unit(100, true);
     unit_base.init_Cuma_Unit_File_Frag_dir();
 
     QVERIFY (unit_base.set_target_unit( 0) == 0);
@@ -57,12 +57,15 @@ void Cuma_Unit_Base_Test::testBypassPayload()
     QVERIFY (unit_base.get_target_unit()->mf_get_client_bypass_protocol_layer() == true);
 
     QSharedPointer<Cuma_Main> target_unit = unit_base.get_target_unit();
-    target_unit->set_bypass_limit_count(2);
+    target_unit->set_bypass_limit_count(90);
 
     Cuma_Debug("active Cuma_bypass protocol by target_uit");
     QVERIFY (unit_base.start_unit_file_binary_exsist() == 0);
 
     QThread::sleep(2);
+
+    //모든 유닛들이 stop명령이 true일때까지 stop
+    while(unit_base.wait_until_unit_is_finish() == true);
 
     QJsonObject report_json = target_unit->mf_get_report_json();
 

@@ -67,10 +67,13 @@ public:
 
     //active되었는지 확인
     bool mf_is_active();
-    void mf_set_active(bool);
+    void mf_set_active(bool b);
 
     bool mf_get_client_bypass_protocol_layer();
-    void mf_set_client_bypass_protocol_layer(bool);
+    void mf_set_client_bypass_protocol_layer(bool b);
+
+    bool mf_is_unit_idle();
+    void mf_set_unit_idle(bool b);
 
     QSharedPointer<Cuma_File> get_File_obj();
 
@@ -247,6 +250,9 @@ ACCESS:
     bool m_active;
 
     bool m_bypass_protocol_layer_active;
+
+    //유닛이 idel인지확인
+    bool m_unit_idle;
 
     //유닛의 바이패스 리미트 카운트를 잼
     static uint32_t m_limit_bypass_count;
