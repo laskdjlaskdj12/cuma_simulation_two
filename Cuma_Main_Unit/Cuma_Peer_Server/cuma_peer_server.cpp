@@ -318,7 +318,27 @@ int Cuma_Main::f_over_bypass(QJsonObject o)
             continue;
         }
 
+        // bypass를 살펴서 자기 bypass와 같은지 확인함
+        bool is_continue = false;
+        QJsonArray bypass_arr = o["bypass"].toArray();
+        for(const QJsonValue& v : bypass_arr)
+        {
+            if(it->mf_get_pid() == v.toInt())
+            {
+                Cuma_Debug("Don't send this unit : " + QString::number(v.toInt()));
+                is_continue = true;
+            }
+        }
+
+        //만약 continue일 경우 true로 리턴함
+        if(is_continue == true)
+        {
+            send_count ++;
+            continue;
+        }
+
         //From을 자기자신의 pid로 변경함
+
         QJsonObject send_protocol = o;
         send_protocol["From"] = static_cast<int>(m_Pid);
         emit it->s_recv(send_protocol);

@@ -1,5 +1,7 @@
 #include <QCoreApplication>
 #include <QTest>
+#include <QJsonObject>
+#include <QJsonDocument>
 #include "Cuma_Unit_Base/cuma_unit_base.h"
 #include "Cuma_Debug/cuma_debug.h"
 #include "Test/cuma_client_test.h"
@@ -29,7 +31,7 @@ int main(int argc, char *argv[])
     Cuma_Debug::show_debug(true);
 
     unit_base.set_Cuma_Unit_Ping_Timeout(5000);
-    unit_base.init_Cuma_Unit(100, true);
+    unit_base.init_Cuma_Unit(100);
     unit_base.init_Cuma_Unit_File_Frag_dir();
 
     unit_base.set_target_unit( 0);
@@ -55,15 +57,22 @@ int main(int argc, char *argv[])
     for(const QSharedPointer<Cuma_Main>& m : unit_base.get_alloc_unit())
     {
         QJsonObject report_json = m->mf_get_report_json();
+
+        if(report_json.isEmpty() == true)
+        {
+            Cuma_Debug("There is no report_json");
+            continue;
+        }
+
         Cuma_Debug("=============== unit : "  + QString::number(m->mf_get_pid()) + "===============", __LINE__);
-        Cuma_Debug(QJsonDocument(report_json).toJson(), __LINE__);
+        Cuma_Debug(QJsonDocument(report_json).toJson(QJsonDocument::Indented), __LINE__);
     }
 
+    QJsonObject taret_report_json = unit_base.get_target_unit()->mf_get_report_json();
     Cuma_Debug("=============== Tagetunit : "  + QString::number(target_unit->mf_get_pid()) + "===============", __LINE__);
-    Cuma_Debug(QJsonDocument(report_json).toJson(), __LINE__);
+    Cuma_Debug(QJsonDocument(taret_report_json).toJson(), __LINE__);
 
     unit_base.finish_thread();
 
     a.exec();
-
 }
